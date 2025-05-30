@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge"
 import { Shield, Mic, Lock, Coins, TrendingUp, CheckCircle, ArrowRight } from "lucide-react"
 import Link from "next/link"
 import { VapiVoiceWidget } from "@/components/vapi-voice-widget"
+import Image from "next/image"
 
 export default function HomePage() {
   return (
@@ -13,7 +14,9 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-2">
-              <Shield className="h-8 w-8 text-blue-400" />
+              <div className="relative w-8 h-8">
+                <Image src="/images/aegis-logo.webp" alt="Aegis Logo" fill className="object-contain" />
+              </div>
               <span className="text-xl font-bold text-white">AegisWhistle</span>
             </div>
             <div className="flex items-center space-x-4">
@@ -79,6 +82,13 @@ export default function HomePage() {
             <div className="text-center">
               <div className="text-3xl font-bold text-purple-400">100%</div>
               <div className="text-slate-400">Anonymity Guaranteed</div>
+            </div>
+          </div>
+
+          {/* Aegis Shield Section */}
+          <div className="mt-16 flex justify-center">
+            <div className="relative w-32 h-32 opacity-80">
+              <Image src="/images/aegis-logo.webp" alt="Aegis Shield" fill className="object-contain" />
             </div>
           </div>
         </div>
@@ -238,8 +248,176 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Founder's Note */}
+      {/* Team Section */}
       <section className="py-20 bg-slate-800/50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">Meet Our Team</h2>
+            <h3 className="text-2xl font-semibold text-blue-400 mb-4">Built by Whistleblowers, for Whistleblowers</h3>
+            <p className="text-xl text-slate-300 mb-8">
+              Our comprehensive suite of professionals caters to a diverse team, ranging from seasoned architects to
+              renowned engineers.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-8">
+            {/* Shan Sankaran */}
+            <Card className="bg-slate-900/50 border-slate-700 hover:border-blue-500/50 transition-colors">
+              <CardContent className="p-6">
+                <div className="flex items-start gap-4">
+                  <div className="relative w-20 h-20 rounded-full overflow-hidden flex-shrink-0">
+                    <Image src="/images/team/shan.jpeg" alt="Shan Sankaran" fill className="object-cover" />
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-2">
+                      <h3 className="text-xl font-semibold text-white">Shan Sankaran</h3>
+                      <a
+                        href="https://www.linkedin.com/in/shan-sankaran-63b140256/"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-400 hover:text-blue-300"
+                      >
+                        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                          <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
+                        </svg>
+                      </a>
+                    </div>
+                    <p className="text-blue-400 mb-3 font-semibold">Founder & CEO • Thinker • Hustler</p>
+                    <p className="text-slate-300 text-sm">
+                      Cyber, Compliance executive with 15+ years in corporate ethics, Governance, Risk and Compliance.
+                      Have mob, gaslight, ban stories and tons of experience political whistleblowing as journalist.
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Sajjad Ahmed */}
+            <Card className="bg-slate-900/50 border-slate-700 hover:border-green-500/50 transition-colors">
+              <CardContent className="p-6">
+                <div className="flex items-start gap-4">
+                  <div className="relative w-20 h-20 rounded-full overflow-hidden flex-shrink-0">
+                    <Image src="/images/team/sajjad.jpeg" alt="Sajjad Ahmed" fill className="object-cover" />
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-2">
+                      <h3 className="text-xl font-semibold text-white">Sajjad Ahmed</h3>
+                      <a
+                        href="https://www.linkedin.com/in/er-sajjad-ahmed/"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-400 hover:text-blue-300"
+                      >
+                        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                          <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
+                        </svg>
+                      </a>
+                    </div>
+                    <p className="text-green-400 mb-3 font-semibold">Blockchain Architect • Technologist</p>
+                    <p className="text-slate-300 text-sm">
+                      Blockchain architect with Hyperledger Fabric certification and previous open source experience.
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Suresh Gopalakrishnan */}
+            <Card className="bg-slate-900/50 border-slate-700 hover:border-purple-500/50 transition-colors">
+              <CardContent className="p-6">
+                <div className="flex items-start gap-4">
+                  <div className="relative w-20 h-20 rounded-full overflow-hidden flex-shrink-0">
+                    <Image src="/images/team/suresh.jpeg" alt="Suresh Gopalakrishnan" fill className="object-cover" />
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-2">
+                      <h3 className="text-xl font-semibold text-white">Suresh Gopalakrishnan</h3>
+                      <a
+                        href="https://www.linkedin.com/in/suresh-gopalakrishnan-5550a52/"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-400 hover:text-blue-300"
+                      >
+                        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                          <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
+                        </svg>
+                      </a>
+                    </div>
+                    <p className="text-purple-400 mb-3 font-semibold">Cybersecurity Expert • Architect</p>
+                    <p className="text-slate-300 text-sm">
+                      Cybersecurity expert specializing in anonymity and zero-knowledge systems.
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Balaji Ramamurthy */}
+            <Card className="bg-slate-900/50 border-slate-700 hover:border-yellow-500/50 transition-colors">
+              <CardContent className="p-6">
+                <div className="flex items-start gap-4">
+                  <div className="relative w-20 h-20 rounded-full overflow-hidden flex-shrink-0">
+                    <Image src="/images/team/balaji.jpeg" alt="Balaji Ramamurthy" fill className="object-cover" />
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-2">
+                      <h3 className="text-xl font-semibold text-white">Balaji Ramamurthy</h3>
+                      <a
+                        href="https://www.linkedin.com/in/balaji-ramamurthy-5501a5/"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-400 hover:text-blue-300"
+                      >
+                        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                          <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
+                        </svg>
+                      </a>
+                    </div>
+                    <p className="text-yellow-400 mb-3 font-semibold">AI Technologist • Engineer</p>
+                    <p className="text-slate-300 text-sm">
+                      Proud Dad of AI Ethics Whistleblower Hero Suchir Balaji. AI Technologist.
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Advisory Board - Updated to only show Open Efficiency Inc */}
+          <div className="mt-16 text-center">
+            <h3 className="text-2xl font-bold text-white mb-8">Advisory Board</h3>
+            <div className="flex justify-center">
+              <Card className="bg-slate-900/50 border-slate-700 hover:border-yellow-500/50 transition-colors max-w-md">
+                <CardContent className="p-8 text-center">
+                  <div className="relative w-24 h-24 mx-auto mb-4 rounded-lg overflow-hidden">
+                    <Image
+                      src="/images/open-efficiency-logo.jpeg"
+                      alt="Open Efficiency Inc Logo"
+                      fill
+                      className="object-cover"
+                    />
+                  </div>
+                  <h4 className="text-xl font-bold text-white mb-2">Open Efficiency Inc</h4>
+                  <p className="text-yellow-400 font-semibold mb-3">A Washington DC not for profit</p>
+                  <p className="text-slate-300 text-lg font-medium mb-4">Empowering Truth Through Technology</p>
+                  <a
+                    href="https://openefficiency.org"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center text-blue-400 hover:text-blue-300 font-medium"
+                  >
+                    Visit OpenEfficiency.org
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </a>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Founder's Note */}
+      <section className="py-20">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-2xl font-bold text-white mb-6">Founder's Note</h2>
           <blockquote className="text-lg text-slate-300 italic mb-4">
@@ -302,7 +480,9 @@ export default function HomePage() {
           <div className="grid md:grid-cols-3 gap-8">
             <div>
               <div className="flex items-center space-x-2 mb-4">
-                <Shield className="h-6 w-6 text-blue-400" />
+                <div className="relative w-6 h-6">
+                  <Image src="/images/aegis-logo.webp" alt="Aegis Logo" fill className="object-contain" />
+                </div>
                 <span className="text-lg font-bold text-white">AegisWhistle</span>
               </div>
               <p className="text-slate-400">Protecting whistleblowers, automating investigations, rewarding courage.</p>
