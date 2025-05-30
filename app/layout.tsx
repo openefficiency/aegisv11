@@ -5,7 +5,7 @@ import "./globals.css"
 export const metadata: Metadata = {
   title: "Aegis Whistle: World's 1st Voice📣 AI🤖 Ethics",
   description: "Secure whistleblowing platform with voice AI technology for ethical reporting",
-  generator: "v0.dev",
+    generator: 'v0.dev'
 }
 
 export default function RootLayout({
