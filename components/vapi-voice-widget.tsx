@@ -7,11 +7,35 @@ export function VapiVoiceWidget() {
 
   useEffect(() => {
     // Listen for messages from the iframe
-    const handleMessage = (event: MessageEvent) => {
-      if (event.origin !== window.location.origin) return
+    const handleMessage = async (event: MessageEvent) => {
+      if (event.origin !== "https://vapi.ai") return
 
       if (event.data.type === "vapi-status") {
         console.log("Vapi status:", event.data.status)
+      }
+
+      // Handle conversation summary
+      if (event.data.type === "vapi-summary") {
+        try {
+          // Update case with summary in Supabase
+          const response = await fetch('/api/update-case-summary', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              caseId: event.data.caseId,
+              summary: event.data.summary,
+              sessionId: event.data.sessionId
+            })
+          })
+
+          if (!response.ok) {
+            throw new Error('Failed to update case summary')
+          }
+        } catch (error) {
+          console.error('Error updating case summary:', error)
+        }
       }
     }
 
