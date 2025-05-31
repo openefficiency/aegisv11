@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge"
 import { Shield, Mic, Lock, Coins, TrendingUp, CheckCircle, ArrowRight } from "lucide-react"
 import Link from "next/link"
 import { VapiVoiceWidget } from "@/components/vapi-voice-widget"
+import { VapiLauncher } from "@/components/vapi-launcher"
 import Image from "next/image"
 
 export default function HomePage() {
@@ -52,12 +53,12 @@ export default function HomePage() {
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
-            <Link href="/report">
+            <VapiLauncher>
               <Button size="lg" className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 text-lg">
                 Start Your Secure Report
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
-            </Link>
+            </VapiLauncher>
           </div>
 
           {/* Voice AI Demo */}
@@ -452,9 +453,9 @@ export default function HomePage() {
               <div className="text-3xl font-bold text-blue-400">100%</div>
               <div className="text-slate-400">Anonymity guaranteed</div>
             </div>
-            <Link href="/report">
+            <VapiLauncher>
               <Button className="bg-blue-600 hover:bg-blue-700">Support Our Pilot</Button>
-            </Link>
+            </VapiLauncher>
           </div>
         </div>
       </section>
@@ -465,12 +466,12 @@ export default function HomePage() {
           <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">
             The next Enron is brewing. Will you shield it—or expose it?
           </h2>
-          <Link href="/report">
+          <VapiLauncher>
             <Button size="lg" className="bg-white text-blue-900 hover:bg-slate-100 px-8 py-4 text-lg font-semibold">
               Begin Your Report
               <ArrowRight className="ml-2 h-5 w-5" />
             </Button>
-          </Link>
+          </VapiLauncher>
         </div>
       </section>
 
