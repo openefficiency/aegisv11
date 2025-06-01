@@ -1,88 +1,543 @@
-"use client"
+"use client";
 
-import { useEffect, useState } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { FileText, DollarSign, CheckCircle, AlertTriangle, Eye, MessageSquare, Award } from "lucide-react"
-import { DashboardLayout } from "@/components/dashboard-layout"
-import { supabase, type Case } from "@/lib/supabase"
+import { useEffect, useState } from "react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  FileText,
+  DollarSign,
+  CheckCircle,
+  AlertTriangle,
+  Eye,
+  MessageSquare,
+  Award,
+  Plus,
+  Send,
+  UserPlus,
+  Mic,
+  RefreshCw,
+  Clock,
+  User,
+  Bot,
+} from "lucide-react";
+import { DashboardLayout } from "@/components/dashboard-layout";
+import { supabase, type Case, type Profile } from "@/lib/supabase";
+import { vapiClient } from "@/lib/vapi-client";
+import { cryptoRewardSystem, supportedCurrencies } from "@/lib/crypto-utils";
+import { auditLogger } from "@/lib/audit-logger";
 
 export default function EthicsOfficerDashboard() {
-  const [cases, setCases] = useState<Case[]>([])
+  const [cases, setCases] = useState<Case[]>([]);
+  const [investigators, setInvestigators] = useState<Profile[]>([]);
+  const [vapiReports, setVapiReports] = useState<any[]>([]);
   const [stats, setStats] = useState({
-    casesToReview: 0,
-    rewardsProcessed: 0,
-    decisionsMade: 0,
-    highPriority: 0,
-  })
-  const [loading, setLoading] = useState(true)
+    openComplaints: 0,
+    resolvedCases: 0,
+    rewardsIssued: 0,
+    bountyOpen: 92000,
+  });
+  const [loading, setLoading] = useState(true);
+  const [loadingVAPI, setLoadingVAPI] = useState(false);
+  const [selectedCase, setSelectedCase] = useState<Case | null>(null);
+  const [selectedVAPIReport, setSelectedVAPIReport] = useState<any>(null);
+  const [actionType, setActionType] = useState<
+    "assign" | "resolve" | "escalate" | null
+  >(null);
+  const [rewardDetails, setRewardDetails] = useState({
+    amount: "",
+    currency: "USDC",
+    address: "",
+    companyUpdate: "",
+    whistleblowerUpdate: "",
+  });
 
   useEffect(() => {
-    fetchData()
-  }, [])
+    fetchData();
+    fetchVAPIReports();
+
+    // Auto-refresh VAPI reports every 30 seconds
+    const interval = setInterval(fetchVAPIReports, 30000);
+    return () => clearInterval(interval);
+  }, []);
 
   const fetchData = async () => {
     try {
-      const { data: casesData, error } = await supabase
+      // Fetch cases
+      const { data: casesData, error: casesError } = await supabase
         .from("cases")
         .select("*")
-        .order("created_at", { ascending: false })
+        .order("created_at", { ascending: false });
 
-      if (error) throw error
+      if (casesError) throw casesError;
 
-      setCases(casesData || [])
+      // Fetch investigators
+      const { data: investigatorsData, error: investigatorsError } =
+        await supabase
+          .from("profiles")
+          .select("*")
+          .eq("role", "investigator")
+          .eq("is_active", true);
+
+      if (investigatorsError) throw investigatorsError;
+
+      setCases(casesData || []);
+      setInvestigators(investigatorsData || []);
 
       // Calculate stats
-      const casesToReview =
-        casesData?.filter((c) => c.status === "open" || c.status === "under_investigation").length || 0
-
-      const rewardsProcessed = casesData?.reduce((sum, c) => sum + (c.reward_amount || 0), 0) || 0
-
-      const decisionsMade = casesData?.filter((c) => c.status === "resolved" || c.status === "escalated").length || 0
-
-      const highPriority = casesData?.filter((c) => c.priority === "high" || c.priority === "critical").length || 0
+      const openComplaints =
+        casesData?.filter((c) => c.status === "open").length || 0;
+      const resolvedCases =
+        casesData?.filter((c) => c.status === "resolved").length || 0;
+      const rewardsIssued =
+        casesData?.reduce((sum, c) => sum + (c.reward_amount || 0), 0) || 0;
 
       setStats({
-        casesToReview,
-        rewardsProcessed,
-        decisionsMade,
-        highPriority,
-      })
+        openComplaints,
+        resolvedCases,
+        rewardsIssued,
+        bountyOpen: 92000,
+      });
     } catch (error) {
-      console.error("Error fetching data:", error)
+      console.error("Error fetching data:", error);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
+
+  const fetchVAPIReports = async () => {
+    setLoadingVAPI(true);
+    try {
+      console.log("Fetching VAPI reports...");
+
+      // Fetch from our API endpoint
+      const response = await fetch("/api/vapi-reports");
+      const result = await response.json();
+
+      if (result.success) {
+        setVapiReports(result.reports);
+        console.log(`Loaded ${result.reports.length} VAPI reports`);
+
+        // Process new reports into cases
+        await processVAPIReportsIntoCases(result.reports);
+      } else {
+        console.error("Failed to fetch VAPI reports:", result.error);
+      }
+    } catch (error) {
+      console.error("Error fetching VAPI reports:", error);
+    } finally {
+      setLoadingVAPI(false);
+    }
+  };
+
+  // Convert VAPI reports into cases
+  const processVAPIReportsIntoCases = async (reports: any[]) => {
+    try {
+      for (const report of reports) {
+        // Check if case already exists
+        const { data: existingCase } = await supabase
+          .from("cases")
+          .select("id")
+          .eq("vapi_session_id", report.session_id)
+          .single();
+
+        if (
+          !existingCase &&
+          report.transcript &&
+          report.transcript.length > 20
+        ) {
+          // Create new case from VAPI report
+          const { error } = await supabase.from("cases").insert({
+            case_number: `WB-${new Date().getFullYear()}-${String(
+              Math.floor(Math.random() * 10000)
+            ).padStart(4, "0")}`,
+            report_id: report.report_id,
+            title: extractTitleFromSummary(report.summary),
+            description: report.summary,
+            category: categorizeReport(report.summary, report.transcript),
+            status: "open",
+            priority: prioritizeReport(report.summary, report.transcript),
+            secret_code: generateSecretCode(),
+            vapi_report_summary: report.summary,
+            vapi_session_id: report.session_id,
+            vapi_transcript: report.transcript,
+            vapi_audio_url: report.audio_url,
+            reward_status: "pending",
+            created_at: report.created_at,
+            updated_at: new Date().toISOString(),
+          });
+
+          if (error) {
+            console.error("Error creating case from VAPI report:", error);
+          } else {
+            console.log(
+              `Created new case from VAPI report: ${report.report_id}`
+            );
+          }
+        }
+      }
+
+      // Refresh cases data
+      fetchData();
+    } catch (error) {
+      console.error("Error processing VAPI reports into cases:", error);
+    }
+  };
+
+  const convertSingleReportToCase = async (report: any) => {
+    try {
+      // Check if case already exists
+      const { data: existingCase } = await supabase
+        .from("cases")
+        .select("id")
+        .eq("vapi_session_id", report.session_id)
+        .single();
+
+      if (existingCase) {
+        alert("This report has already been converted to a case.");
+        return;
+      }
+
+      const { error } = await supabase.from("cases").insert({
+        case_number: `WB-${new Date().getFullYear()}-${String(
+          Math.floor(Math.random() * 10000)
+        ).padStart(4, "0")}`,
+        report_id: report.report_id,
+        title: extractTitleFromSummary(report.summary),
+        description: report.summary,
+        category: categorizeReport(report.summary, report.transcript),
+        status: "open",
+        priority: prioritizeReport(report.summary, report.transcript),
+        secret_code: generateSecretCode(),
+        vapi_report_summary: report.summary,
+        vapi_session_id: report.session_id,
+        vapi_transcript: report.transcript,
+        vapi_audio_url: report.audio_url,
+        reward_status: "pending",
+        created_at: report.created_at,
+        updated_at: new Date().toISOString(),
+      });
+
+      if (error) throw error;
+
+      await auditLogger.logCaseAction(
+        "current_user_id",
+        "new_case",
+        "case_created_from_vapi",
+        {
+          vapi_report_id: report.report_id,
+          session_id: report.session_id,
+        }
+      );
+
+      alert("Report successfully converted to case!");
+      fetchData();
+      setSelectedVAPIReport(null);
+    } catch (error) {
+      console.error("Error converting report to case:", error);
+      alert("Failed to convert report to case.");
+    }
+  };
+
+  // Helper functions
+  const extractTitleFromSummary = (summary: string): string => {
+    if (!summary) return "Voice Report";
+
+    // Extract first sentence or meaningful phrase
+    const firstSentence = summary.split(/[.!?]/)[0].trim();
+    if (firstSentence.length > 100) {
+      return firstSentence.substring(0, 97) + "...";
+    }
+    return firstSentence || "Voice Report";
+  };
+
+  const categorizeReport = (summary: string, transcript: string): string => {
+    const text = (summary + " " + transcript).toLowerCase();
+
+    if (
+      text.includes("discriminat") ||
+      text.includes("racial") ||
+      text.includes("gender") ||
+      text.includes("age")
+    ) {
+      return "discrimination";
+    } else if (
+      text.includes("harass") ||
+      text.includes("sexual") ||
+      text.includes("unwanted")
+    ) {
+      return "harassment";
+    } else if (
+      text.includes("fraud") ||
+      text.includes("money") ||
+      text.includes("steal") ||
+      text.includes("embezzle")
+    ) {
+      return "fraud";
+    } else if (
+      text.includes("abuse") ||
+      text.includes("violence") ||
+      text.includes("threat")
+    ) {
+      return "abuse";
+    } else if (
+      text.includes("safety") ||
+      text.includes("danger") ||
+      text.includes("unsafe")
+    ) {
+      return "safety";
+    } else if (
+      text.includes("corrupt") ||
+      text.includes("bribe") ||
+      text.includes("kickback")
+    ) {
+      return "corruption";
+    } else {
+      return "fraud"; // Default category
+    }
+  };
+
+  const prioritizeReport = (summary: string, transcript: string): string => {
+    const text = (summary + " " + transcript).toLowerCase();
+
+    if (
+      text.includes("immediate") ||
+      text.includes("urgent") ||
+      text.includes("danger") ||
+      text.includes("threat")
+    ) {
+      return "critical";
+    } else if (
+      text.includes("serious") ||
+      text.includes("significant") ||
+      text.includes("major")
+    ) {
+      return "high";
+    } else if (text.includes("minor") || text.includes("small")) {
+      return "low";
+    } else {
+      return "medium";
+    }
+  };
+
+  const generateSecretCode = (): string => {
+    const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    let result = "";
+    for (let i = 0; i < 12; i++) {
+      result += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return result;
+  };
+
+  const handleAssignCase = async (caseId: string, investigatorId: string) => {
+    try {
+      const { error } = await supabase
+        .from("cases")
+        .update({
+          assigned_to: investigatorId,
+          assigned_by: "current_user_id", // Replace with actual user ID
+          status: "under_investigation",
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", caseId);
+
+      if (error) throw error;
+
+      await auditLogger.logCaseAction(
+        "current_user_id",
+        caseId,
+        "case_assigned",
+        {
+          investigator_id: investigatorId,
+        }
+      );
+
+      fetchData();
+      setSelectedCase(null);
+      setActionType(null);
+    } catch (error) {
+      console.error("Error assigning case:", error);
+    }
+  };
+
+  const handleResolveCase = async () => {
+    if (!selectedCase) return;
+
+    try {
+      const updates: any = {
+        status: "resolved",
+        resolution_summary: rewardDetails.companyUpdate,
+        whistleblower_update: rewardDetails.whistleblowerUpdate,
+        updated_at: new Date().toISOString(),
+      };
+
+      if (rewardDetails.amount && rewardDetails.address) {
+        updates.reward_amount = parseFloat(rewardDetails.amount);
+        updates.crypto_address = rewardDetails.address;
+        updates.crypto_currency = rewardDetails.currency;
+        updates.reward_status = "pending";
+      }
+
+      const { error } = await supabase
+        .from("cases")
+        .update(updates)
+        .eq("id", selectedCase.id);
+
+      if (error) throw error;
+
+      // Process crypto reward if specified
+      if (rewardDetails.amount && rewardDetails.address) {
+        const rewardResult = await cryptoRewardSystem.processReward({
+          amount: parseFloat(rewardDetails.amount),
+          currency: rewardDetails.currency,
+          address: rewardDetails.address,
+          caseId: selectedCase.id,
+        });
+
+        if (rewardResult.success) {
+          await supabase
+            .from("cases")
+            .update({ reward_status: "paid" })
+            .eq("id", selectedCase.id);
+
+          await auditLogger.logRewardTransaction(
+            "current_user_id",
+            selectedCase.id,
+            {
+              amount: rewardDetails.amount,
+              currency: rewardDetails.currency,
+              transaction_hash: rewardResult.transactionHash,
+            }
+          );
+        }
+      }
+
+      await auditLogger.logCaseAction(
+        "current_user_id",
+        selectedCase.id,
+        "case_resolved",
+        {
+          reward_amount: rewardDetails.amount,
+          currency: rewardDetails.currency,
+        }
+      );
+
+      fetchData();
+      setSelectedCase(null);
+      setActionType(null);
+      setRewardDetails({
+        amount: "",
+        currency: "USDC",
+        address: "",
+        companyUpdate: "",
+        whistleblowerUpdate: "",
+      });
+    } catch (error) {
+      console.error("Error resolving case:", error);
+    }
+  };
+
+  const handleEscalateCase = async (caseId: string, escalationNote: string) => {
+    try {
+      const { error } = await supabase
+        .from("cases")
+        .update({
+          status: "escalated",
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", caseId);
+
+      if (error) throw error;
+
+      // Send email notification (mock implementation)
+      const emailPayload = {
+        to: "legal@company.com",
+        subject: `Case Escalation Required: ${selectedCase?.case_number}`,
+        body: `Case has been escalated for review.\n\nDetails:\n${escalationNote}`,
+      };
+      console.log("Email notification:", emailPayload);
+
+      await auditLogger.logCaseAction(
+        "current_user_id",
+        caseId,
+        "case_escalated",
+        {
+          escalation_note: escalationNote,
+        }
+      );
+
+      fetchData();
+      setSelectedCase(null);
+      setActionType(null);
+    } catch (error) {
+      console.error("Error escalating case:", error);
+    }
+  };
+
+  const addFundsToPool = () => {
+    // Plaid integration placeholder
+    window.open("https://plaid.com/demo", "_blank", "width=600,height=400");
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
       case "resolved":
-        return "border-green-500 text-green-400"
+        return "border-green-500 text-green-400";
       case "escalated":
-        return "border-red-500 text-red-400"
+        return "border-red-500 text-red-400";
       case "under_investigation":
-        return "border-blue-500 text-blue-400"
+        return "border-blue-500 text-blue-400";
       default:
-        return "border-yellow-500 text-yellow-400"
+        return "border-yellow-500 text-yellow-400";
     }
-  }
+  };
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
       case "critical":
-        return "border-red-500 text-red-400"
+        return "border-red-500 text-red-400";
       case "high":
-        return "border-orange-500 text-orange-400"
+        return "border-orange-500 text-orange-400";
       case "medium":
-        return "border-yellow-500 text-yellow-400"
+        return "border-yellow-500 text-yellow-400";
       default:
-        return "border-green-500 text-green-400"
+        return "border-green-500 text-green-400";
     }
-  }
+  };
 
   if (loading) {
     return (
@@ -91,11 +546,8 @@ export default function EthicsOfficerDashboard() {
           <div className="text-white">Loading...</div>
         </div>
       </DashboardLayout>
-    )
+    );
   }
-
-  const casesToReview = cases.filter((c) => c.status === "open" || c.status === "under_investigation")
-  const rewardCases = cases.filter((c) => c.status === "resolved" && c.reward_status === "approved")
 
   return (
     <DashboardLayout role="ethics-officer">
@@ -103,21 +555,27 @@ export default function EthicsOfficerDashboard() {
         {/* Header */}
         <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-3xl font-bold text-white">Ethics Officer Dashboard</h1>
-            <p className="text-slate-400">Review cases, process rewards, and make decisions</p>
+            <h1 className="text-3xl font-bold text-white">
+              Ethics Officer Dashboard
+            </h1>
+            <p className="text-slate-400">
+              Manage cases, process rewards, and oversee investigations
+            </p>
           </div>
         </div>
 
-        {/* Stats Cards */}
+        {/* Top Stats Cards - Matching Sketch Layout */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <Card className="bg-slate-800/50 border-slate-700 backdrop-blur-sm">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-slate-400 text-sm">Cases to Review</p>
-                  <p className="text-2xl font-bold text-white">{stats.casesToReview}</p>
+                  <p className="text-slate-400 text-sm">Open Complaints</p>
+                  <p className="text-3xl font-bold text-white">
+                    {stats.openComplaints}
+                  </p>
                 </div>
-                <FileText className="h-8 w-8 text-blue-400" />
+                <FileText className="h-12 w-12 text-blue-400" />
               </div>
             </CardContent>
           </Card>
@@ -126,10 +584,12 @@ export default function EthicsOfficerDashboard() {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-slate-400 text-sm">Rewards Processed</p>
-                  <p className="text-2xl font-bold text-white">${stats.rewardsProcessed.toLocaleString()}</p>
+                  <p className="text-slate-400 text-sm">Resolved Cases</p>
+                  <p className="text-3xl font-bold text-white">
+                    {stats.resolvedCases}
+                  </p>
                 </div>
-                <DollarSign className="h-8 w-8 text-green-400" />
+                <CheckCircle className="h-12 w-12 text-green-400" />
               </div>
             </CardContent>
           </Card>
@@ -138,10 +598,14 @@ export default function EthicsOfficerDashboard() {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-slate-400 text-sm">Decisions Made</p>
-                  <p className="text-2xl font-bold text-white">{stats.decisionsMade}</p>
+                  <p className="text-slate-400 text-sm">
+                    Rewards Issued So Far
+                  </p>
+                  <p className="text-3xl font-bold text-white">
+                    ${stats.rewardsIssued.toLocaleString()}
+                  </p>
                 </div>
-                <CheckCircle className="h-8 w-8 text-purple-400" />
+                <Award className="h-12 w-12 text-green-400" />
               </div>
             </CardContent>
           </Card>
@@ -150,23 +614,39 @@ export default function EthicsOfficerDashboard() {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-slate-400 text-sm">High Priority</p>
-                  <p className="text-2xl font-bold text-white">{stats.highPriority}</p>
+                  <p className="text-slate-400 text-sm">Bounty Open</p>
+                  <p className="text-3xl font-bold text-white">
+                    ${stats.bountyOpen.toLocaleString()}
+                  </p>
+                  <Button
+                    onClick={addFundsToPool}
+                    size="sm"
+                    className="mt-2 bg-blue-600 hover:bg-blue-700 text-white"
+                  >
+                    <Plus className="h-4 w-4 mr-1" />
+                    Add Money
+                  </Button>
                 </div>
-                <AlertTriangle className="h-8 w-8 text-red-400" />
+                <DollarSign className="h-12 w-12 text-yellow-400" />
               </div>
             </CardContent>
           </Card>
         </div>
 
-        {/* Main Content */}
-        <Tabs defaultValue="review" className="space-y-6">
+        {/* Main Content Tabs */}
+        <Tabs defaultValue="overview" className="space-y-6">
           <TabsList className="bg-slate-800/50 border-slate-700">
             <TabsTrigger
-              value="review"
+              value="overview"
               className="data-[state=active]:bg-blue-600 data-[state=active]:text-white text-slate-300"
             >
-              Case Review
+              Case Management
+            </TabsTrigger>
+            <TabsTrigger
+              value="vapi-reports"
+              className="data-[state=active]:bg-blue-600 data-[state=active]:text-white text-slate-300"
+            >
+              VAPI Reports ({vapiReports.length})
             </TabsTrigger>
             <TabsTrigger
               value="rewards"
@@ -174,125 +654,124 @@ export default function EthicsOfficerDashboard() {
             >
               Reward Processing
             </TabsTrigger>
-            <TabsTrigger
-              value="decisions"
-              className="data-[state=active]:bg-blue-600 data-[state=active]:text-white text-slate-300"
-            >
-              Decision Tracking
-            </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="review" className="space-y-6">
-            {/* Cases to Review */}
-            <div className="grid gap-6">
-              {casesToReview.map((case_) => (
-                <Card key={case_.id} className="bg-slate-800/50 border-slate-700 backdrop-blur-sm">
-                  <CardHeader>
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <CardTitle className="text-white flex items-center gap-2">
-                          {case_.title}
-                          <Badge variant="outline" className={getPriorityColor(case_.priority)}>
-                            {case_.priority}
-                          </Badge>
-                        </CardTitle>
-                        <CardDescription className="text-slate-400">
-                          Case #{case_.case_number} • {new Date(case_.created_at).toLocaleDateString()}
-                        </CardDescription>
-                      </div>
-                      <Badge variant="outline" className={getStatusColor(case_.status)}>
-                        {case_.status.replace("_", " ")}
-                      </Badge>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div>
-                      <h4 className="text-white font-semibold mb-2">Case Summary</h4>
-                      <p className="text-slate-300">{case_.description}</p>
-                    </div>
-
-                    {case_.vapi_report_summary && (
-                      <div>
-                        <h4 className="text-white font-semibold mb-2 flex items-center gap-2">
-                          <MessageSquare className="h-4 w-4" />
-                          VAPI AI Report Summary
-                        </h4>
-                        <div className="bg-slate-900/50 p-3 rounded border border-slate-600">
-                          <p className="text-slate-300">{case_.vapi_report_summary}</p>
-                        </div>
-                      </div>
-                    )}
-
-                    <div className="flex items-center justify-between pt-4 border-t border-slate-700">
-                      <div className="flex items-center gap-4">
-                        <span className="text-slate-400">Category:</span>
-                        <Badge variant="outline" className="border-orange-500 text-orange-400 capitalize">
-                          {case_.category}
-                        </Badge>
-                        <span className="text-slate-400">Potential Reward:</span>
-                        <span className="text-green-400 font-semibold">
-                          ${case_.reward_amount?.toLocaleString() || "0"}
-                        </span>
-                      </div>
-                      <div className="flex gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="border-slate-600 text-slate-300 hover:bg-slate-700 hover:text-white"
-                        >
-                          <Eye className="h-4 w-4 mr-2" />
-                          View Details
-                        </Button>
-                        <Button size="sm" className="bg-blue-600 hover:bg-blue-700 text-white">
-                          Review Case
-                        </Button>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </TabsContent>
-
-          <TabsContent value="rewards" className="space-y-6">
+          <TabsContent value="overview" className="space-y-6">
+            {/* Cases Table - Matching Sketch Layout */}
             <Card className="bg-slate-800/50 border-slate-700 backdrop-blur-sm">
               <CardHeader>
-                <CardTitle className="text-white">Reward Processing</CardTitle>
-                <CardDescription className="text-slate-400">Process crypto rewards for resolved cases</CardDescription>
+                <CardTitle className="text-white">Case Management</CardTitle>
+                <CardDescription className="text-slate-400">
+                  Review cases, assign investigators, and process rewards
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 <Table>
                   <TableHeader>
                     <TableRow className="border-slate-700">
-                      <TableHead className="text-slate-300">Case #</TableHead>
+                      <TableHead className="text-slate-300">ID</TableHead>
                       <TableHead className="text-slate-300">Title</TableHead>
-                      <TableHead className="text-slate-300">Recovery Amount</TableHead>
-                      <TableHead className="text-slate-300">Reward (15%)</TableHead>
+                      <TableHead className="text-slate-300">Summary</TableHead>
+                      <TableHead className="text-slate-300">Category</TableHead>
                       <TableHead className="text-slate-300">Status</TableHead>
-                      <TableHead className="text-slate-300">Action</TableHead>
+                      <TableHead className="text-slate-300">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {rewardCases.map((case_) => (
+                    {cases.map((case_) => (
                       <TableRow key={case_.id} className="border-slate-700">
-                        <TableCell className="text-slate-300 font-mono">{case_.case_number}</TableCell>
-                        <TableCell className="text-white">{case_.title}</TableCell>
-                        <TableCell className="text-green-400">
-                          ${case_.recovery_amount?.toLocaleString() || "0"}
+                        <TableCell className="text-slate-300 font-mono">
+                          {case_.report_id || case_.case_number}
                         </TableCell>
-                        <TableCell className="text-green-400">
-                          ${case_.reward_amount?.toLocaleString() || "0"}
+                        <TableCell className="text-white max-w-xs truncate">
+                          {case_.title}
+                        </TableCell>
+                        <TableCell className="text-slate-300 max-w-sm">
+                          <span className="truncate block">
+                            {case_.vapi_report_summary || case_.description}
+                          </span>
+                          <button className="text-blue-400 hover:text-blue-300 text-sm mt-1">
+                            ---- more
+                          </button>
                         </TableCell>
                         <TableCell>
-                          <Badge variant="outline" className="border-green-500 text-green-400">
-                            Ready for Payout
+                          <Badge
+                            variant="outline"
+                            className="border-orange-500 text-orange-400 capitalize"
+                          >
+                            {case_.category}
                           </Badge>
                         </TableCell>
                         <TableCell>
-                          <Button size="sm" className="bg-green-600 hover:bg-green-700 text-white">
-                            <Award className="h-4 w-4 mr-2" />
-                            Process Reward
-                          </Button>
+                          <Badge
+                            variant="outline"
+                            className={getStatusColor(case_.status)}
+                          >
+                            {case_.status.replace("_", " ")}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center space-x-2">
+                            <Dialog>
+                              <DialogTrigger asChild>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="border-slate-600 text-slate-300 hover:bg-slate-700 hover:text-white"
+                                  onClick={() => {
+                                    setSelectedCase(case_);
+                                    setActionType("assign");
+                                  }}
+                                >
+                                  <UserPlus className="h-4 w-4 mr-1" />
+                                  Assign
+                                </Button>
+                              </DialogTrigger>
+                            </Dialog>
+
+                            <Dialog>
+                              <DialogTrigger asChild>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="border-slate-600 text-slate-300 hover:bg-slate-700 hover:text-white"
+                                  onClick={() => {
+                                    setSelectedCase(case_);
+                                    setActionType("resolve");
+                                  }}
+                                >
+                                  <CheckCircle className="h-4 w-4 mr-1" />
+                                  Resolve
+                                </Button>
+                              </DialogTrigger>
+                            </Dialog>
+
+                            <Dialog>
+                              <DialogTrigger asChild>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="border-slate-600 text-slate-300 hover:bg-slate-700 hover:text-white"
+                                  onClick={() => {
+                                    setSelectedCase(case_);
+                                    setActionType("escalate");
+                                  }}
+                                >
+                                  <AlertTriangle className="h-4 w-4 mr-1" />
+                                  Escalate
+                                </Button>
+                              </DialogTrigger>
+                            </Dialog>
+
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="border-slate-600 text-slate-300 hover:bg-slate-700 hover:text-white"
+                            >
+                              <Eye className="h-4 w-4 mr-1" />
+                              Report: Transcript + Artifacts
+                            </Button>
+                          </div>
                         </TableCell>
                       </TableRow>
                     ))}
@@ -302,43 +781,578 @@ export default function EthicsOfficerDashboard() {
             </Card>
           </TabsContent>
 
-          <TabsContent value="decisions" className="space-y-6">
+          <TabsContent value="vapi-reports" className="space-y-6">
             <Card className="bg-slate-800/50 border-slate-700 backdrop-blur-sm">
               <CardHeader>
-                <CardTitle className="text-white">Recent Decisions</CardTitle>
-                <CardDescription className="text-slate-400">Track your case decisions and outcomes</CardDescription>
+                <div className="flex justify-between items-center">
+                  <div>
+                    <CardTitle className="text-white">
+                      Voice AI Reports
+                    </CardTitle>
+                    <CardDescription className="text-slate-400">
+                      Reports submitted through the VAPI voice assistant
+                    </CardDescription>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      onClick={fetchVAPIReports}
+                      variant="outline"
+                      size="sm"
+                      disabled={loadingVAPI}
+                      className="border-slate-600 text-slate-300 hover:bg-slate-700"
+                    >
+                      {loadingVAPI ? (
+                        <>
+                          <RefreshCw className="h-4 w-4 mr-1 animate-spin" />
+                          Syncing...
+                        </>
+                      ) : (
+                        <>
+                          <RefreshCw className="h-4 w-4 mr-1" />
+                          Sync VAPI
+                        </>
+                      )}
+                    </Button>
+                    <Badge
+                      variant="outline"
+                      className="border-blue-500 text-blue-400"
+                    >
+                      {vapiReports.length} Reports
+                    </Badge>
+                  </div>
+                </div>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  {cases
-                    .filter((c) => c.status === "resolved" || c.status === "escalated")
-                    .slice(0, 3)
-                    .map((case_) => (
-                      <div key={case_.id} className="border border-slate-700 rounded p-4">
-                        <div className="flex justify-between items-start mb-2">
-                          <h4 className="text-white font-semibold">
-                            {case_.case_number} - {case_.title}
-                          </h4>
-                          <Badge variant="outline" className={getStatusColor(case_.status)}>
-                            {case_.status}
-                          </Badge>
-                        </div>
-                        <p className="text-slate-400 text-sm mb-2">
-                          Decision Date: {new Date(case_.updated_at).toLocaleDateString()}
-                        </p>
-                        <p className="text-slate-300 text-sm">
-                          {case_.status === "escalated"
-                            ? "Escalated to law enforcement due to severity. Recommended immediate investigation and victim protection measures."
-                            : "Case resolved successfully. Disciplinary actions taken and process improvements implemented."}
-                        </p>
-                      </div>
+                {loadingVAPI ? (
+                  <div className="flex items-center justify-center py-12">
+                    <div className="text-slate-400">
+                      Loading VAPI reports...
+                    </div>
+                  </div>
+                ) : vapiReports.length === 0 ? (
+                  <div className="text-center py-12">
+                    <MessageSquare className="h-12 w-12 text-slate-500 mx-auto mb-4" />
+                    <p className="text-slate-400">No voice reports found</p>
+                    <p className="text-slate-500 text-sm">
+                      Reports will appear here when users submit voice
+                      complaints
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {vapiReports.map((report) => (
+                      <Card
+                        key={report.id}
+                        className="bg-slate-900/50 border-slate-600"
+                      >
+                        <CardContent className="p-4">
+                          <div className="flex justify-between items-start mb-3">
+                            <div>
+                              <div className="flex items-center gap-2 mb-1">
+                                <Badge
+                                  variant="outline"
+                                  className="border-blue-500 text-blue-400"
+                                >
+                                  {report.report_id}
+                                </Badge>
+                                <Badge
+                                  variant="outline"
+                                  className={
+                                    report.status === "processed"
+                                      ? "border-green-500 text-green-400"
+                                      : "border-yellow-500 text-yellow-400"
+                                  }
+                                >
+                                  {report.status}
+                                </Badge>
+                                {report.vapi_call_data?.cost && (
+                                  <Badge
+                                    variant="outline"
+                                    className="border-purple-500 text-purple-400"
+                                  >
+                                    ${report.vapi_call_data.cost.toFixed(3)}
+                                  </Badge>
+                                )}
+                              </div>
+                              <h4 className="text-white font-semibold">
+                                {extractTitleFromSummary(report.summary)}
+                              </h4>
+                              <p className="text-slate-400 text-sm">
+                                Received:{" "}
+                                {new Date(report.created_at).toLocaleString()}
+                                {report.ended_at && (
+                                  <>
+                                    {" "}
+                                    • Duration:{" "}
+                                    {Math.round(
+                                      (new Date(report.ended_at).getTime() -
+                                        new Date(report.created_at).getTime()) /
+                                        1000
+                                    )}
+                                    s
+                                  </>
+                                )}
+                              </p>
+                            </div>
+                            <div className="flex gap-2">
+                              {report.audio_url && (
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="border-slate-600 text-slate-300 hover:bg-slate-700"
+                                  onClick={() =>
+                                    window.open(report.audio_url, "_blank")
+                                  }
+                                >
+                                  <Mic className="h-4 w-4 mr-1" />
+                                  Audio
+                                </Button>
+                              )}
+                              <Dialog>
+                                <DialogTrigger asChild>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="border-slate-600 text-slate-300 hover:bg-slate-700"
+                                    onClick={() =>
+                                      setSelectedVAPIReport(report)
+                                    }
+                                  >
+                                    <Eye className="h-4 w-4 mr-1" />
+                                    View Full
+                                  </Button>
+                                </DialogTrigger>
+                                <DialogContent className="bg-slate-800 border-slate-700 max-w-4xl max-h-[80vh] overflow-y-auto">
+                                  <DialogHeader>
+                                    <DialogTitle className="text-white">
+                                      VAPI Report Details
+                                    </DialogTitle>
+                                    <DialogDescription className="text-slate-400">
+                                      Complete voice report from{" "}
+                                      {report.report_id}
+                                    </DialogDescription>
+                                  </DialogHeader>
+                                  <div className="space-y-4">
+                                    <div>
+                                      <Label className="text-slate-300">
+                                        Summary
+                                      </Label>
+                                      <div className="bg-slate-900/50 p-3 rounded border border-slate-600">
+                                        <p className="text-slate-300">
+                                          {report.summary}
+                                        </p>
+                                      </div>
+                                    </div>
+                                    <div>
+                                      <Label className="text-slate-300">
+                                        Full Transcript
+                                      </Label>
+                                      <div className="bg-slate-900/50 p-3 rounded border border-slate-600 max-h-60 overflow-y-auto">
+                                        <p className="text-slate-300 whitespace-pre-wrap">
+                                          {report.transcript}
+                                        </p>
+                                      </div>
+                                    </div>
+                                    {report.vapi_call_data?.messages && (
+                                      <div>
+                                        <Label className="text-slate-300">
+                                          Conversation Flow
+                                        </Label>
+                                        <div className="bg-slate-900/50 p-3 rounded border border-slate-600 max-h-40 overflow-y-auto">
+                                          {report.vapi_call_data.messages.map(
+                                            (msg: any, idx: number) => (
+                                              <div
+                                                key={idx}
+                                                className="mb-2 flex items-start gap-2"
+                                              >
+                                                {msg.role === "user" ? (
+                                                  <User className="h-4 w-4 text-blue-400 mt-0.5 flex-shrink-0" />
+                                                ) : (
+                                                  <Bot className="h-4 w-4 text-green-400 mt-0.5 flex-shrink-0" />
+                                                )}
+                                                <div className="flex-1">
+                                                  <span
+                                                    className={`text-sm font-semibold ${
+                                                      msg.role === "user"
+                                                        ? "text-blue-400"
+                                                        : "text-green-400"
+                                                    }`}
+                                                  >
+                                                    {msg.role === "user"
+                                                      ? "Whistleblower"
+                                                      : "AI Assistant"}
+                                                    :
+                                                  </span>
+                                                  <p className="text-slate-300 text-sm mt-1">
+                                                    {msg.message}
+                                                  </p>
+                                                  {msg.secondsFromStart && (
+                                                    <span className="text-slate-500 text-xs">
+                                                      {Math.floor(
+                                                        msg.secondsFromStart /
+                                                          60
+                                                      )}
+                                                      :
+                                                      {String(
+                                                        Math.floor(
+                                                          msg.secondsFromStart %
+                                                            60
+                                                        )
+                                                      ).padStart(2, "0")}
+                                                    </span>
+                                                  )}
+                                                </div>
+                                              </div>
+                                            )
+                                          )}
+                                        </div>
+                                      </div>
+                                    )}
+                                    {report.vapi_call_data?.analysis && (
+                                      <div>
+                                        <Label className="text-slate-300">
+                                          AI Analysis
+                                        </Label>
+                                        <div className="bg-slate-900/50 p-3 rounded border border-slate-600">
+                                          <pre className="text-slate-300 text-sm whitespace-pre-wrap">
+                                            {JSON.stringify(
+                                              report.vapi_call_data.analysis,
+                                              null,
+                                              2
+                                            )}
+                                          </pre>
+                                        </div>
+                                      </div>
+                                    )}
+                                  </div>
+                                  <DialogFooter>
+                                    <Button
+                                      onClick={() =>
+                                        convertSingleReportToCase(report)
+                                      }
+                                      className="bg-blue-600 hover:bg-blue-700"
+                                    >
+                                      Convert to Case
+                                    </Button>
+                                  </DialogFooter>
+                                </DialogContent>
+                              </Dialog>
+                            </div>
+                          </div>
+                          <div className="bg-slate-900/50 p-3 rounded border border-slate-600">
+                            <p className="text-slate-300 text-sm">
+                              {report.summary}
+                            </p>
+                          </div>
+                          {report.transcript && (
+                            <details className="mt-2">
+                              <summary className="text-slate-400 text-sm cursor-pointer hover:text-slate-300">
+                                View Transcript ({report.transcript.length}{" "}
+                                characters)
+                              </summary>
+                              <div className="mt-2 p-2 bg-slate-900/30 rounded text-slate-400 text-xs max-h-32 overflow-y-auto">
+                                {report.transcript.substring(0, 500)}
+                                {report.transcript.length > 500 && "..."}
+                              </div>
+                            </details>
+                          )}
+                        </CardContent>
+                      </Card>
                     ))}
-                </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="rewards" className="space-y-6">
+            <Card className="bg-slate-800/50 border-slate-700 backdrop-blur-sm">
+              <CardHeader>
+                <CardTitle className="text-white">Reward Processing</CardTitle>
+                <CardDescription className="text-slate-400">
+                  Process crypto rewards for resolved cases
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow className="border-slate-700">
+                      <TableHead className="text-slate-300">Case #</TableHead>
+                      <TableHead className="text-slate-300">Title</TableHead>
+                      <TableHead className="text-slate-300">
+                        Recovery Amount
+                      </TableHead>
+                      <TableHead className="text-slate-300">
+                        Reward (15%)
+                      </TableHead>
+                      <TableHead className="text-slate-300">Status</TableHead>
+                      <TableHead className="text-slate-300">Action</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {cases
+                      .filter(
+                        (c) =>
+                          c.status === "resolved" &&
+                          c.reward_status === "approved"
+                      )
+                      .map((case_) => (
+                        <TableRow key={case_.id} className="border-slate-700">
+                          <TableCell className="text-slate-300 font-mono">
+                            {case_.case_number}
+                          </TableCell>
+                          <TableCell className="text-white">
+                            {case_.title}
+                          </TableCell>
+                          <TableCell className="text-green-400">
+                            ${case_.recovery_amount?.toLocaleString() || "0"}
+                          </TableCell>
+                          <TableCell className="text-green-400">
+                            ${case_.reward_amount?.toLocaleString() || "0"}
+                          </TableCell>
+                          <TableCell>
+                            <Badge
+                              variant="outline"
+                              className="border-green-500 text-green-400"
+                            >
+                              Ready for Payout
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <Button
+                              size="sm"
+                              className="bg-green-600 hover:bg-green-700 text-white"
+                            >
+                              <Award className="h-4 w-4 mr-2" />
+                              Process Reward
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                  </TableBody>
+                </Table>
               </CardContent>
             </Card>
           </TabsContent>
         </Tabs>
+
+        {/* Action Modals */}
+        {selectedCase && actionType === "assign" && (
+          <Dialog
+            open={true}
+            onOpenChange={() => {
+              setSelectedCase(null);
+              setActionType(null);
+            }}
+          >
+            <DialogContent className="bg-slate-800 border-slate-700">
+              <DialogHeader>
+                <DialogTitle className="text-white">
+                  Assign Case to Investigator
+                </DialogTitle>
+                <DialogDescription className="text-slate-400">
+                  Select an investigator for case {selectedCase.case_number}
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div>
+                  <Label className="text-slate-300">Select Investigator</Label>
+                  <Select
+                    onValueChange={(value) =>
+                      handleAssignCase(selectedCase.id, value)
+                    }
+                  >
+                    <SelectTrigger className="bg-slate-900/50 border-slate-600 text-white">
+                      <SelectValue placeholder="Choose investigator" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-slate-800 border-slate-600">
+                      {investigators.map((investigator) => (
+                        <SelectItem
+                          key={investigator.id}
+                          value={investigator.id}
+                        >
+                          {investigator.first_name} {investigator.last_name} -{" "}
+                          {investigator.department}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
+        )}
+
+        {selectedCase && actionType === "resolve" && (
+          <Dialog
+            open={true}
+            onOpenChange={() => {
+              setSelectedCase(null);
+              setActionType(null);
+            }}
+          >
+            <DialogContent className="bg-slate-800 border-slate-700 max-w-2xl">
+              <DialogHeader>
+                <DialogTitle className="text-white">Resolve Case</DialogTitle>
+                <DialogDescription className="text-slate-400">
+                  Complete the resolution for case {selectedCase.case_number}
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div>
+                  <Label className="text-slate-300">Company Update</Label>
+                  <Textarea
+                    placeholder="Internal resolution summary for company documentation..."
+                    value={rewardDetails.companyUpdate}
+                    onChange={(e) =>
+                      setRewardDetails({
+                        ...rewardDetails,
+                        companyUpdate: e.target.value,
+                      })
+                    }
+                    className="bg-slate-900/50 border-slate-600 text-white"
+                  />
+                </div>
+                <div>
+                  <Label className="text-slate-300">Whistleblower Update</Label>
+                  <Textarea
+                    placeholder="Greeting and update message for the whistleblower..."
+                    value={rewardDetails.whistleblowerUpdate}
+                    onChange={(e) =>
+                      setRewardDetails({
+                        ...rewardDetails,
+                        whistleblowerUpdate: e.target.value,
+                      })
+                    }
+                    className="bg-slate-900/50 border-slate-600 text-white"
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-slate-300">
+                      Reward Amount (Optional)
+                    </Label>
+                    <Input
+                      type="number"
+                      placeholder="Enter reward amount"
+                      value={rewardDetails.amount}
+                      onChange={(e) =>
+                        setRewardDetails({
+                          ...rewardDetails,
+                          amount: e.target.value,
+                        })
+                      }
+                      className="bg-slate-900/50 border-slate-600 text-white"
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-slate-300">Cryptocurrency</Label>
+                    <Select
+                      value={rewardDetails.currency}
+                      onValueChange={(value) =>
+                        setRewardDetails({ ...rewardDetails, currency: value })
+                      }
+                    >
+                      <SelectTrigger className="bg-slate-900/50 border-slate-600 text-white">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="bg-slate-800 border-slate-600">
+                        {supportedCurrencies.map((currency) => (
+                          <SelectItem
+                            key={currency.currency}
+                            value={currency.currency}
+                          >
+                            {currency.symbol} {currency.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                {rewardDetails.amount && (
+                  <div>
+                    <Label className="text-slate-300">
+                      Crypto Wallet Address
+                    </Label>
+                    <Input
+                      placeholder="Whistleblower's crypto wallet address"
+                      value={rewardDetails.address}
+                      onChange={(e) =>
+                        setRewardDetails({
+                          ...rewardDetails,
+                          address: e.target.value,
+                        })
+                      }
+                      className="bg-slate-900/50 border-slate-600 text-white"
+                    />
+                  </div>
+                )}
+              </div>
+              <DialogFooter>
+                <Button
+                  onClick={handleResolveCase}
+                  className="bg-green-600 hover:bg-green-700 text-white"
+                >
+                  Resolve Case & Process Reward
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        )}
+
+        {selectedCase && actionType === "escalate" && (
+          <Dialog
+            open={true}
+            onOpenChange={() => {
+              setSelectedCase(null);
+              setActionType(null);
+            }}
+          >
+            <DialogContent className="bg-slate-800 border-slate-700">
+              <DialogHeader>
+                <DialogTitle className="text-white">Escalate Case</DialogTitle>
+                <DialogDescription className="text-slate-400">
+                  Escalate case {selectedCase.case_number} to legal/senior
+                  management
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div>
+                  <Label className="text-slate-300">Escalation Note</Label>
+                  <Textarea
+                    placeholder="Reason for escalation and required actions..."
+                    className="bg-slate-900/50 border-slate-600 text-white"
+                  />
+                </div>
+                <div>
+                  <Label className="text-slate-300">Notify Contact</Label>
+                  <Select>
+                    <SelectTrigger className="bg-slate-900/50 border-slate-600 text-white">
+                      <SelectValue placeholder="Select contact to notify" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-slate-800 border-slate-600">
+                      <SelectItem value="legal">Legal Department</SelectItem>
+                      <SelectItem value="hr">HR Director</SelectItem>
+                      <SelectItem value="ceo">CEO Office</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <DialogFooter>
+                <Button
+                  onClick={() =>
+                    handleEscalateCase(selectedCase.id, "Escalation note here")
+                  }
+                  className="bg-red-600 hover:bg-red-700 text-white"
+                >
+                  <Send className="h-4 w-4 mr-2" />
+                  Escalate & Notify
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        )}
       </div>
     </DashboardLayout>
-  )
+  );
 }
