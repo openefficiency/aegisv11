@@ -1,3 +1,4 @@
+// lib/vapi-client.ts
 export interface VAPIConfig {
   apiKey: string;
   baseUrl: string;
@@ -57,29 +58,32 @@ export class VAPIClient {
   private async makeRequest(endpoint: string, options: RequestInit = {}) {
     const url = `${this.baseUrl}${endpoint}`;
 
-    const response = await fetch(url, {
-      ...options,
-      headers: {
-        Authorization: `Bearer ${this.apiKey}`,
-        "Content-Type": "application/json",
-        ...options.headers,
-      },
-    });
+    try {
+      const response = await fetch(url, {
+        ...options,
+        headers: {
+          Authorization: `Bearer ${this.apiKey}`,
+          "Content-Type": "application/json",
+          ...options.headers,
+        },
+      });
 
-    if (!response.ok) {
-      throw new Error(
-        `VAPI API error: ${response.status} ${response.statusText}`
-      );
+      if (!response.ok) {
+        throw new Error(
+          `VAPI API error: ${response.status} ${response.statusText}`
+        );
+      }
+
+      return response.json();
+    } catch (error) {
+      console.error("VAPI request failed:", error);
+      throw error;
     }
-
-    return response.json();
   }
 
   async fetchCalls(limit: number = 100): Promise<VAPICall[]> {
     try {
-      const calls = await this.makeRequest(
-        `/call?limit=${limit}&sortOrder=desc`
-      );
+      const calls = await this.makeRequest(`/call?limit=${limit}`);
       return calls || [];
     } catch (error) {
       console.error("Error fetching VAPI calls:", error);
@@ -99,7 +103,9 @@ export class VAPIClient {
 
   async fetchReports(): Promise<any[]> {
     try {
+      console.log("Fetching calls from VAPI API...");
       const calls = await this.fetchCalls();
+      console.log(`Retrieved ${calls.length} calls from VAPI`);
 
       // Filter and transform calls into report format
       const reports = calls
@@ -126,16 +132,12 @@ export class VAPIClient {
           vapi_call_data: call,
         }));
 
+      console.log(`Converted ${reports.length} calls to reports`);
       return reports;
     } catch (error) {
       console.error("Error fetching VAPI reports:", error);
-      return [];
+      throw error; // Re-throw to let the calling function handle fallback
     }
-  }
-
-  async getReportById(reportId: string): Promise<any> {
-    const reports = await this.fetchReports();
-    return reports.find((r) => r.report_id === reportId || r.id === reportId);
   }
 
   private extractSummaryFromTranscript(transcript: string): string {
@@ -200,6 +202,38 @@ export const vapiClient = new VAPIClient({
     process.env.NEXT_PUBLIC_VAPI_API_KEY ||
     "0a4b2b25-ecba-4a82-864c-1b7f057260f5",
   baseUrl: "https://api.vapi.ai",
-  assistantId: "bb8029bb-dde6-485a-9c32-d41b684568ff", // Your actual assistant ID
-  shareKey: "89effcf9-d6c0-4a75-9470-51e6f0114e4b", // Your actual share key
+  assistantId: "bb8029bb-dde6-485a-9c32-d41b684568ff",
+  shareKey: "89effcf9-d6c0-4a75-9470-51e6f0114e4b",
 });
+
+export const testVAPICredentials = async () => {
+  try {
+    console.log("Testing VAPI connection with hardcoded credentials...");
+
+    // Test basic API connection
+    const response = await fetch(
+      "https://api.vapi.ai/assistant/bb8029bb-dde6-485a-9c32-d41b684568ff",
+      {
+        headers: {
+          Authorization: "Bearer 0a4b2b25-ecba-4a82-864c-1b7f057260f5",
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    console.log("VAPI API Response Status:", response.status);
+
+    if (response.ok) {
+      const data = await response.json();
+      console.log("VAPI Assistant Data:", data);
+      return { success: true, data };
+    } else {
+      const errorText = await response.text();
+      console.error("VAPI API Error:", response.status, errorText);
+      return { success: false, error: `${response.status}: ${errorText}` };
+    }
+  } catch (error) {
+    console.error("VAPI Connection Error:", error);
+    return { success: false, error: error.message };
+  }
+};
