@@ -57,11 +57,11 @@ const exampleCases: ExampleCase[] = [
   },
 ];
 
-// Marker color mapping by category
-const categoryColors: Record<string, string> = {
-  Fraud: '#ff4444',        // Red
-  Safety: '#ffbb33',       // Yellow
-  Discrimination: '#00C851'// Green
+// Marker color and icon mapping by category
+const categoryStyles: Record<string, { color: string; icon: string }> = {
+  Fraud: { color: '#ff4444', icon: 'fa-solid fa-hand-holding-dollar' },
+  Safety: { color: '#ffbb33', icon: 'fa-solid fa-hard-hat' },
+  Discrimination: { color: '#00C851', icon: 'fa-solid fa-scale-balanced' },
 };
 
 // Fix for default marker icons in Next.js
@@ -116,8 +116,20 @@ export default function MapComponent() {
     exampleCases.forEach((c) => {
       // Debug: Log each case
       console.log('Adding marker for case:', c);
-      // TEMP: Use default Leaflet icon for debugging
-      const marker = L.marker([c.location.lat, c.location.lng]).addTo(map);
+      // Use category-specific icon and color
+      const style = categoryStyles[c.category] || { color: '#888', icon: 'fa-solid fa-question' };
+      const customIcon = L.divIcon({
+        className: 'custom-marker',
+        html: `
+          <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+          <div style="background-color:${style.color};width:28px;height:28px;border-radius:50%;border:2px solid white;box-shadow:0 0 8px rgba(0,0,0,0.2);display:flex;align-items:center;justify-content:center;">
+            <i class="${style.icon}" style="color:white;font-size:16px;"></i>
+          </div>
+        `,
+        iconSize: [32, 32],
+        iconAnchor: [16, 16],
+      });
+      const marker = L.marker([c.location.lat, c.location.lng], { icon: customIcon }).addTo(map);
       marker.bindPopup(`
         <div style="min-width:220px;padding:10px 0 0 0;">
           <h3 style="margin:0 0 8px 0;font-size:16px;color:#333;">${c.title}</h3>
