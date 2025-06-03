@@ -573,16 +573,16 @@ const ReportOnMap = () => {
                 value={formData.category}
                 onValueChange={(value) => setFormData({ ...formData, category: value })}
               >
-                <SelectTrigger className="bg-slate-900/50 border-slate-600 text-white hover:bg-slate-800/50 focus:ring-2 focus:ring-blue-500">
+                <SelectTrigger className="w-full bg-slate-900/50 border-slate-600 text-white hover:bg-slate-800/50 focus:ring-2 focus:ring-blue-500">
                   <SelectValue placeholder="Select the type of issue" />
                 </SelectTrigger>
-                <SelectContent className="bg-slate-800 border-slate-600">
-                  <SelectItem value="fraud" className="text-white hover:bg-slate-700 focus:bg-slate-700">Fraud</SelectItem>
-                  <SelectItem value="abuse" className="text-white hover:bg-slate-700 focus:bg-slate-700">Abuse</SelectItem>
-                  <SelectItem value="discrimination" className="text-white hover:bg-slate-700 focus:bg-slate-700">Discrimination</SelectItem>
-                  <SelectItem value="harassment" className="text-white hover:bg-slate-700 focus:bg-slate-700">Harassment</SelectItem>
-                  <SelectItem value="safety" className="text-white hover:bg-slate-700 focus:bg-slate-700">Safety Violations</SelectItem>
-                  <SelectItem value="corruption" className="text-white hover:bg-slate-700 focus:bg-slate-700">Corruption</SelectItem>
+                <SelectContent className="bg-slate-800 border-slate-600 z-[99999]">
+                  <SelectItem value="fraud" className="text-white hover:bg-slate-700 focus:bg-slate-700 cursor-pointer">Fraud</SelectItem>
+                  <SelectItem value="abuse" className="text-white hover:bg-slate-700 focus:bg-slate-700 cursor-pointer">Abuse</SelectItem>
+                  <SelectItem value="discrimination" className="text-white hover:bg-slate-700 focus:bg-slate-700 cursor-pointer">Discrimination</SelectItem>
+                  <SelectItem value="harassment" className="text-white hover:bg-slate-700 focus:bg-slate-700 cursor-pointer">Harassment</SelectItem>
+                  <SelectItem value="safety" className="text-white hover:bg-slate-700 focus:bg-slate-700 cursor-pointer">Safety Violations</SelectItem>
+                  <SelectItem value="corruption" className="text-white hover:bg-slate-700 focus:bg-slate-700 cursor-pointer">Corruption</SelectItem>
                 </SelectContent>
               </Select>
             </div>
