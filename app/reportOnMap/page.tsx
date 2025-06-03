@@ -395,7 +395,7 @@ const ReportOnMap = () => {
       </div>
       {/* Report Modal */}
       <Dialog open={showReportModal} onOpenChange={setShowReportModal}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto !z-[99999] bg-slate-900 border-slate-700">
           <DialogHeader>
             <DialogTitle className="text-2xl font-bold text-white">Submit a Secure Report</DialogTitle>
             <DialogDescription className="text-slate-400">
