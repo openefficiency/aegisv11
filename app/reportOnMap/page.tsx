@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import type { LatLngLiteral } from 'leaflet';
 import { useMapEvents, MapContainer as StaticMapContainer, TileLayer as StaticTileLayer, Marker as StaticMarker, Popup as StaticPopup } from 'react-leaflet';
 import type L from 'leaflet';
+import { FaSearch } from 'react-icons/fa';
 
 const MapContainer = dynamic(() => import('react-leaflet').then((mod) => mod.MapContainer), { ssr: false });
 const TileLayer = dynamic(() => import('react-leaflet').then((mod) => mod.TileLayer), { ssr: false });
@@ -130,6 +131,35 @@ const ReportOnMap = () => {
     setShowSuggestions(false);
   };
 
+  // Helper to highlight matched text
+  const highlightMatch = (text: string, query: string) => {
+    if (!query) return text;
+    const regex = new RegExp(`(${query})`, 'ig');
+    return text.split(regex).map((part, i) =>
+      regex.test(part) ? <span key={i} className="font-semibold">{part}</span> : part
+    );
+  };
+
+  // Helper to determine if suggestion is a place (has address)
+  const isPlace = (suggestion: any) => suggestion && suggestion.display_name && suggestion.lat && suggestion.lon;
+
+  // Helper to get thumbnail (for place, fallback to icon)
+  const getSuggestionIcon = (suggestion: any) => {
+    if (isPlace(suggestion)) {
+      // Use a static map thumbnail or fallback image
+      return (
+        <img
+          src={`https://maps.locationiq.com/v3/staticmap?key=pk.demo&center=${suggestion.lat},${suggestion.lon}&zoom=15&size=60x60&format=png&markers=icon:small-red-cutout|${suggestion.lat},${suggestion.lon}`}
+          alt="location thumbnail"
+          className="w-8 h-8 rounded object-cover bg-gray-200"
+          onError={(e) => (e.currentTarget.style.display = 'none')}
+        />
+      );
+    }
+    // Default: magnifier icon
+    return <FaSearch className="text-gray-400 w-6 h-6" />;
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900">
       {/* Navigation */}
@@ -158,19 +188,23 @@ const ReportOnMap = () => {
         </div>
       </nav>
       {/* Search Bar */}
-      <div className="flex justify-center items-center py-4 bg-slate-900/70 sticky top-16 z-40 backdrop-blur-sm">
+      <div className="flex justify-center items-center py-6 bg-transparent sticky top-16 z-40">
         <form onSubmit={handleSearch} className="relative w-full max-w-xl mx-4">
           <div className="relative">
+            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
+              <FaSearch className="w-5 h-5" />
+            </span>
             <input
               type="text"
               value={searchQuery}
               onChange={handleSearchInputChange}
               placeholder="Search for a location..."
-              className="w-full px-4 py-3 bg-slate-800/90 text-white border border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+              className="w-full pl-12 pr-4 py-3 bg-white text-gray-900 border border-gray-200 rounded-2xl shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all placeholder-gray-400 text-base"
+              autoComplete="off"
             />
             <button
               type="submit"
-              className="absolute right-2 top-1/2 -translate-y-1/2 px-4 py-1.5 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 transition-colors"
+              className="absolute right-2 top-1/2 -translate-y-1/2 px-4 py-1.5 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 transition-colors shadow"
               disabled={searching}
             >
               {searching ? (
@@ -185,14 +219,21 @@ const ReportOnMap = () => {
             </button>
           </div>
           {showSuggestions && suggestions.length > 0 && (
-            <div className="absolute top-full left-0 w-full mt-1 bg-slate-800/95 rounded-lg shadow-lg z-50 backdrop-blur-sm border border-slate-700">
+            <div className="absolute top-full left-0 w-full mt-2 bg-white rounded-2xl shadow-2xl z-50 border border-gray-200 overflow-hidden animate-fade-in">
               {suggestions.map((suggestion, index) => (
                 <div
                   key={index}
-                  className="px-4 py-3 hover:bg-slate-700/50 cursor-pointer text-white text-sm transition-colors first:rounded-t-lg last:rounded-b-lg"
+                  className="flex items-center gap-3 px-4 py-3 hover:bg-gray-100 cursor-pointer transition-colors border-b last:border-b-0 border-gray-100 group"
                   onClick={() => handleSuggestionClick(suggestion)}
                 >
-                  {suggestion.display_name}
+                  <div className="flex-shrink-0">
+                    {getSuggestionIcon(suggestion)}
+                  </div>
+                  <div className="flex flex-col min-w-0">
+                    <span className="truncate text-gray-900 text-base group-hover:font-semibold">
+                      {highlightMatch(suggestion.display_name, searchQuery)}
+                    </span>
+                  </div>
                 </div>
               ))}
             </div>
