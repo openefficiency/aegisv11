@@ -2,13 +2,10 @@
 
 import React, { useState, useRef } from 'react';
 import dynamic from 'next/dynamic';
-import 'leaflet/dist/leaflet.css';
 import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import type { LatLngLiteral } from 'leaflet';
-import { useMapEvents, MapContainer as StaticMapContainer, TileLayer as StaticTileLayer, Marker as StaticMarker, Popup as StaticPopup } from 'react-leaflet';
-import L from 'leaflet';
 import { FaSearch } from 'react-icons/fa';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
@@ -24,21 +21,20 @@ import { Eye, EyeOff } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { ToastAction } from "@/components/ui/toast";
 
-const MapContainer = dynamic(() => import('react-leaflet').then((mod) => mod.MapContainer), { ssr: false });
-const TileLayer = dynamic(() => import('react-leaflet').then((mod) => mod.TileLayer), { ssr: false });
-const Marker = dynamic(() => import('react-leaflet').then((mod) => mod.Marker), { ssr: false });
-const Popup = dynamic(() => import('react-leaflet').then((mod) => mod.Popup), { ssr: false });
+// Dynamically import the MapWrapper component
+const MapWrapper = dynamic(
+  () => import('./MapWrapper'),
+  { 
+    ssr: false,
+    loading: () => (
+      <div className="h-[calc(100vh-64px-56px)] w-full flex items-center justify-center bg-slate-900">
+        <div className="text-white">Loading map...</div>
+      </div>
+    )
+  }
+);
 
 const DEFAULT_CENTER: LatLngLiteral = { lat: 38.9051269, lng: -77.0229544 };
-
-function MapEvents({ onMapClick }: { onMapClick: (latlng: LatLngLiteral) => void }) {
-  useMapEvents({
-    click: (e) => {
-      onMapClick(e.latlng);
-    },
-  });
-  return null;
-}
 
 const exampleReport = {
   case_id: "WA30530001",
@@ -102,8 +98,8 @@ const ReportOnMap = () => {
 
     // Clear existing marker and popup
     if (mapRef.current) {
-      mapRef.current.eachLayer((layer) => {
-        if (layer instanceof L.Marker) {
+      mapRef.current.eachLayer((layer: any) => {
+        if (layer.options && layer.options.icon) {
           mapRef.current?.removeLayer(layer);
         }
       });
@@ -535,54 +531,15 @@ const ReportOnMap = () => {
         </form>
       </div>
       {/* Map */}
-      <div style={{ height: 'calc(100vh - 64px - 56px)', width: '100vw', position: 'relative' }}>
-        <MapContainer
-          center={mapCenter}
-          zoom={14}
-          style={{ height: '100%', width: '100%' }}
-          zoomControl={false}
-          attributionControl={false}
-          ref={mapRef}
-        >
-          <TileLayer
-            url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
-            attribution='&copy; <a href="https://carto.com/attributions">CARTO</a>'
-          />
-          <MapEvents onMapClick={handleMapClick} />
-          {selectedLocation && (
-            <Marker 
-              position={selectedLocation}
-              eventHandlers={{
-                click: () => {
-                  if (popupRef.current && mapRef.current) {
-                    popupRef.current.openOn(mapRef.current);
-                  }
-                }
-              }}
-            >
-              <Popup 
-                ref={popupRef}
-                className="custom-popup"
-                position={selectedLocation}
-              >
-                <div className="p-3 min-w-[250px]">
-                  <h3 className="font-bold text-lg mb-2 text-slate-900">Report Location</h3>
-                  <p className="text-sm text-slate-600 mb-2">{address}</p>
-                  <p className="text-xs text-slate-500 mb-4">
-                    Lat: {selectedLocation.lat.toFixed(5)}, Lng: {selectedLocation.lng.toFixed(5)}
-                  </p>
-                  <Button 
-                    onClick={handleStartReport}
-                    className="w-full bg-blue-600 hover:bg-blue-700 text-white transition-colors py-2"
-                  >
-                    Start Report
-                  </Button>
-                </div>
-              </Popup>
-            </Marker>
-          )}
-        </MapContainer>
-      </div>
+      <MapWrapper
+        selectedLocation={selectedLocation}
+        mapCenter={mapCenter}
+        onMapClick={handleMapClick}
+        onStartReport={handleStartReport}
+        address={address}
+        mapRef={mapRef}
+        popupRef={popupRef}
+      />
       {/* Report Modal */}
       <Dialog open={showReportModal} onOpenChange={setShowReportModal}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto !z-[99999] bg-slate-900 border-slate-700">
@@ -743,4 +700,4 @@ const ReportOnMap = () => {
   );
 };
 
-export default ReportOnMap; 
+export default ReportOnMap;
