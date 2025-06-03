@@ -56,7 +56,7 @@ const menuItems = {
     { title: "Dashboard", url: "/dashboard/ethics-officer", icon: Home },
     {
       title: "Map",
-      url: "/dashboard/ethics-officer/map",
+      url: "/dashboard/map",
       icon: Map,
     },
     {
