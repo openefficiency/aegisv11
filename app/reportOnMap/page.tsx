@@ -326,7 +326,13 @@ const ReportOnMap = () => {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to submit report');
+        // Construct a detailed error message
+        let errorMessage = data.error || 'Failed to submit report';
+        if (data.details) errorMessage += `\nDetails: ${data.details}`;
+        if (data.hint) errorMessage += `\nHint: ${data.hint}`;
+        if (data.code) errorMessage += `\nError Code: ${data.code}`;
+        
+        throw new Error(errorMessage);
       }
 
       // Show success toast and close modal
@@ -351,12 +357,17 @@ const ReportOnMap = () => {
     } catch (error) {
       console.error('Error submitting report:', error);
       
-      // Show error toast
+      // Show detailed error toast
       toast({
         variant: "destructive",
-        title: "Error",
+        title: "Error Submitting Report",
         description: error instanceof Error ? error.message : "Failed to submit report",
-        duration: 3000,
+        duration: 5000,
+        action: (
+          <ToastAction altText="Try again" onClick={() => setShowReportModal(true)}>
+            Try again
+          </ToastAction>
+        ),
       });
     } finally {
       setIsLoading(false);
