@@ -50,6 +50,9 @@ const ReportOnMap = () => {
         const latlng: LatLngLiteral = { lat: parseFloat(lat), lng: parseFloat(lon) };
         setSelectedLocation(latlng);
         setMapCenter(latlng);
+        if (mapRef.current) {
+          mapRef.current.setView(latlng, 14);
+        }
       }
     } finally {
       setSearching(false);
@@ -108,6 +111,7 @@ const ReportOnMap = () => {
           style={{ height: '100%', width: '100%' }}
           zoomControl={false}
           attributionControl={false}
+          ref={mapRef}
         >
           <TileLayer
             url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
