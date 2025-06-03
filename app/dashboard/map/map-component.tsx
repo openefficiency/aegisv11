@@ -143,28 +143,25 @@ export default function MapComponent() {
 
   // Initialize map
   useEffect(() => {
-    if (!isMounted) return;
-    if (map.current) {
-      console.log("Map already initialized");
-      return;
-    }
-    if (!mapContainer.current) {
-      console.error("Map container ref is not available");
-      return;
-    }
+    let mapInstance: L.Map | null = null;
 
     const initializeMap = async () => {
+      if (!mapContainer.current) {
+        console.error("Map container ref is not available");
+        return;
+      }
+
       try {
         console.log("Starting map initialization...");
         console.log("Container dimensions:", {
-          width: mapContainer.current?.offsetWidth,
-          height: mapContainer.current?.offsetHeight,
-          clientWidth: mapContainer.current?.clientWidth,
-          clientHeight: mapContainer.current?.clientHeight
+          width: mapContainer.current.offsetWidth,
+          height: mapContainer.current.offsetHeight,
+          clientWidth: mapContainer.current.clientWidth,
+          clientHeight: mapContainer.current.clientHeight
         });
         
         // Initialize the map with explicit options
-        map.current = L.map(mapContainer.current!, {
+        mapInstance = L.map(mapContainer.current, {
           center: [38.8574, -77.0234],
           zoom: 14,
           zoomControl: false,
@@ -180,6 +177,7 @@ export default function MapComponent() {
           bounceAtZoomLimits: true
         });
 
+        map.current = mapInstance;
         console.log("Map object created:", map.current);
 
         // Add OpenStreetMap tiles with explicit options
@@ -194,20 +192,20 @@ export default function MapComponent() {
         });
 
         console.log("Tile layer created, adding to map...");
-        tileLayer.addTo(map.current);
+        tileLayer.addTo(mapInstance);
 
         // Add zoom control in top right
         L.control.zoom({
           position: 'topright',
           zoomInText: '+',
           zoomOutText: '-'
-        }).addTo(map.current);
+        }).addTo(mapInstance);
 
         // Add attribution in bottom right
         L.control.attribution({
           position: 'bottomright',
           prefix: '© OpenStreetMap contributors'
-        }).addTo(map.current);
+        }).addTo(mapInstance);
 
         console.log("Basic controls added");
 
@@ -243,17 +241,17 @@ export default function MapComponent() {
           }
         });
 
-        new ViewModeControl().addTo(map.current);
+        new ViewModeControl().addTo(mapInstance);
         console.log("View mode control added");
 
         // Force multiple resize events to ensure the map renders properly
         const resizeMap = () => {
-          if (map.current) {
+          if (mapInstance) {
             console.log("Resizing map...");
-            map.current.invalidateSize();
+            mapInstance.invalidateSize();
             console.log("Map resized, new size:", {
-              width: map.current.getSize().x,
-              height: map.current.getSize().y
+              width: mapInstance.getSize().x,
+              height: mapInstance.getSize().y
             });
           }
         };
@@ -283,14 +281,19 @@ export default function MapComponent() {
       }
     };
 
-    // Initialize map after a short delay to ensure container is ready
-    setTimeout(initializeMap, 100);
+    if (isMounted && !map.current) {
+      // Wait for the next tick to ensure the container is mounted
+      requestAnimationFrame(() => {
+        initializeMap();
+      });
+    }
 
     // Cleanup on unmount
     return () => {
-      if (map.current) {
+      if (mapInstance) {
         console.log("Cleaning up map...");
-        map.current.remove();
+        mapInstance.remove();
+        mapInstance = null;
         map.current = null;
       }
     };
@@ -483,6 +486,7 @@ export default function MapComponent() {
   return (
     <div
       ref={mapContainer}
+      className="map-container"
       style={{
         position: "absolute",
         top: 0,
@@ -495,7 +499,6 @@ export default function MapComponent() {
         backgroundColor: "#f5f5f5",
         zIndex: 1,
       }}
-      className="map-container"
     />
   );
 } 
