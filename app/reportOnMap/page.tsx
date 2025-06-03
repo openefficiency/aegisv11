@@ -299,6 +299,8 @@ const ReportOnMap = () => {
         created_at: new Date().toISOString()
       };
 
+      console.log('Submitting report:', reportData); // Debug log
+
       // Send to API
       const response = await fetch('/api/reports', {
         method: 'POST',
@@ -308,12 +310,11 @@ const ReportOnMap = () => {
         body: JSON.stringify(reportData),
       });
 
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Failed to submit report');
-      }
-
       const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to submit report');
+      }
 
       // Show success state
       setSecretCode(data.caseId);
@@ -330,7 +331,7 @@ const ReportOnMap = () => {
     } catch (error) {
       console.error('Error submitting report:', error);
       
-      // Show error toast
+      // Show error toast with more details
       toast({
         variant: "destructive",
         title: "Error Submitting Report",
