@@ -9,12 +9,23 @@ const CONVENTION_CENTER = { lat: 38.9033, lng: -77.0230 };
 
 // Generate random location near the convention center
 function generateRandomLocation(centerLat: number, centerLng: number, radiusInMeters: number = 200): { lat: number; lng: number } {
-  const radiusInDegrees = radiusInMeters / 111000;
-  const angle = Math.random() * 2 * Math.PI;
-  const distance = Math.random() * radiusInDegrees;
-  const lat = centerLat + distance * Math.cos(angle);
-  const lng = centerLng + distance * Math.sin(angle);
-  return { lat, lng };
+  const y0 = centerLat;
+  const x0 = centerLng;
+  const rd = radiusInMeters / 111300; // ~111300 meters per degree latitude
+
+  const u = Math.random();
+  const v = Math.random();
+
+  const w = rd * Math.sqrt(u);
+  const t = 2 * Math.PI * v;
+  const x = w * Math.cos(t);
+  const y = w * Math.sin(t);
+
+  // Adjust the x-coordinate for the shrinking of the east-west distances
+  const newLat = y0 + y;
+  const newLng = x0 + x / Math.cos(y0 * Math.PI / 180);
+
+  return { lat: newLat, lng: newLng };
 }
 
 type ExampleCase = {
