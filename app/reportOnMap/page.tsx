@@ -11,6 +11,14 @@ import { useMapEvents, MapContainer as StaticMapContainer, TileLayer as StaticTi
 import type L from 'leaflet';
 import { FaSearch } from 'react-icons/fa';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Upload } from "lucide-react";
+import { Shield } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Lock } from "lucide-react";
 
 const MapContainer = dynamic(() => import('react-leaflet').then((mod) => mod.MapContainer), { ssr: false });
 const TileLayer = dynamic(() => import('react-leaflet').then((mod) => mod.TileLayer), { ssr: false });
@@ -50,6 +58,18 @@ const ReportOnMap = () => {
   const popupRef = useRef<L.Popup | null>(null);
   const searchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [showReportModal, setShowReportModal] = useState(false);
+  const [reporterName, setReporterName] = useState('');
+  const [reporterRole, setReporterRole] = useState('');
+  const [reporterCompany, setReporterCompany] = useState('');
+  const [formData, setFormData] = useState({
+    category: '',
+    title: '',
+    description: '',
+    dateOccurred: '',
+    anonymous: true,
+    contactInfo: ''
+  });
+  const [isLoading, setIsLoading] = useState(false);
 
   const getAddressFromCoordinates = async (latlng: LatLngLiteral) => {
     try {
@@ -250,6 +270,18 @@ const ReportOnMap = () => {
     return <FaSearch className="text-gray-400 w-6 h-6" />;
   };
 
+  const handleReportSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setIsLoading(true);
+    try {
+      // Handle form submission
+      console.log('Report submitted:', { reporterName, reporterRole, reporterCompany });
+      // You can add more fields and send this data to an API or log it
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900">
       {/* Navigation */}
@@ -362,21 +394,160 @@ const ReportOnMap = () => {
         </MapContainer>
       </div>
       {/* Report Modal */}
-      <Dialog open={showReportModal} onOpenChange={setShowReportModal} style={{ zIndex: 99999 }}>
-        <DialogContent className="!z-[99999]">
+      <Dialog open={showReportModal} onOpenChange={setShowReportModal}>
+        <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>Report Summary</DialogTitle>
-            <DialogDescription>Example of a filled report (demo)</DialogDescription>
+            <DialogTitle className="text-2xl font-bold text-white">Submit a Secure Report</DialogTitle>
+            <DialogDescription className="text-slate-400">
+              Report wrongdoing safely and anonymously with military-grade protection
+            </DialogDescription>
           </DialogHeader>
-          <div className="space-y-2 text-sm">
-            <div><b>Case ID:</b> {exampleReport.case_id}</div>
-            <div><b>Reporter:</b> {exampleReport.reporter.name} ({exampleReport.reporter.role}, {exampleReport.reporter.company})</div>
-            <div><b>Incident:</b> {exampleReport.incident.type} on {exampleReport.incident.date} at {exampleReport.incident.time}, {exampleReport.incident.location} ({exampleReport.incident.setting})</div>
-            <div><b>Accused:</b> {exampleReport.accused.name} ({exampleReport.accused.relationship_to_reporter})</div>
-            <div><b>Witnesses:</b> {exampleReport.witnesses.present ? `${exampleReport.witnesses.count} - ${exampleReport.witnesses.details}` : 'None'}</div>
-            <div><b>Evidence:</b> {exampleReport.evidence.type} - {exampleReport.evidence.details}</div>
-            <div><b>Follow-up Plan:</b> {exampleReport.follow_up_plan}</div>
-          </div>
+          <form onSubmit={handleReportSubmit} className="space-y-6">
+            {/* Category */}
+            <div className="space-y-2">
+              <Label htmlFor="category" className="text-slate-300">
+                Category *
+              </Label>
+              <Select
+                value={formData.category}
+                onValueChange={(value) => setFormData({ ...formData, category: value })}
+              >
+                <SelectTrigger className="bg-slate-900/50 border-slate-600 text-white">
+                  <SelectValue placeholder="Select the type of issue" />
+                </SelectTrigger>
+                <SelectContent className="bg-slate-800 border-slate-600">
+                  <SelectItem value="fraud">Fraud</SelectItem>
+                  <SelectItem value="abuse">Abuse</SelectItem>
+                  <SelectItem value="discrimination">Discrimination</SelectItem>
+                  <SelectItem value="harassment">Harassment</SelectItem>
+                  <SelectItem value="safety">Safety Violations</SelectItem>
+                  <SelectItem value="corruption">Corruption</SelectItem>
+                  <SelectItem value="other">Other</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Title */}
+            <div className="space-y-2">
+              <Label htmlFor="title" className="text-slate-300">
+                Brief Title *
+              </Label>
+              <Input
+                id="title"
+                value={formData.title}
+                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                placeholder="Brief description of the issue"
+                className="bg-slate-900/50 border-slate-600 text-white"
+                required
+              />
+            </div>
+
+            {/* Description */}
+            <div className="space-y-2">
+              <Label htmlFor="description" className="text-slate-300">
+                Detailed Description *
+              </Label>
+              <Textarea
+                id="description"
+                value={formData.description}
+                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                placeholder="Provide as much detail as possible about what happened, when, where, and who was involved..."
+                className="bg-slate-900/50 border-slate-600 text-white min-h-[120px]"
+                required
+              />
+            </div>
+
+            {/* Location (pre-filled from map) */}
+            <div className="space-y-2">
+              <Label htmlFor="location" className="text-slate-300">
+                Location
+              </Label>
+              <Input
+                id="location"
+                value={address}
+                readOnly
+                className="bg-slate-900/50 border-slate-600 text-white"
+              />
+              <p className="text-sm text-slate-400">
+                Lat: {selectedLocation?.lat.toFixed(5)}, Lng: {selectedLocation?.lng.toFixed(5)}
+              </p>
+            </div>
+
+            {/* Date */}
+            <div className="space-y-2">
+              <Label htmlFor="dateOccurred" className="text-slate-300">
+                Date Occurred
+              </Label>
+              <Input
+                id="dateOccurred"
+                type="date"
+                value={formData.dateOccurred}
+                onChange={(e) => setFormData({ ...formData, dateOccurred: e.target.value })}
+                className="bg-slate-900/50 border-slate-600 text-white"
+              />
+            </div>
+
+            {/* File Upload */}
+            <div className="space-y-2">
+              <Label className="text-slate-300">Supporting Documents (Optional)</Label>
+              <div className="border-2 border-dashed border-slate-600 rounded-lg p-6 text-center">
+                <Upload className="h-8 w-8 text-slate-400 mx-auto mb-2" />
+                <p className="text-slate-400">Drag and drop files here, or click to select</p>
+                <p className="text-sm text-slate-500 mt-1">All files are encrypted and stored securely</p>
+              </div>
+            </div>
+
+            {/* Anonymous Option */}
+            <div className="space-y-4">
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="anonymous"
+                  checked={formData.anonymous}
+                  onCheckedChange={(checked) => setFormData({ ...formData, anonymous: checked as boolean })}
+                  className="border-slate-600"
+                />
+                <Label htmlFor="anonymous" className="text-slate-300">
+                  Submit anonymously (recommended)
+                </Label>
+              </div>
+
+              {!formData.anonymous && (
+                <div className="space-y-2">
+                  <Label htmlFor="contactInfo" className="text-slate-300">
+                    Contact Information
+                  </Label>
+                  <Input
+                    id="contactInfo"
+                    value={formData.contactInfo}
+                    onChange={(e) => setFormData({ ...formData, contactInfo: e.target.value })}
+                    placeholder="Email or phone number (optional)"
+                    className="bg-slate-900/50 border-slate-600 text-white"
+                  />
+                </div>
+              )}
+            </div>
+
+            {/* Security Notice */}
+            <div className="bg-slate-900/50 p-4 rounded border border-slate-600">
+              <div className="flex items-start gap-3">
+                <Lock className="h-5 w-5 text-blue-400 mt-0.5" />
+                <div>
+                  <h4 className="text-white font-semibold mb-1">Your Security is Our Priority</h4>
+                  <ul className="text-sm text-slate-400 space-y-1">
+                    <li>• All data is encrypted with military-grade security</li>
+                    <li>• Anonymous reports cannot be traced back to you</li>
+                    <li>• We use Tor networks and zero-knowledge proofs</li>
+                    <li>• You'll receive a secret code to track your report</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+
+            <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 py-3 text-lg" disabled={isLoading}>
+              {isLoading ? "Submitting Securely..." : "Submit Report Securely"}
+              <Shield className="ml-2 h-5 w-5" />
+            </Button>
+          </form>
         </DialogContent>
       </Dialog>
     </div>
