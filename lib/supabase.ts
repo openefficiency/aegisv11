@@ -33,6 +33,7 @@ export interface Case {
   vapi_session_id?: string;
   vapi_transcript?: string; // NEW
   vapi_audio_url?: string; // NEW
+  structured_data?: any; // Parsed VAPI fields
   assigned_to?: string;
   assigned_by?: string; // NEW
   resolution_summary?: string; // NEW
