@@ -96,6 +96,8 @@ const ReportOnMap = () => {
       return;
     }
 
+    console.log('Map clicked at:', latlng); // Debug log
+
     // Clear existing marker and popup
     if (mapRef.current) {
       mapRef.current.eachLayer((layer: any) => {
