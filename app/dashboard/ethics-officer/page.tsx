@@ -63,8 +63,10 @@ import {
 import { DashboardLayout } from "@/components/dashboard-layout";
 import { supabase, type Case, type Profile } from "@/lib/supabase";
 import { cryptoRewardSystem, supportedCurrencies } from "@/lib/crypto-utils";
+
 import { auditLogger } from "@/lib/audit-logger";
 import { formatCaseText, formatCaseTitle, extractCaseLocation, getCaseDateReceived } from "@/lib/utils";
+
 
 export default function EthicsOfficerDashboard() {
   const [cases, setCases] = useState<Case[]>([]);
@@ -92,6 +94,38 @@ export default function EthicsOfficerDashboard() {
   });
   const [escalationNote, setEscalationNote] = useState("");
   const [error, setError] = useState<string | null>(null);
+
+  const normalizeCase = (c: any): Case => {
+    const normalized = { ...c } as Case;
+
+    const tryParse = (val: any): any => {
+      if (!val) return null;
+      if (typeof val === "object") return val;
+      if (typeof val === "string") {
+        try {
+          return JSON.parse(val);
+        } catch {
+          return null;
+        }
+      }
+      return null;
+    };
+
+    const parsed = tryParse(c.description) || tryParse(c.title);
+
+    if (parsed && parsed.incident) {
+      normalized.structured_data = parsed;
+      const location = parsed.incident.location || "Unknown";
+      normalized.title = `${location} - TESTING`;
+      normalized.description = parsed.incident.description || "";
+    } else {
+      normalized.title = typeof c.title === "string" ? c.title : "";
+      normalized.description =
+        typeof c.description === "string" ? c.description : "";
+    }
+
+    return normalized;
+  };
 
   useEffect(() => {
     fetchData();
@@ -215,7 +249,8 @@ export default function EthicsOfficerDashboard() {
             ? investigatorsData
             : mockInvestigators;
 
-        setCases(finalCases);
+        const normalized = finalCases.map((c) => normalizeCase(c));
+        setCases(normalized);
         setInvestigators(finalInvestigators);
 
         // Calculate stats
@@ -242,7 +277,7 @@ export default function EthicsOfficerDashboard() {
         );
       } catch (dbError) {
         console.warn("Database not available, using mock data:", dbError);
-        setCases(mockCases);
+        setCases(mockCases.map((c) => normalizeCase(c)));
         setInvestigators(mockInvestigators);
 
         // Calculate stats from mock data
@@ -361,8 +396,8 @@ export default function EthicsOfficerDashboard() {
             updated_at: new Date().toISOString(),
           };
 
-          // Add to local state
-          setCases((prevCases) => [newCase, ...prevCases]);
+          // Add to local state with normalization
+          setCases((prevCases) => [normalizeCase(newCase), ...prevCases]);
 
           // Try to save to database (optional)
           try {
@@ -433,7 +468,7 @@ export default function EthicsOfficerDashboard() {
       };
 
       // Add to local state
-      setCases((prevCases) => [newCase, ...prevCases]);
+      setCases((prevCases) => [normalizeCase(newCase), ...prevCases]);
 
       // Try to save to database
       try {
@@ -936,7 +971,13 @@ export default function EthicsOfficerDashboard() {
                             {case_.report_id || case_.case_number}
                           </TableCell>
                           <TableCell className="text-white max-w-xs truncate">
+
+
+
                             {formatCaseTitle(case_.title, case_.description, case_.created_at)}
+
+
+
                           </TableCell>
                           <TableCell className="text-slate-300 max-w-sm">
                             <span className="truncate block">
@@ -1278,7 +1319,12 @@ export default function EthicsOfficerDashboard() {
                               {case_.case_number}
                             </TableCell>
                             <TableCell className="text-white">
+
                               {formatCaseTitle(case_.title, case_.description, case_.created_at)}
+
+
+
+
                             </TableCell>
                             <TableCell className="text-green-400">
                               ${case_.recovery_amount?.toLocaleString() || "0"}
@@ -1362,9 +1408,11 @@ export default function EthicsOfficerDashboard() {
                 </div>
                 <div>
                   <Label className="text-slate-300">Title</Label>
+
                   <p className="text-white">
                     {formatCaseTitle(selectedCase.title, selectedCase.description, selectedCase.created_at)}
                   </p>
+
                 </div>
                 <div>
                   <Label className="text-slate-300">Description</Label>
@@ -1372,6 +1420,32 @@ export default function EthicsOfficerDashboard() {
                     <p className="text-slate-300">{formatCaseText(selectedCase.description)}</p>
                   </div>
                 </div>
+                {selectedCase.structured_data && (
+                  <>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label className="text-slate-300">Incident Type</Label>
+                        <p className="text-white">
+                          {selectedCase.structured_data.incident?.type || "N/A"}
+                        </p>
+                      </div>
+                      <div>
+                        <Label className="text-slate-300">Incident Date</Label>
+                        <p className="text-white">
+                          {selectedCase.structured_data.incident?.date || "N/A"}
+                        </p>
+                      </div>
+                    </div>
+                    <div>
+                      <Label className="text-slate-300">Follow Up Notes</Label>
+                      <div className="bg-slate-900/50 p-3 rounded border border-slate-600">
+                        <p className="text-slate-300">
+                          {selectedCase.structured_data.follow_up?.notes || "N/A"}
+                        </p>
+                      </div>
+                    </div>
+                  </>
+                )}
                 {selectedCase.vapi_transcript && (
                   <div>
                     <Label className="text-slate-300">Voice Transcript</Label>
