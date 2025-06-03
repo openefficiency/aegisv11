@@ -28,6 +28,7 @@ export function formatCaseText(field: any): string {
       value.title ||
       value.detailed_description ||
       value.description ||
+
       (value.incident &&
         (value.incident.detailed_description ||
           value.incident.description ||
@@ -36,12 +37,14 @@ export function formatCaseText(field: any): string {
         (value.structuredData.detailed_description ||
           value.structuredData.description ||
           value.structuredData.summary)) ||
+
       ""
     )
   }
 
   return String(value)
 }
+
 
 export function parseCaseData(field: any): any | null {
   if (field === null || field === undefined) return null
@@ -135,3 +138,4 @@ export function formatCaseTitle(
 
   return formatCaseText(titleField)
 }
+
