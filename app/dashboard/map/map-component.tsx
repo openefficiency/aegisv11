@@ -111,10 +111,19 @@ export default function MapComponent() {
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<'cases' | 'safety'>('cases');
   const [mapError, setMapError] = useState<string | null>(null);
+  const [isMounted, setIsMounted] = useState(false);
+
+  // Set mounted state
+  useEffect(() => {
+    setIsMounted(true);
+    return () => setIsMounted(false);
+  }, []);
 
   useEffect(() => {
-    fetchCases();
-  }, []);
+    if (isMounted) {
+      fetchCases();
+    }
+  }, [isMounted]);
 
   const fetchCases = async () => {
     try {
@@ -134,6 +143,7 @@ export default function MapComponent() {
 
   // Initialize map
   useEffect(() => {
+    if (!isMounted) return;
     if (map.current) {
       console.log("Map already initialized");
       return;
@@ -143,133 +153,138 @@ export default function MapComponent() {
       return;
     }
 
-    try {
-      console.log("Starting map initialization...");
-      console.log("Container dimensions:", {
-        width: mapContainer.current.offsetWidth,
-        height: mapContainer.current.offsetHeight,
-        clientWidth: mapContainer.current.clientWidth,
-        clientHeight: mapContainer.current.clientHeight
-      });
-      
-      // Initialize the map with explicit options
-      map.current = L.map(mapContainer.current, {
-        center: [38.8574, -77.0234],
-        zoom: 14,
-        zoomControl: false,
-        attributionControl: false,
-        minZoom: 2,
-        maxZoom: 19,
-        zoomSnap: 1,
-        zoomDelta: 1,
-        wheelDebounceTime: 40,
-        wheelPxPerZoomLevel: 60,
-        tapTolerance: 15,
-        touchZoom: true,
-        bounceAtZoomLimits: true
-      });
+    const initializeMap = async () => {
+      try {
+        console.log("Starting map initialization...");
+        console.log("Container dimensions:", {
+          width: mapContainer.current?.offsetWidth,
+          height: mapContainer.current?.offsetHeight,
+          clientWidth: mapContainer.current?.clientWidth,
+          clientHeight: mapContainer.current?.clientHeight
+        });
+        
+        // Initialize the map with explicit options
+        map.current = L.map(mapContainer.current!, {
+          center: [38.8574, -77.0234],
+          zoom: 14,
+          zoomControl: false,
+          attributionControl: false,
+          minZoom: 2,
+          maxZoom: 19,
+          zoomSnap: 1,
+          zoomDelta: 1,
+          wheelDebounceTime: 40,
+          wheelPxPerZoomLevel: 60,
+          tapTolerance: 15,
+          touchZoom: true,
+          bounceAtZoomLimits: true
+        });
 
-      console.log("Map object created:", map.current);
+        console.log("Map object created:", map.current);
 
-      // Add OpenStreetMap tiles with explicit options
-      const tileLayer = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-        maxZoom: 19,
-        attribution: '© OpenStreetMap contributors',
-        tileSize: 256,
-        zoomOffset: 0,
-        updateWhenIdle: true,
-        updateWhenZooming: true,
-        keepBuffer: 2
-      });
+        // Add OpenStreetMap tiles with explicit options
+        const tileLayer = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+          maxZoom: 19,
+          attribution: '© OpenStreetMap contributors',
+          tileSize: 256,
+          zoomOffset: 0,
+          updateWhenIdle: true,
+          updateWhenZooming: true,
+          keepBuffer: 2
+        });
 
-      console.log("Tile layer created, adding to map...");
-      tileLayer.addTo(map.current);
+        console.log("Tile layer created, adding to map...");
+        tileLayer.addTo(map.current);
 
-      // Add zoom control in top right
-      L.control.zoom({
-        position: 'topright',
-        zoomInText: '+',
-        zoomOutText: '-'
-      }).addTo(map.current);
+        // Add zoom control in top right
+        L.control.zoom({
+          position: 'topright',
+          zoomInText: '+',
+          zoomOutText: '-'
+        }).addTo(map.current);
 
-      // Add attribution in bottom right
-      L.control.attribution({
-        position: 'bottomright',
-        prefix: '© OpenStreetMap contributors'
-      }).addTo(map.current);
+        // Add attribution in bottom right
+        L.control.attribution({
+          position: 'bottomright',
+          prefix: '© OpenStreetMap contributors'
+        }).addTo(map.current);
 
-      console.log("Basic controls added");
+        console.log("Basic controls added");
 
-      // Add view mode toggle control
-      const ViewModeControl = L.Control.extend({
-        options: {
-          position: 'topright'
-        },
-        onAdd: function() {
-          const div = L.DomUtil.create('div', 'leaflet-control leaflet-bar');
-          div.innerHTML = `
-            <div style="
-              background-color: rgba(0, 0, 0, 0.8);
-              padding: 8px;
-              border-radius: 4px;
-              margin-bottom: 8px;
-            ">
-              <button id="viewModeToggle" style="
-                background-color: #2c3e50;
-                border: none;
-                color: white;
-                padding: 8px 16px;
+        // Add view mode toggle control
+        const ViewModeControl = L.Control.extend({
+          options: {
+            position: 'topright'
+          },
+          onAdd: function() {
+            const div = L.DomUtil.create('div', 'leaflet-control leaflet-bar');
+            div.innerHTML = `
+              <div style="
+                background-color: rgba(0, 0, 0, 0.8);
+                padding: 8px;
                 border-radius: 4px;
-                cursor: pointer;
-                font-size: 14px;
-                width: 100%;
+                margin-bottom: 8px;
               ">
-                Switch to ${viewMode === 'cases' ? 'Safety View' : 'Cases View'}
-              </button>
-            </div>
-          `;
-          return div;
-        }
-      });
+                <button id="viewModeToggle" style="
+                  background-color: #2c3e50;
+                  border: none;
+                  color: white;
+                  padding: 8px 16px;
+                  border-radius: 4px;
+                  cursor: pointer;
+                  font-size: 14px;
+                  width: 100%;
+                ">
+                  Switch to ${viewMode === 'cases' ? 'Safety View' : 'Cases View'}
+                </button>
+              </div>
+            `;
+            return div;
+          }
+        });
 
-      new ViewModeControl().addTo(map.current);
-      console.log("View mode control added");
+        new ViewModeControl().addTo(map.current);
+        console.log("View mode control added");
 
-      // Force multiple resize events to ensure the map renders properly
-      const resizeMap = () => {
-        if (map.current) {
-          console.log("Resizing map...");
-          map.current.invalidateSize();
-          console.log("Map resized, new size:", {
-            width: map.current.getSize().x,
-            height: map.current.getSize().y
-          });
-        }
-      };
+        // Force multiple resize events to ensure the map renders properly
+        const resizeMap = () => {
+          if (map.current) {
+            console.log("Resizing map...");
+            map.current.invalidateSize();
+            console.log("Map resized, new size:", {
+              width: map.current.getSize().x,
+              height: map.current.getSize().y
+            });
+          }
+        };
 
-      // Initial resize
-      setTimeout(resizeMap, 100);
-      
-      // Additional resizes
-      setTimeout(resizeMap, 500);
-      setTimeout(resizeMap, 1000);
+        // Initial resize
+        setTimeout(resizeMap, 100);
+        
+        // Additional resizes
+        setTimeout(resizeMap, 500);
+        setTimeout(resizeMap, 1000);
 
-      // Add event listener for view mode toggle
-      setTimeout(() => {
-        const toggleButton = document.getElementById('viewModeToggle');
-        if (toggleButton) {
-          toggleButton.addEventListener('click', () => {
-            setViewMode(prev => prev === 'cases' ? 'safety' : 'cases');
-          });
-        }
-      }, 100);
+        // Add event listener for view mode toggle
+        setTimeout(() => {
+          const toggleButton = document.getElementById('viewModeToggle');
+          if (toggleButton) {
+            toggleButton.addEventListener('click', () => {
+              setViewMode(prev => prev === 'cases' ? 'safety' : 'cases');
+            });
+          }
+        }, 100);
 
-      console.log("Map initialization complete");
+        console.log("Map initialization complete");
 
-    } catch (error) {
-      console.error("Error initializing map:", error);
-      setMapError(error instanceof Error ? error.message : "Failed to initialize map");
-    }
+      } catch (error) {
+        console.error("Error initializing map:", error);
+        setMapError(error instanceof Error ? error.message : "Failed to initialize map");
+      }
+    };
+
+    // Initialize map after a short delay to ensure container is ready
+    setTimeout(initializeMap, 100);
 
     // Cleanup on unmount
     return () => {
@@ -279,7 +294,7 @@ export default function MapComponent() {
         map.current = null;
       }
     };
-  }, []);
+  }, [isMounted, viewMode]);
 
   // Add a debug effect to monitor map container dimensions
   useEffect(() => {
