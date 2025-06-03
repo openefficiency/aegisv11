@@ -219,7 +219,9 @@ export default function AdminDashboard() {
                       <TableRow key={case_.id} className="border-slate-700">
                         <TableCell className="text-slate-300 font-mono">{case_.case_number}</TableCell>
 
+
                         <TableCell className="text-white">{formatCaseTitle(case_.title, case_.description, case_.created_at)}</TableCell>
+
 
                         <TableCell>
                           <Badge variant="outline" className="border-orange-500 text-orange-400 capitalize">

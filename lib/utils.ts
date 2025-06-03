@@ -77,11 +77,12 @@ export function extractCaseLocation(field: any): string {
 
   return (
     data.location ||
+
     data.location_of_incident ||
     (data.incident && (data.incident.location || data.incident.location_of_incident)) ||
     (data.structuredData &&
       (data.structuredData.location || data.structuredData.location_of_incident)) ||
-    ""
+
   )
 }
 
@@ -92,6 +93,7 @@ export function extractCaseDate(field: any): string {
   return (
     data.date_received ||
     data.date ||
+
     data.date_of_incident ||
     (data.incident &&
       (data.incident.date ||
@@ -101,6 +103,7 @@ export function extractCaseDate(field: any): string {
       (data.structuredData.date ||
         data.structuredData.date_received ||
         data.structuredData.date_of_incident)) ||
+
     ""
   )
 }
