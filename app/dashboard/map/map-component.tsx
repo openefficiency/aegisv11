@@ -5,6 +5,52 @@ import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { supabase, type Case } from "@/lib/supabase";
 
+// Fix for default marker icons in Next.js
+delete (L.Icon.Default.prototype as any)._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png",
+  iconUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png",
+  shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
+});
+
+// Category icons mapping
+const categoryIcons = {
+  fraud: "fa-solid fa-hand-holding-dollar",
+  abuse: "fa-solid fa-triangle-exclamation",
+  discrimination: "fa-solid fa-scale-balanced",
+  harassment: "fa-solid fa-user-shield",
+  safety: "fa-solid fa-hard-hat",
+  corruption: "fa-solid fa-user-tie",
+};
+
+// Category colors mapping
+const categoryColors = {
+  fraud: "#FF6B6B",
+  abuse: "#FF9F43",
+  discrimination: "#4ECDC4",
+  harassment: "#45B7D1",
+  safety: "#96CEB4",
+  corruption: "#D4A5A5",
+};
+
+// Add this function after the categoryColors mapping
+const generateRandomLocation = (centerLat: number, centerLng: number, radiusInMeters: number = 500) => {
+  // Convert radius from meters to degrees (approximate)
+  const radiusInDegrees = radiusInMeters / 111000;
+  
+  // Generate random angle
+  const angle = Math.random() * 2 * Math.PI;
+  
+  // Generate random distance within radius
+  const distance = Math.random() * radiusInDegrees;
+  
+  // Calculate new coordinates
+  const lat = centerLat + (distance * Math.cos(angle));
+  const lng = centerLng + (distance * Math.sin(angle));
+  
+  return { lat, lng };
+};
+
 // Fix for default marker icons in Leaflet with Next.js
 const DefaultIcon = L.icon({
   iconUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png",
@@ -118,20 +164,22 @@ export default function MapComponent() {
         </div>
       `;
 
-      // Extract location from structured data if available
-      let lat = 38.8574; // Default to convention center
-      let lng = -77.0234;
+      // Convention center coordinates
+      const conventionCenter = { lat: 38.8574, lng: -77.0234 };
       
-      if (case_.structured_data?.incident?.location) {
-        // If we have location data, use it
-        const location = case_.structured_data.incident.location;
-        if (location.lat && location.lng) {
-          lat = location.lat;
-          lng = location.lng;
-        }
+      // Get location from structured data or generate random location
+      let location;
+      if (case_.structured_data?.incident?.location?.lat && case_.structured_data?.incident?.location?.lng) {
+        location = {
+          lat: case_.structured_data.incident.location.lat,
+          lng: case_.structured_data.incident.location.lng
+        };
+      } else {
+        // Generate random location around convention center
+        location = generateRandomLocation(conventionCenter.lat, conventionCenter.lng);
       }
 
-      const marker = L.marker([lat, lng], { icon: customIcon })
+      const marker = L.marker([location.lat, location.lng], { icon: customIcon })
         .bindPopup(popupContent)
         .addTo(map.current!);
 
