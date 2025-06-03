@@ -31,11 +31,36 @@ const ReportOnMap = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [mapCenter, setMapCenter] = useState<LatLngLiteral>(DEFAULT_CENTER);
   const [searching, setSearching] = useState(false);
+  const [suggestions, setSuggestions] = useState<Array<{ display_name: string; lat: string; lon: string }>>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [address, setAddress] = useState<string>('');
   const mapRef = useRef<L.Map | null>(null);
+  const searchTimeoutRef = useRef<ReturnType<typeof setTimeout>>();
 
-  const handleMapClick = (latlng: LatLngLiteral) => {
+  const getAddressFromCoordinates = async (latlng: LatLngLiteral) => {
+    try {
+      const res = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latlng.lat}&lon=${latlng.lng}&zoom=18&addressdetails=1`
+      );
+      const data = await res.json();
+      if (data && data.display_name) {
+        setAddress(data.display_name);
+      }
+    } catch (error) {
+      console.error('Error fetching address:', error);
+      setAddress('Address not found');
+    }
+  };
+
+  const handleMapClick = async (latlng: LatLngLiteral) => {
     setSelectedLocation(latlng);
     setMapCenter(latlng);
+    await getAddressFromCoordinates(latlng);
+  };
+
+  const handleStartReport = () => {
+    // TODO: Implement report creation logic
+    console.log('Starting report at:', selectedLocation, 'Address:', address);
   };
 
   const handleSearch = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -51,12 +76,51 @@ const ReportOnMap = () => {
         setSelectedLocation(latlng);
         setMapCenter(latlng);
         if (mapRef.current) {
-          mapRef.current.setView(latlng, 14);
+          mapRef.current.setView(latlng, 16);
         }
+        setShowSuggestions(false);
       }
     } finally {
       setSearching(false);
     }
+  };
+
+  const handleSearchInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setSearchQuery(value);
+    
+    // Clear previous timeout
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
+    }
+
+    // Set new timeout for search
+    searchTimeoutRef.current = setTimeout(async () => {
+      if (value.length > 2) {
+        try {
+          const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(value)}`);
+          const data = await res.json();
+          setSuggestions(data.slice(0, 5)); // Show top 5 suggestions
+          setShowSuggestions(true);
+        } catch (error) {
+          console.error('Error fetching suggestions:', error);
+        }
+      } else {
+        setSuggestions([]);
+        setShowSuggestions(false);
+      }
+    }, 300); // 300ms delay
+  };
+
+  const handleSuggestionClick = (suggestion: { lat: string; lon: string; display_name: string }) => {
+    const latlng: LatLngLiteral = { lat: parseFloat(suggestion.lat), lng: parseFloat(suggestion.lon) };
+    setSelectedLocation(latlng);
+    setMapCenter(latlng);
+    setSearchQuery(suggestion.display_name);
+    if (mapRef.current) {
+      mapRef.current.setView(latlng, 16);
+    }
+    setShowSuggestions(false);
   };
 
   return (
@@ -87,22 +151,37 @@ const ReportOnMap = () => {
         </div>
       </nav>
       {/* Search Bar */}
-      <form onSubmit={handleSearch} className="flex justify-center items-center py-4 bg-slate-900/70">
-        <input
-          type="text"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          placeholder="Search for a location..."
-          className="rounded-l px-4 py-2 w-64 bg-slate-800 text-white border border-slate-700 focus:outline-none"
-        />
-        <button
-          type="submit"
-          className="rounded-r px-4 py-2 bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50"
-          disabled={searching}
-        >
-          {searching ? 'Searching...' : 'Search'}
-        </button>
-      </form>
+      <div className="flex justify-center items-center py-4 bg-slate-900/70 relative">
+        <form onSubmit={handleSearch} className="relative">
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={handleSearchInputChange}
+            placeholder="Search for a location..."
+            className="rounded-l px-4 py-2 w-64 bg-slate-800 text-white border border-slate-700 focus:outline-none"
+          />
+          <button
+            type="submit"
+            className="rounded-r px-4 py-2 bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50"
+            disabled={searching}
+          >
+            {searching ? 'Searching...' : 'Search'}
+          </button>
+          {showSuggestions && suggestions.length > 0 && (
+            <div className="absolute top-full left-0 w-full mt-1 bg-slate-800 rounded-md shadow-lg z-50">
+              {suggestions.map((suggestion, index) => (
+                <div
+                  key={index}
+                  className="px-4 py-2 hover:bg-slate-700 cursor-pointer text-white text-sm"
+                  onClick={() => handleSuggestionClick(suggestion)}
+                >
+                  {suggestion.display_name}
+                </div>
+              ))}
+            </div>
+          )}
+        </form>
+      </div>
       {/* Map */}
       <div style={{ height: 'calc(100vh - 64px - 56px)', width: '100vw' }}>
         <MapContainer
