@@ -207,10 +207,12 @@ export default function MapComponent() {
 
       try {
         // Initialize the map with explicit options
+        const conventionCenterCoords: [number, number] = [38.8574, -77.0234];
+        console.log("Setting map center to convention center:", conventionCenterCoords);
+        
         mapInstance = L.map(mapContainer.current, {
-          // Walter E. Washington Convention Center coordinates (38.8574, -77.0234)
-          center: [38.8574, -77.0234],
-          zoom: 14,
+          center: conventionCenterCoords,
+          zoom: 15, // Increased zoom level for better visibility
           zoomControl: false,
           attributionControl: false,
           minZoom: 2,
@@ -242,8 +244,18 @@ export default function MapComponent() {
           keepBuffer: 2
         });
 
-        console.log("Tile layer created, adding to map...");
+        console.log("Adding tile layer...");
         tileLayer.addTo(mapInstance);
+
+        // Force a resize after a short delay to ensure proper rendering
+        setTimeout(() => {
+          if (mapInstance) {
+            console.log("Forcing map resize...");
+            mapInstance.invalidateSize(true);
+            // Set the view again to ensure proper centering
+            mapInstance.setView(conventionCenterCoords, 15);
+          }
+        }, 100);
 
         // Add zoom control in top right
         L.control.zoom({
@@ -257,72 +269,6 @@ export default function MapComponent() {
           position: 'bottomright',
           prefix: '© OpenStreetMap contributors'
         }).addTo(mapInstance);
-
-        console.log("Basic controls added");
-
-        // Add view mode toggle control
-        const ViewModeControl = L.Control.extend({
-          options: {
-            position: 'topright'
-          },
-          onAdd: function() {
-            const div = L.DomUtil.create('div', 'leaflet-control leaflet-bar');
-            div.innerHTML = `
-              <div style="
-                background-color: rgba(0, 0, 0, 0.8);
-                padding: 8px;
-                border-radius: 4px;
-                margin-bottom: 8px;
-              ">
-                <button id="viewModeToggle" style="
-                  background-color: #2c3e50;
-                  border: none;
-                  color: white;
-                  padding: 8px 16px;
-                  border-radius: 4px;
-                  cursor: pointer;
-                  font-size: 14px;
-                  width: 100%;
-                ">
-                  Switch to ${viewMode === 'cases' ? 'Safety View' : 'Cases View'}
-                </button>
-              </div>
-            `;
-            return div;
-          }
-        });
-
-        new ViewModeControl().addTo(mapInstance);
-        console.log("View mode control added");
-
-        // Force multiple resize events to ensure the map renders properly
-        const resizeMap = () => {
-          if (mapInstance) {
-            console.log("Resizing map...");
-            mapInstance.invalidateSize();
-            console.log("Map resized, new size:", {
-              width: mapInstance.getSize().x,
-              height: mapInstance.getSize().y
-            });
-          }
-        };
-
-        // Initial resize
-        setTimeout(resizeMap, 100);
-        
-        // Additional resizes
-        setTimeout(resizeMap, 500);
-        setTimeout(resizeMap, 1000);
-
-        // Add event listener for view mode toggle
-        setTimeout(() => {
-          const toggleButton = document.getElementById('viewModeToggle');
-          if (toggleButton) {
-            toggleButton.addEventListener('click', () => {
-              setViewMode(prev => prev === 'cases' ? 'safety' : 'cases');
-            });
-          }
-        }, 100);
 
         console.log("Map initialization complete");
 
@@ -374,10 +320,32 @@ export default function MapComponent() {
       map.current.removeLayer(heatmapLayer.current);
     }
 
+    // Add convention center marker
+    const conventionCenterCoords: [number, number] = [38.8574, -77.0234];
+    const conventionCenterIcon = L.divIcon({
+      className: 'convention-center-marker',
+      html: `<div style="
+        background-color: #2c3e50;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        border: 3px solid white;
+        box-shadow: 0 0 10px rgba(0,0,0,0.5);
+      "></div>`,
+      iconSize: [24, 24],
+      iconAnchor: [12, 12]
+    });
+
+    const conventionCenterMarker = L.marker(conventionCenterCoords, { icon: conventionCenterIcon })
+      .bindPopup('Walter E. Washington Convention Center')
+      .addTo(map.current!);
+
+    markersRef.current.push(conventionCenterMarker);
+
     if (viewMode === 'cases') {
       console.log("Creating case markers for", cases.length, "cases");
       // Show individual case markers
-      markersRef.current = cases.map((case_) => {
+      markersRef.current = markersRef.current.concat(cases.map((case_) => {
         // Use category color for marker
         const markerColor = categoryColors[case_.category] || '#888';
         const customIcon = L.divIcon({
@@ -407,8 +375,8 @@ export default function MapComponent() {
           </div>
         `;
 
-        // Always generate random location around map center
-        const location = generateRandomLocation(38.8574, -77.0234);
+        // Generate random location around convention center
+        const location = generateRandomLocation(38.8574, -77.0234, 100); // Reduced radius to 100m
         console.log("Creating marker at location:", location);
 
         const marker = L.marker([location.lat, location.lng], { icon: customIcon })
@@ -416,7 +384,7 @@ export default function MapComponent() {
           .addTo(map.current!);
 
         return marker;
-      });
+      }));
       console.log("Created", markersRef.current.length, "markers");
     } else {
       // Show safety heatmap
