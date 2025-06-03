@@ -109,16 +109,15 @@ export default function MapComponent() {
       .bindPopup("Walter E. Washington Convention Center")
       .addTo(map);
 
+    // Debug: Log example cases
+    console.log('exampleCases:', exampleCases);
+
     // Add case markers
     exampleCases.forEach((c) => {
-      const color = categoryColors[c.category] || '#888';
-      const customIcon = L.divIcon({
-        className: 'custom-marker',
-        html: `<div style="background-color:${color};width:18px;height:18px;border-radius:50%;border:2px solid white;box-shadow:0 0 8px rgba(0,0,0,0.2);"></div>`,
-        iconSize: [22, 22],
-        iconAnchor: [11, 11],
-      });
-      const marker = L.marker([c.location.lat, c.location.lng], { icon: customIcon }).addTo(map);
+      // Debug: Log each case
+      console.log('Adding marker for case:', c);
+      // TEMP: Use default Leaflet icon for debugging
+      const marker = L.marker([c.location.lat, c.location.lng]).addTo(map);
       marker.bindPopup(`
         <div style="min-width:220px;padding:10px 0 0 0;">
           <h3 style="margin:0 0 8px 0;font-size:16px;color:#333;">${c.title}</h3>
