@@ -36,6 +36,7 @@ import {
   type CaseUpdate,
   type InvestigatorQuery,
 } from "@/lib/supabase";
+import { formatCaseText } from "@/lib/utils";
 
 export default function FollowUpPage() {
   const [secretCode, setSecretCode] = useState("");
@@ -282,7 +283,7 @@ export default function FollowUpPage() {
                 <div className="flex justify-between items-start">
                   <div>
                     <CardTitle className="text-white">
-                      {caseData.title}
+                      {formatCaseText(caseData.title)}
                     </CardTitle>
                     <CardDescription className="text-slate-400">
                       Report ID: {caseData.report_id || caseData.case_number} •
