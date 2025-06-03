@@ -191,7 +191,7 @@ export async function GET() {
     try {
       // Try to fetch real VAPI reports, but fall back to mock data if it fails
       console.log("VAPI CONNECTION!!!");
-      const reports = await vapiClient.fetchCalls();
+      const reports = await vapiClient.fetchReports();
       console.log(`Found ${reports.length} real VAPI reports`);
 
       if (reports.length === 0) {
