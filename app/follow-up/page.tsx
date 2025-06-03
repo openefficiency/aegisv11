@@ -36,6 +36,7 @@ import {
   type CaseUpdate,
   type InvestigatorQuery,
 } from "@/lib/supabase";
+import { formatCaseText, formatCaseTitle, getCaseDateReceived, extractCaseLocation } from "@/lib/utils";
 
 export default function FollowUpPage() {
   const [secretCode, setSecretCode] = useState("");
@@ -282,7 +283,7 @@ export default function FollowUpPage() {
                 <div className="flex justify-between items-start">
                   <div>
                     <CardTitle className="text-white">
-                      {caseData.title}
+                      {formatCaseTitle(caseData.title, caseData.description, caseData.created_at)}
                     </CardTitle>
                     <CardDescription className="text-slate-400">
                       Report ID: {caseData.report_id || caseData.case_number} •
@@ -327,6 +328,20 @@ export default function FollowUpPage() {
                         {getProgress(caseData.status)}%
                       </span>
                     </div>
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <span className="text-slate-400 text-sm">Date Received</span>
+                    <p className="text-white">
+                      {getCaseDateReceived(caseData.title, caseData.description, caseData.created_at)}
+                    </p>
+                  </div>
+                  <div>
+                    <span className="text-slate-400 text-sm">Location</span>
+                    <p className="text-white">
+                      {extractCaseLocation(caseData.title) || extractCaseLocation(caseData.description)}
+                    </p>
                   </div>
                 </div>
 
