@@ -95,13 +95,19 @@ const ReportOnMap = () => {
   };
 
   const handleMapClick = async (latlng: LatLngLiteral) => {
+    if (!latlng || typeof latlng.lat !== 'number' || typeof latlng.lng !== 'number') {
+      console.error('Invalid coordinates received:', latlng);
+      return;
+    }
+
     setSelectedLocation(latlng);
     setMapCenter(latlng);
     await getAddressFromCoordinates(latlng);
+    
     // Open popup after a short delay to ensure marker is rendered
     setTimeout(() => {
-      if (popupRef.current) {
-        popupRef.current.openOn(mapRef.current!);
+      if (popupRef.current && mapRef.current) {
+        popupRef.current.openOn(mapRef.current);
       }
     }, 100);
   };
@@ -283,19 +289,31 @@ const ReportOnMap = () => {
     setIsLoading(true);
 
     try {
+      // Validate required fields
+      if (!selectedLocation || !selectedLocation.lat || !selectedLocation.lng) {
+        throw new Error('Please select a location on the map before submitting');
+      }
+
+      if (!formData.category || !formData.title || !formData.description) {
+        throw new Error('Please fill in all required fields (Category, Title, and Description)');
+      }
+
       // Generate a unique case ID
       const timestamp = new Date().toISOString().slice(2, 10).replace(/-/g, '');
       const random = Math.random().toString(36).substring(2, 6).toUpperCase();
       const caseId = `WA${timestamp}${random}`;
 
-      // Prepare the report data
+      // Prepare the report data with validated coordinates
       const reportData = {
         ...formData,
-        location: address,
-        coordinates: selectedLocation,
+        location: address || 'Location not specified',
+        coordinates: {
+          lat: selectedLocation.lat,
+          lng: selectedLocation.lng
+        },
         case_id: caseId,
         status: 'open',
-        priority: 'medium', // Default priority
+        priority: 'medium',
         created_at: new Date().toISOString()
       };
 
@@ -322,8 +340,8 @@ const ReportOnMap = () => {
         throw new Error(errorMessage);
       }
 
-      // Show success state
-      setSecretCode(data.caseId);
+      // Set success state and case ID
+      setSecretCode(data.caseId || caseId);
       setIsSubmitted(true);
       setShowReportModal(false);
 

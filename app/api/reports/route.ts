@@ -31,6 +31,15 @@ export async function POST(request: Request) {
       )
     }
 
+    // Validate coordinates
+    if (!body.coordinates || typeof body.coordinates.lat !== 'number' || typeof body.coordinates.lng !== 'number') {
+      console.error('Invalid coordinates:', body.coordinates)
+      return NextResponse.json(
+        { error: 'Invalid coordinates provided' },
+        { status: 400 }
+      )
+    }
+
     // Validate category
     const validCategories = ['fraud', 'abuse', 'discrimination', 'harassment', 'safety', 'corruption']
     if (!validCategories.includes(body.category)) {
@@ -59,7 +68,8 @@ export async function POST(request: Request) {
       title: body.title,
       description: body.description,
       location: body.location,
-      coordinates: body.coordinates,
+      latitude: body.coordinates.lat,
+      longitude: body.coordinates.lng,
       date_occurred: body.dateOccurred,
       is_anonymous: body.anonymous,
       contact_info: body.contactInfo,
