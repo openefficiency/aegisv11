@@ -51,8 +51,8 @@ const exampleCases: Case[] = [
     structured_data: {
       incident: {
         location: {
-          lat: 38.8977,
-          lng: -77.0365
+          lat: 38.8574,
+          lng: -77.0234
         }
       }
     }
@@ -73,8 +73,8 @@ const exampleCases: Case[] = [
     structured_data: {
       incident: {
         location: {
-          lat: 38.8895,
-          lng: -77.0093
+          lat: 38.8574,
+          lng: -77.0234
         }
       }
     }
@@ -95,8 +95,8 @@ const exampleCases: Case[] = [
     structured_data: {
       incident: {
         location: {
-          lat: 38.8897,
-          lng: -77.0089
+          lat: 38.8574,
+          lng: -77.0234
         }
       }
     }
@@ -104,7 +104,7 @@ const exampleCases: Case[] = [
 ];
 
 // Add this function after the categoryColors mapping
-const generateRandomLocation = (centerLat: number, centerLng: number, radiusInMeters: number = 500) => {
+const generateRandomLocation = (centerLat: number, centerLng: number, radiusInMeters: number = 200) => {
   // Convert radius from meters to degrees (approximate)
   const radiusInDegrees = radiusInMeters / 111000;
   
@@ -194,14 +194,18 @@ export default function MapComponent() {
     let mapInstance: L.Map | null = null;
 
     const initializeMap = async () => {
+      console.log("Starting map initialization...", {
+        hasContainer: !!mapContainer.current,
+        isMounted,
+        hasExistingMap: !!map.current
+      });
+
       if (!mapContainer.current) {
         console.error("Map container ref is not available");
         return;
       }
 
       try {
-        console.log("Starting map initialization...");
-        
         // Initialize the map with explicit options
         mapInstance = L.map(mapContainer.current, {
           // Walter E. Washington Convention Center coordinates (38.8574, -77.0234)
@@ -221,7 +225,11 @@ export default function MapComponent() {
         });
 
         map.current = mapInstance;
-        console.log("Map object created:", map.current);
+        console.log("Map object created:", {
+          center: mapInstance.getCenter(),
+          zoom: mapInstance.getZoom(),
+          size: mapInstance.getSize()
+        });
 
         // Add OpenStreetMap tiles with explicit options
         const tileLayer = L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", {
@@ -344,7 +352,20 @@ export default function MapComponent() {
 
   // Update markers or heatmap when cases or view mode changes
   useEffect(() => {
-    if (!map.current || !cases.length) return;
+    console.log("Effect triggered with:", { 
+      hasMap: !!map.current, 
+      casesCount: cases.length,
+      viewMode,
+      isMounted 
+    });
+
+    if (!map.current || !cases.length) {
+      console.log("Skipping marker creation:", { 
+        hasMap: !!map.current, 
+        casesCount: cases.length 
+      });
+      return;
+    }
 
     // Clear existing markers and heatmap
     markersRef.current.forEach(marker => marker.remove());
@@ -354,6 +375,7 @@ export default function MapComponent() {
     }
 
     if (viewMode === 'cases') {
+      console.log("Creating case markers for", cases.length, "cases");
       // Show individual case markers
       markersRef.current = cases.map((case_) => {
         // Use category color for marker
@@ -387,6 +409,7 @@ export default function MapComponent() {
 
         // Always generate random location around map center
         const location = generateRandomLocation(38.8574, -77.0234);
+        console.log("Creating marker at location:", location);
 
         const marker = L.marker([location.lat, location.lng], { icon: customIcon })
           .bindPopup(popupContent)
@@ -394,6 +417,7 @@ export default function MapComponent() {
 
         return marker;
       });
+      console.log("Created", markersRef.current.length, "markers");
     } else {
       // Show safety heatmap
       const gridSize = 0.001; // Size of each grid cell
