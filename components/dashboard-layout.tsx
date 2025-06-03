@@ -29,6 +29,7 @@ import {
   AlertTriangle,
   MessageSquare,
   UserCheck,
+  Map,
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -53,6 +54,11 @@ const menuItems = {
   ],
   "ethics-officer": [
     { title: "Dashboard", url: "/dashboard/ethics-officer", icon: Home },
+    {
+      title: "Map",
+      url: "/dashboard/map",
+      icon: Map,
+    },
     {
       title: "Case Review",
       url: "/dashboard/ethics-officer/review",
