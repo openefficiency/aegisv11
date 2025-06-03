@@ -47,9 +47,6 @@ import { auditLogger } from "@/lib/audit-logger";
 import { formatCaseText, formatCaseTitle } from "@/lib/utils";
 
 
-import { formatCaseText, formatCaseTitle } from "@/lib/utils";
-
-
 
 export default function InvestigatorDashboard() {
   const [cases, setCases] = useState<Case[]>([]);
