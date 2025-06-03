@@ -177,11 +177,33 @@ export default function MapComponent() {
   const map = useRef<L.Map | null>(null);
   const markersRef = useRef<L.Marker[]>([]);
   const heatmapLayer = useRef<L.Layer | null>(null);
-  const [cases, setCases] = useState<Case[]>(exampleCases);
-  const [loading, setLoading] = useState(false);
+  const [cases, setCases] = useState<Case[]>([]);
+  const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<'cases' | 'safety'>('cases');
   const [mapError, setMapError] = useState<string | null>(null);
   const [isMounted, setIsMounted] = useState(false);
+
+  // Fetch cases from Supabase
+  useEffect(() => {
+    const fetchCases = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('cases')
+          .select('*')
+          .order('created_at', { ascending: false });
+
+        if (error) throw error;
+        setCases(data || []);
+      } catch (error) {
+        console.error('Error fetching cases:', error);
+        setMapError(error instanceof Error ? error.message : 'Failed to fetch cases');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCases();
+  }, []);
 
   // Set mounted state
   useEffect(() => {
@@ -483,19 +505,42 @@ export default function MapComponent() {
   }
 
   return (
-    <div className="w-full h-full flex items-center justify-center bg-transparent">
+    <div className="w-full h-full flex flex-col items-center justify-center bg-transparent">
+      <div className="w-full flex justify-end p-4 gap-2">
+        <button
+          onClick={() => setViewMode('cases')}
+          className={`px-4 py-2 rounded-lg transition-colors ${
+            viewMode === 'cases'
+              ? 'bg-blue-500 text-white'
+              : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+          }`}
+        >
+          Cases View
+        </button>
+        <button
+          onClick={() => setViewMode('safety')}
+          className={`px-4 py-2 rounded-lg transition-colors ${
+            viewMode === 'safety'
+              ? 'bg-blue-500 text-white'
+              : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+          }`}
+        >
+          Safety Heatmap
+        </button>
+      </div>
       <div
         ref={mapContainer}
         className="map-container"
         style={{
-          borderRadius: "0px",
-          boxShadow: "none",
-          border: "none",
+          borderRadius: "8px",
+          boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+          border: "1px solid #e5e7eb",
           minHeight: "500px",
-          width: "100vw",
-          height: "100vh",
+          width: "100%",
+          height: "calc(100vh - 80px)",
           backgroundColor: "#f5f5f5",
-          zIndex: 1
+          zIndex: 1,
+          transition: "all 0.3s ease-in-out"
         }}
       />
     </div>
