@@ -377,16 +377,16 @@ const ReportOnMap = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900">
       {/* Navigation */}
-      <nav className="border-b border-slate-800 bg-slate-900/50 backdrop-blur-sm sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <nav className="aegis-nav border-b border-slate-800 bg-slate-900/50 backdrop-blur-sm sticky top-0 z-50">
+        <div className="aegis-nav__container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            <div className="flex items-center space-x-2">
+            <div className="aegis-nav__brand flex items-center space-x-2">
               <div className="relative w-8 h-8">
                 <Image src="/images/aegis-logo.webp" alt="Aegis Logo" fill className="object-contain" />
               </div>
               <span className="text-xl font-bold text-white">AegisWhistle</span>
             </div>
-            <div className="flex items-center space-x-4">
+            <div className="aegis-nav__links flex items-center space-x-4">
               <Link href="/follow-up">
                 <Button variant="ghost" className="text-slate-300 hover:text-white transition-colors">
                   Follow-up
@@ -402,7 +402,7 @@ const ReportOnMap = () => {
         </div>
       </nav>
       {/* Search Bar */}
-      <div className="flex justify-center items-center py-6 bg-transparent sticky top-16 z-40">
+      <div className="aegis-searchbar flex justify-center items-center py-6 bg-transparent sticky top-16 z-40" style={{zIndex: 99999}}>
         <form onSubmit={handleSearch} className="relative w-full max-w-xl mx-4">
           <div className="relative">
             <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
@@ -413,12 +413,12 @@ const ReportOnMap = () => {
               value={searchQuery}
               onChange={handleSearchInputChange}
               placeholder="Search for a location..."
-              className="w-full pl-12 pr-4 py-3 bg-white text-gray-900 border border-gray-200 rounded-2xl shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all placeholder-gray-400 text-base"
+              className="aegis-searchbar__input w-full pl-12 pr-4 py-3 bg-white text-gray-900 border border-gray-200 rounded-2xl shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all placeholder-gray-400 text-base"
               autoComplete="off"
             />
             <button
               type="submit"
-              className="absolute right-2 top-1/2 -translate-y-1/2 px-4 py-1.5 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 transition-colors shadow"
+              className="aegis-searchbar__button absolute right-2 top-1/2 -translate-y-1/2 px-4 py-1.5 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 transition-colors shadow"
               disabled={searching}
             >
               {searching ? (
@@ -433,7 +433,7 @@ const ReportOnMap = () => {
             </button>
           </div>
           {showSuggestions && suggestions.length > 0 && (
-            <div className="absolute top-full left-0 w-full mt-2 bg-white rounded-2xl shadow-2xl z-[9999] border border-gray-200 max-h-[300px] overflow-y-auto">
+            <div className="aegis-searchbar__suggestions absolute top-full left-0 w-full mt-2 bg-white rounded-2xl shadow-2xl z-[9999] border border-gray-200 max-h-[300px] overflow-y-auto">
               {suggestions.map((suggestion, index) => (
                 <div
                   key={index}
@@ -450,15 +450,17 @@ const ReportOnMap = () => {
         </form>
       </div>
       {/* Map */}
-      <MapWrapper
-        selectedLocation={selectedLocation}
-        mapCenter={mapCenter}
-        onMapClick={handleMapClick}
-        onStartReport={handleStartReport}
-        address={address}
-        mapRef={mapRef}
-        popupRef={popupRef}
-      />
+      <div className="aegis-map-wrapper" style={{zIndex: 1}}> 
+        <MapWrapper
+          selectedLocation={selectedLocation}
+          mapCenter={mapCenter}
+          onMapClick={handleMapClick}
+          onStartReport={handleStartReport}
+          address={address}
+          mapRef={mapRef}
+          popupRef={popupRef}
+        />
+      </div>
       {/* Report Modal */}
       <Dialog open={showReportModal} onOpenChange={setShowReportModal}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto !z-[99999] bg-slate-900 border-slate-700">
