@@ -17,12 +17,14 @@ if (supabaseUrl && supabaseServiceKey) {
 export async function POST(request: Request) {
   try {
     const body = await request.json()
+    console.log('Received report data:', body) // Debug log
     
     // Validate required fields
     const requiredFields = ['category', 'title', 'description', 'case_id', 'location', 'coordinates']
     const missingFields = requiredFields.filter(field => !body[field])
     
     if (missingFields.length > 0) {
+      console.error('Missing required fields:', missingFields)
       return NextResponse.json(
         { error: `Missing required fields: ${missingFields.join(', ')}` },
         { status: 400 }
@@ -32,6 +34,7 @@ export async function POST(request: Request) {
     // Validate category
     const validCategories = ['fraud', 'abuse', 'discrimination', 'harassment', 'safety', 'corruption']
     if (!validCategories.includes(body.category)) {
+      console.error('Invalid category:', body.category)
       return NextResponse.json(
         { error: `Invalid category. Must be one of: ${validCategories.join(', ')}` },
         { status: 400 }
@@ -73,11 +76,12 @@ export async function POST(request: Request) {
     if (error) {
       console.error('Error inserting report:', error)
       return NextResponse.json(
-        { error: 'Failed to submit report to database' },
+        { error: `Database error: ${error.message}` },
         { status: 500 }
       )
     }
 
+    console.log('Report submitted successfully:', data)
     return NextResponse.json({ 
       success: true, 
       caseId: body.case_id,
@@ -87,7 +91,7 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error('Error processing report:', error)
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: error instanceof Error ? error.message : 'Internal server error' },
       { status: 500 }
     )
   }
