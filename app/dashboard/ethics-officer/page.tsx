@@ -64,6 +64,7 @@ import { DashboardLayout } from "@/components/dashboard-layout";
 import { supabase, type Case, type Profile } from "@/lib/supabase";
 import { cryptoRewardSystem, supportedCurrencies } from "@/lib/crypto-utils";
 import { auditLogger } from "@/lib/audit-logger";
+import { formatCaseText, formatCaseTitle, extractCaseLocation, getCaseDateReceived } from "@/lib/utils";
 
 export default function EthicsOfficerDashboard() {
   const [cases, setCases] = useState<Case[]>([]);
@@ -935,11 +936,11 @@ export default function EthicsOfficerDashboard() {
                             {case_.report_id || case_.case_number}
                           </TableCell>
                           <TableCell className="text-white max-w-xs truncate">
-                            {case_.title}
+                            {formatCaseTitle(case_.title, case_.description, case_.created_at)}
                           </TableCell>
                           <TableCell className="text-slate-300 max-w-sm">
                             <span className="truncate block">
-                              {case_.vapi_report_summary || case_.description}
+                              {formatCaseText(case_.vapi_report_summary || case_.description)}
                             </span>
                             <Dialog>
                               <DialogTrigger asChild>
@@ -1277,7 +1278,7 @@ export default function EthicsOfficerDashboard() {
                               {case_.case_number}
                             </TableCell>
                             <TableCell className="text-white">
-                              {case_.title}
+                              {formatCaseTitle(case_.title, case_.description, case_.created_at)}
                             </TableCell>
                             <TableCell className="text-green-400">
                               ${case_.recovery_amount?.toLocaleString() || "0"}
@@ -1345,14 +1346,30 @@ export default function EthicsOfficerDashboard() {
                     </p>
                   </div>
                 </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-slate-300">Date Received</Label>
+                    <p className="text-white">
+                      {getCaseDateReceived(selectedCase.title, selectedCase.description, selectedCase.created_at)}
+                    </p>
+                  </div>
+                  <div>
+                    <Label className="text-slate-300">Location</Label>
+                    <p className="text-white">
+                      {extractCaseLocation(selectedCase.title) || extractCaseLocation(selectedCase.description)}
+                    </p>
+                  </div>
+                </div>
                 <div>
                   <Label className="text-slate-300">Title</Label>
-                  <p className="text-white">{selectedCase.title}</p>
+                  <p className="text-white">
+                    {formatCaseTitle(selectedCase.title, selectedCase.description, selectedCase.created_at)}
+                  </p>
                 </div>
                 <div>
                   <Label className="text-slate-300">Description</Label>
                   <div className="bg-slate-900/50 p-3 rounded border border-slate-600">
-                    <p className="text-slate-300">{selectedCase.description}</p>
+                    <p className="text-slate-300">{formatCaseText(selectedCase.description)}</p>
                   </div>
                 </div>
                 {selectedCase.vapi_transcript && (
