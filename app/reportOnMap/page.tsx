@@ -20,6 +20,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/com
 import { Eye, EyeOff } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { ToastAction } from "@/components/ui/toast";
+import ReportForm from './ReportForm';
 
 // Dynamically import the MapWrapper component
 const MapWrapper = dynamic(
@@ -58,7 +59,7 @@ const ReportOnMap = () => {
   const mapRef = useRef<L.Map | null>(null);
   const popupRef = useRef<L.Popup | null>(null);
   const searchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const [showReportModal, setShowReportModal] = useState(false);
+  const [showReportForm, setShowReportForm] = useState(false);
   const [reporterName, setReporterName] = useState('');
   const [reporterRole, setReporterRole] = useState('');
   const [reporterCompany, setReporterCompany] = useState('');
@@ -92,25 +93,14 @@ const ReportOnMap = () => {
       console.error('Invalid coordinates received:', latlng);
       return;
     }
-
-    console.log('Map clicked at:', latlng); // Debug log
-
-    // Clear existing marker and popup
-    if (mapRef.current) {
-      mapRef.current.eachLayer((layer: any) => {
-        if (layer.options && layer.options.icon) {
-          mapRef.current?.removeLayer(layer);
-        }
-      });
-    }
-
     setSelectedLocation(latlng);
     setMapCenter(latlng);
     await getAddressFromCoordinates(latlng);
+    setShowReportForm(true);
   };
 
   const handleStartReport = () => {
-    setShowReportModal(true);
+    setShowReportForm(true);
   };
 
   const handleSearch = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -342,7 +332,7 @@ const ReportOnMap = () => {
         duration: 3000,
       });
       
-      setShowReportModal(false);
+      setShowReportForm(false);
       setFormData({
         category: '',
         title: '',
@@ -364,7 +354,7 @@ const ReportOnMap = () => {
         description: error instanceof Error ? error.message : "Failed to submit report",
         duration: 5000,
         action: (
-          <ToastAction altText="Try again" onClick={() => setShowReportModal(true)}>
+          <ToastAction altText="Try again" onClick={() => setShowReportForm(true)}>
             Try again
           </ToastAction>
         ),
@@ -450,173 +440,33 @@ const ReportOnMap = () => {
         </form>
       </div>
       {/* Map */}
-      <div className="aegis-map-wrapper" style={{zIndex: 1}}> 
+      <div className="aegis-map-wrapper" style={{zIndex: 99999}}>
         <MapWrapper
           selectedLocation={selectedLocation}
           mapCenter={mapCenter}
           onMapClick={handleMapClick}
-          onStartReport={handleStartReport}
+          onStartReport={() => setShowReportForm(true)}
           address={address}
           mapRef={mapRef}
           popupRef={popupRef}
         />
       </div>
-      {/* Report Modal */}
-      <Dialog open={showReportModal} onOpenChange={setShowReportModal}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto !z-[99999] bg-slate-900 border-slate-700">
-          <DialogHeader>
-            <DialogTitle className="text-2xl font-bold text-white">Submit a Secure Report</DialogTitle>
-            <DialogDescription className="text-slate-400">
-              Report wrongdoing safely and anonymously with military-grade protection
-            </DialogDescription>
-          </DialogHeader>
-          <form onSubmit={handleReportSubmit} className="space-y-6">
-            {/* Category */}
-            <div className="space-y-2">
-              <Label htmlFor="category" className="text-slate-300">
-                Category *
-              </Label>
-              <Select
-                value={formData.category}
-                onValueChange={(value) => setFormData({ ...formData, category: value })}
-              >
-                <SelectTrigger className="w-full bg-slate-900/50 border-slate-600 text-white hover:bg-slate-800/50 focus:ring-2 focus:ring-blue-500">
-                  <SelectValue placeholder="Select the type of issue" />
-                </SelectTrigger>
-                <SelectContent className="bg-slate-800 border-slate-600 z-[99999]">
-                  <SelectItem value="fraud" className="text-white hover:bg-slate-700 focus:bg-slate-700 cursor-pointer">Fraud</SelectItem>
-                  <SelectItem value="abuse" className="text-white hover:bg-slate-700 focus:bg-slate-700 cursor-pointer">Abuse</SelectItem>
-                  <SelectItem value="discrimination" className="text-white hover:bg-slate-700 focus:bg-slate-700 cursor-pointer">Discrimination</SelectItem>
-                  <SelectItem value="harassment" className="text-white hover:bg-slate-700 focus:bg-slate-700 cursor-pointer">Harassment</SelectItem>
-                  <SelectItem value="safety" className="text-white hover:bg-slate-700 focus:bg-slate-700 cursor-pointer">Safety Violations</SelectItem>
-                  <SelectItem value="corruption" className="text-white hover:bg-slate-700 focus:bg-slate-700 cursor-pointer">Corruption</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Title */}
-            <div className="space-y-2">
-              <Label htmlFor="title" className="text-slate-300">
-                Brief Title *
-              </Label>
-              <Input
-                id="title"
-                value={formData.title}
-                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                placeholder="Brief description of the issue"
-                className="bg-slate-900/50 border-slate-600 text-white"
-                required
-              />
-            </div>
-
-            {/* Description */}
-            <div className="space-y-2">
-              <Label htmlFor="description" className="text-slate-300">
-                Detailed Description *
-              </Label>
-              <Textarea
-                id="description"
-                value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                placeholder="Provide as much detail as possible about what happened, when, where, and who was involved..."
-                className="bg-slate-900/50 border-slate-600 text-white min-h-[120px]"
-                required
-              />
-            </div>
-
-            {/* Location (pre-filled from map) */}
-            <div className="space-y-2">
-              <Label htmlFor="location" className="text-slate-300">
-                Location
-              </Label>
-              <Input
-                id="location"
-                value={address}
-                readOnly
-                className="bg-slate-900/50 border-slate-600 text-white"
-              />
-              <p className="text-sm text-slate-400">
-                Lat: {selectedLocation?.lat.toFixed(5)}, Lng: {selectedLocation?.lng.toFixed(5)}
-              </p>
-            </div>
-
-            {/* Date */}
-            <div className="space-y-2">
-              <Label htmlFor="dateOccurred" className="text-slate-300">
-                Date Occurred
-              </Label>
-              <Input
-                id="dateOccurred"
-                type="date"
-                value={formData.dateOccurred}
-                onChange={(e) => setFormData({ ...formData, dateOccurred: e.target.value })}
-                className="bg-slate-900/50 border-slate-600 text-white"
-              />
-            </div>
-
-            {/* File Upload */}
-            <div className="space-y-2">
-              <Label className="text-slate-300">Supporting Documents (Optional)</Label>
-              <div className="border-2 border-dashed border-slate-600 rounded-lg p-6 text-center">
-                <Upload className="h-8 w-8 text-slate-400 mx-auto mb-2" />
-                <p className="text-slate-400">Drag and drop files here, or click to select</p>
-                <p className="text-sm text-slate-500 mt-1">All files are encrypted and stored securely</p>
-              </div>
-            </div>
-
-            {/* Anonymous Option */}
-            <div className="space-y-4">
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="anonymous"
-                  checked={formData.anonymous}
-                  onCheckedChange={(checked) => setFormData({ ...formData, anonymous: checked as boolean })}
-                  className="border-slate-600"
-                />
-                <Label htmlFor="anonymous" className="text-slate-300">
-                  Submit anonymously (recommended)
-                </Label>
-              </div>
-
-              {!formData.anonymous && (
-                <div className="space-y-2">
-                  <Label htmlFor="contactInfo" className="text-slate-300">
-                    Contact Information
-                  </Label>
-                  <Input
-                    id="contactInfo"
-                    value={formData.contactInfo}
-                    onChange={(e) => setFormData({ ...formData, contactInfo: e.target.value })}
-                    placeholder="Email or phone number (optional)"
-                    className="bg-slate-900/50 border-slate-600 text-white"
-                  />
-                </div>
-              )}
-            </div>
-
-            {/* Security Notice */}
-            <div className="bg-slate-900/50 p-4 rounded border border-slate-600">
-              <div className="flex items-start gap-3">
-                <Lock className="h-5 w-5 text-blue-400 mt-0.5" />
-                <div>
-                  <h4 className="text-white font-semibold mb-1">Your Security is Our Priority</h4>
-                  <ul className="text-sm text-slate-400 space-y-1">
-                    <li>• All data is encrypted with military-grade security</li>
-                    <li>• Anonymous reports cannot be traced back to you</li>
-                    <li>• We use Tor networks and zero-knowledge proofs</li>
-                    <li>• You'll receive a secret code to track your report</li>
-                  </ul>
-                </div>
-              </div>
-            </div>
-
-            <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 py-3 text-lg" disabled={isLoading}>
-              {isLoading ? "Submitting Securely..." : "Submit Report Securely"}
-              <Shield className="ml-2 h-5 w-5" />
-            </Button>
-          </form>
-        </DialogContent>
-      </Dialog>
+      {/* Report Form Modal */}
+      <ReportForm
+        open={showReportForm}
+        onClose={() => {
+          setShowReportForm(false);
+          setSelectedLocation(null);
+          setAddress('');
+        }}
+        onSuccess={() => {
+          setShowReportForm(false);
+          setSelectedLocation(null);
+          setAddress('');
+        }}
+        address={address}
+        location={selectedLocation}
+      />
     </div>
   );
 };
