@@ -110,6 +110,7 @@ export default function MapComponent() {
   const [cases, setCases] = useState<Case[]>([]);
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<'cases' | 'safety'>('cases');
+  const [mapError, setMapError] = useState<string | null>(null);
 
   useEffect(() => {
     fetchCases();
@@ -131,81 +132,94 @@ export default function MapComponent() {
     }
   };
 
+  // Initialize map
   useEffect(() => {
     if (map.current) return;
     if (!mapContainer.current) return;
 
-    // Initialize the map
-    map.current = L.map(mapContainer.current, {
-      center: [38.8574, -77.0234],
-      zoom: 14,
-      zoomControl: false,
-      attributionControl: false
-    });
+    try {
+      console.log("Initializing map...");
+      
+      // Initialize the map
+      map.current = L.map(mapContainer.current, {
+        center: [38.8574, -77.0234],
+        zoom: 14,
+        zoomControl: false,
+        attributionControl: false
+      });
 
-    // Add the light-themed map tiles
-    L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", {
-      maxZoom: 19,
-      attribution: '© OpenStreetMap contributors, © CARTO'
-    }).addTo(map.current);
+      console.log("Map initialized, adding tile layer...");
 
-    // Add zoom control in top right
-    L.control.zoom({
-      position: 'topright'
-    }).addTo(map.current);
+      // Add the light-themed map tiles
+      L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", {
+        maxZoom: 19,
+        attribution: '© OpenStreetMap contributors, © CARTO'
+      }).addTo(map.current);
 
-    // Add attribution in bottom right
-    L.control.attribution({
-      position: 'bottomright'
-    }).addTo(map.current);
+      console.log("Tile layer added, adding controls...");
 
-    // Add view mode toggle control
-    const ViewModeControl = L.Control.extend({
-      options: {
+      // Add zoom control in top right
+      L.control.zoom({
         position: 'topright'
-      },
-      onAdd: function() {
-        const div = L.DomUtil.create('div', 'leaflet-control leaflet-bar');
-        div.innerHTML = `
-          <div style="
-            background-color: rgba(0, 0, 0, 0.8);
-            padding: 8px;
-            border-radius: 4px;
-            margin-bottom: 8px;
-          ">
-            <button id="viewModeToggle" style="
-              background-color: #2c3e50;
-              border: none;
-              color: white;
-              padding: 8px 16px;
+      }).addTo(map.current);
+
+      // Add attribution in bottom right
+      L.control.attribution({
+        position: 'bottomright'
+      }).addTo(map.current);
+
+      // Add view mode toggle control
+      const ViewModeControl = L.Control.extend({
+        options: {
+          position: 'topright'
+        },
+        onAdd: function() {
+          const div = L.DomUtil.create('div', 'leaflet-control leaflet-bar');
+          div.innerHTML = `
+            <div style="
+              background-color: rgba(0, 0, 0, 0.8);
+              padding: 8px;
               border-radius: 4px;
-              cursor: pointer;
-              font-size: 14px;
-              width: 100%;
+              margin-bottom: 8px;
             ">
-              Switch to ${viewMode === 'cases' ? 'Safety View' : 'Cases View'}
-            </button>
-          </div>
-        `;
-        return div;
-      }
-    });
+              <button id="viewModeToggle" style="
+                background-color: #2c3e50;
+                border: none;
+                color: white;
+                padding: 8px 16px;
+                border-radius: 4px;
+                cursor: pointer;
+                font-size: 14px;
+                width: 100%;
+              ">
+                Switch to ${viewMode === 'cases' ? 'Safety View' : 'Cases View'}
+              </button>
+            </div>
+          `;
+          return div;
+        }
+      });
 
-    new ViewModeControl().addTo(map.current);
+      new ViewModeControl().addTo(map.current);
 
-    // Add event listener for view mode toggle
-    setTimeout(() => {
-      const toggleButton = document.getElementById('viewModeToggle');
-      if (toggleButton) {
-        toggleButton.addEventListener('click', () => {
-          setViewMode(prev => prev === 'cases' ? 'safety' : 'cases');
-        });
-      }
-    }, 100);
+      console.log("Controls added, map initialization complete");
+
+      // Force a resize event to ensure the map renders properly
+      setTimeout(() => {
+        map.current?.invalidateSize();
+      }, 100);
+
+    } catch (error) {
+      console.error("Error initializing map:", error);
+      setMapError(error instanceof Error ? error.message : "Failed to initialize map");
+    }
 
     // Cleanup on unmount
     return () => {
-      map.current?.remove();
+      if (map.current) {
+        map.current.remove();
+        map.current = null;
+      }
     };
   }, []);
 
@@ -342,5 +356,22 @@ export default function MapComponent() {
     return <div className="h-full w-full flex items-center justify-center">Loading cases...</div>;
   }
 
-  return <div ref={mapContainer} className="h-full w-full" />;
+  if (mapError) {
+    return (
+      <div className="h-full w-full flex items-center justify-center">
+        <div className="text-red-500">Error: {mapError}</div>
+      </div>
+    );
+  }
+
+  return (
+    <div 
+      ref={mapContainer} 
+      className="h-full w-full"
+      style={{ 
+        minHeight: "500px",
+        backgroundColor: "#f0f0f0" // Light gray background to show the container
+      }} 
+    />
+  );
 } 
