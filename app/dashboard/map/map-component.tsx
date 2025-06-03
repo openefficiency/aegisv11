@@ -140,32 +140,49 @@ export default function MapComponent() {
     try {
       console.log("Initializing map...");
       
-      // Initialize the map
+      // Initialize the map with explicit options
       map.current = L.map(mapContainer.current, {
         center: [38.8574, -77.0234],
         zoom: 14,
         zoomControl: false,
-        attributionControl: false
+        attributionControl: false,
+        minZoom: 2,
+        maxZoom: 19,
+        zoomSnap: 1,
+        zoomDelta: 1,
+        wheelDebounceTime: 40,
+        wheelPxPerZoomLevel: 60,
+        tapTolerance: 15,
+        touchZoom: true,
+        bounceAtZoomLimits: true
       });
 
       console.log("Map initialized, adding tile layer...");
 
-      // Add the light-themed map tiles
-      L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", {
+      // Add OpenStreetMap tiles with explicit options
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
         maxZoom: 19,
-        attribution: '© OpenStreetMap contributors, © CARTO'
+        attribution: '© OpenStreetMap contributors',
+        tileSize: 256,
+        zoomOffset: 0,
+        updateWhenIdle: true,
+        updateWhenZooming: true,
+        keepBuffer: 2
       }).addTo(map.current);
 
       console.log("Tile layer added, adding controls...");
 
       // Add zoom control in top right
       L.control.zoom({
-        position: 'topright'
+        position: 'topright',
+        zoomInText: '+',
+        zoomOutText: '-'
       }).addTo(map.current);
 
       // Add attribution in bottom right
       L.control.attribution({
-        position: 'bottomright'
+        position: 'bottomright',
+        prefix: '© OpenStreetMap contributors'
       }).addTo(map.current);
 
       // Add view mode toggle control
@@ -204,9 +221,29 @@ export default function MapComponent() {
 
       console.log("Controls added, map initialization complete");
 
-      // Force a resize event to ensure the map renders properly
+      // Force multiple resize events to ensure the map renders properly
+      const resizeMap = () => {
+        if (map.current) {
+          map.current.invalidateSize();
+          console.log("Map resized");
+        }
+      };
+
+      // Initial resize
+      setTimeout(resizeMap, 100);
+      
+      // Additional resizes
+      setTimeout(resizeMap, 500);
+      setTimeout(resizeMap, 1000);
+
+      // Add event listener for view mode toggle
       setTimeout(() => {
-        map.current?.invalidateSize();
+        const toggleButton = document.getElementById('viewModeToggle');
+        if (toggleButton) {
+          toggleButton.addEventListener('click', () => {
+            setViewMode(prev => prev === 'cases' ? 'safety' : 'cases');
+          });
+        }
       }, 100);
 
     } catch (error) {
@@ -370,7 +407,9 @@ export default function MapComponent() {
       className="h-full w-full"
       style={{ 
         minHeight: "500px",
-        backgroundColor: "#f0f0f0" // Light gray background to show the container
+        backgroundColor: "#f0f0f0",
+        position: "relative",
+        zIndex: 1
       }} 
     />
   );
