@@ -153,9 +153,29 @@ export default function MapComponent() {
         return;
       }
 
+      // Force container to be visible and have dimensions
+      mapContainer.current.style.display = "block";
+      mapContainer.current.style.visibility = "visible";
+      mapContainer.current.style.position = "absolute";
+      mapContainer.current.style.top = "0";
+      mapContainer.current.style.left = "0";
+      mapContainer.current.style.right = "0";
+      mapContainer.current.style.bottom = "0";
+      mapContainer.current.style.width = "100%";
+      mapContainer.current.style.height = "100%";
+      mapContainer.current.style.minHeight = "500px";
+
       // Check if container has dimensions
       const containerWidth = mapContainer.current.offsetWidth;
       const containerHeight = mapContainer.current.offsetHeight;
+
+      console.log("Container dimensions check:", {
+        width: containerWidth,
+        height: containerHeight,
+        clientWidth: mapContainer.current.clientWidth,
+        clientHeight: mapContainer.current.clientHeight,
+        style: mapContainer.current.style.cssText
+      });
 
       if (containerWidth === 0 || containerHeight === 0) {
         console.log("Container has no dimensions, waiting...", {
@@ -166,19 +186,13 @@ export default function MapComponent() {
         
         if (initAttempts < maxAttempts) {
           initAttempts++;
-          setTimeout(initializeMap, 500);
+          setTimeout(initializeMap, 1000); // Increased delay
           return;
         }
       }
 
       try {
         console.log("Starting map initialization...");
-        console.log("Container dimensions:", {
-          width: containerWidth,
-          height: containerHeight,
-          clientWidth: mapContainer.current.clientWidth,
-          clientHeight: mapContainer.current.clientHeight
-        });
         
         // Initialize the map with explicit options
         mapInstance = L.map(mapContainer.current, {
@@ -328,7 +342,8 @@ export default function MapComponent() {
           height: mapContainer.current.offsetHeight,
           clientWidth: mapContainer.current.clientWidth,
           clientHeight: mapContainer.current.clientHeight,
-          style: mapContainer.current.style.cssText
+          style: mapContainer.current.style.cssText,
+          computedStyle: window.getComputedStyle(mapContainer.current)
         });
       }
     };
