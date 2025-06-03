@@ -313,7 +313,13 @@ const ReportOnMap = () => {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to submit report');
+        // Construct a detailed error message
+        let errorMessage = data.error || 'Failed to submit report';
+        if (data.details) errorMessage += `\nDetails: ${data.details}`;
+        if (data.hint) errorMessage += `\nHint: ${data.hint}`;
+        if (data.code) errorMessage += `\nError Code: ${data.code}`;
+        
+        throw new Error(errorMessage);
       }
 
       // Show success state
