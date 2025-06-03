@@ -362,8 +362,8 @@ const ReportOnMap = () => {
         </MapContainer>
       </div>
       {/* Report Modal */}
-      <Dialog open={showReportModal} onOpenChange={setShowReportModal}>
-        <DialogContent>
+      <Dialog open={showReportModal} onOpenChange={setShowReportModal} style={{ zIndex: 99999 }}>
+        <DialogContent className="!z-[99999]">
           <DialogHeader>
             <DialogTitle>Report Summary</DialogTitle>
             <DialogDescription>Example of a filled report (demo)</DialogDescription>
