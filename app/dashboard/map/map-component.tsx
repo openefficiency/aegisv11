@@ -46,7 +46,7 @@ const exampleCases: ExampleCase[] = [
     status: "Under Investigation",
     category: "Fraud",
     description: "Unusual transactions detected in procurement department.",
-    location: generateRandomLocation(CONVENTION_CENTER.lat, CONVENTION_CENTER.lng, 100),
+    location: generateRandomLocation(CONVENTION_CENTER.lat, CONVENTION_CENTER.lng, 1000),
   },
   {
     id: "2",
@@ -55,7 +55,7 @@ const exampleCases: ExampleCase[] = [
     status: "Open",
     category: "Safety",
     description: "Multiple reports of unsafe working conditions.",
-    location: generateRandomLocation(CONVENTION_CENTER.lat, CONVENTION_CENTER.lng, 100),
+    location: generateRandomLocation(CONVENTION_CENTER.lat, CONVENTION_CENTER.lng, 1000),
   },
   {
     id: "3",
@@ -64,20 +64,19 @@ const exampleCases: ExampleCase[] = [
     status: "Resolved",
     category: "Discrimination",
     description: "Employee reports discriminatory practices.",
-    location: generateRandomLocation(CONVENTION_CENTER.lat, CONVENTION_CENTER.lng, 100),
+    location: generateRandomLocation(CONVENTION_CENTER.lat, CONVENTION_CENTER.lng, 1000),
   },
 ];
 
 // Debug: Log convention center and case locations
 console.log('Convention Center:', CONVENTION_CENTER);
-console.log('Case Locations:', exampleCases.map(c => ({
-  title: c.title,
-  location: c.location,
-  distance: Math.sqrt(
+exampleCases.forEach((c, i) => {
+  const dist = Math.sqrt(
     Math.pow(c.location.lat - CONVENTION_CENTER.lat, 2) +
     Math.pow(c.location.lng - CONVENTION_CENTER.lng, 2)
-  ) * 111000 // Convert to meters
-})));
+  ) * 111000;
+  console.log(`Case ${i+1}:`, c.title, c.location, `Distance: ${dist.toFixed(2)}m`);
+});
 
 // Marker color and icon mapping by category
 const categoryStyles: Record<string, { color: string; icon: string }> = {
@@ -147,7 +146,7 @@ export default function MapComponent() {
       // Use category-specific icon and color
       const style = categoryStyles[c.category] || { color: '#888', icon: 'fa-solid fa-question' };
       const customIcon = L.divIcon({
-        className: 'custom-marker caseLocationIcon',
+        className: `custom-marker caseLocationIcon caseLocationIcon${c.id}`,
         html: `
           <div style="background-color:${style.color};width:28px;height:28px;border-radius:50%;border:2px solid white;box-shadow:0 0 8px rgba(0,0,0,0.2);display:flex;align-items:center;justify-content:center;">
             <i class="${style.icon}" style="color:white;font-size:16px;"></i>
@@ -166,6 +165,13 @@ export default function MapComponent() {
           <div style="font-size:13px;margin-bottom:4px;"><b>Status:</b> ${c.status}</div>
           <div style="font-size:13px;margin-bottom:4px;"><b>Category:</b> ${c.category}</div>
           <div style="font-size:13px;color:#666;">${c.description}</div>
+          <div style="font-size:12px;color:#888;margin-top:8px;">Lat: ${c.location.lat.toFixed(6)}, Lng: ${c.location.lng.toFixed(6)}</div>
+          <div style="font-size:12px;color:#888;">Distance from center: ${(
+            Math.sqrt(
+              Math.pow(c.location.lat - CONVENTION_CENTER.lat, 2) +
+              Math.pow(c.location.lng - CONVENTION_CENTER.lng, 2)
+            ) * 111000
+          ).toFixed(2)} m</div>
           <button style='margin-top:12px;padding:8px 16px;background:#007bff;color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:14px;' onclick='alert("Deploying drone for: ${c.title}")'>
             🚁 Deploy Drone
           </button>
