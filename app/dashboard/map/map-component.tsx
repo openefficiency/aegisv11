@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+import { supabase, type Case } from "@/lib/supabase";
 
 // Fix for default marker icons in Leaflet with Next.js
 const DefaultIcon = L.icon({
@@ -21,6 +22,28 @@ export default function MapComponent() {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<L.Map | null>(null);
   const markersRef = useRef<L.Marker[]>([]);
+  const [cases, setCases] = useState<Case[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchCases();
+  }, []);
+
+  const fetchCases = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("cases")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+      setCases(data || []);
+    } catch (error) {
+      console.error("Error fetching cases:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     if (map.current) return; // initialize map only once
@@ -50,61 +73,9 @@ export default function MapComponent() {
       position: 'bottomright'
     }).addTo(map.current);
 
-    // Add example investigations around the convention center
-    const investigations = [
-      {
-        id: "INV-2024-001",
-        title: "AI Ethics Conference",
-        lat: 38.8574,
-        lng: -77.0234,
-        status: "Active",
-        date: "2024-03-15",
-        description: "Monitoring AI ethics discussions and potential bias in conference presentations",
-        severity: "High",
-        investigator: "Dr. Sarah Chen",
-        location: "Walter E. Washington Convention Center"
-      },
-      {
-        id: "INV-2024-002",
-        title: "Data Privacy Workshop",
-        lat: 38.8590,
-        lng: -77.0250,
-        status: "Under Review",
-        date: "2024-03-10",
-        description: "Review of data handling practices in workshop demonstrations",
-        severity: "Critical",
-        investigator: "James Wilson",
-        location: "Shaw Library"
-      },
-      {
-        id: "INV-2024-003",
-        title: "Algorithm Transparency Panel",
-        lat: 38.8560,
-        lng: -77.0210,
-        status: "Pending",
-        date: "2024-03-12",
-        description: "Assessment of transparency in financial algorithms presented at panel discussion",
-        severity: "Medium",
-        investigator: "Maria Rodriguez",
-        location: "Mount Vernon Square"
-      },
-      {
-        id: "INV-2024-004",
-        title: "AI Safety Demonstration",
-        lat: 38.8580,
-        lng: -77.0240,
-        status: "Active",
-        date: "2024-03-14",
-        description: "Evaluation of safety protocols in autonomous vehicle demonstrations",
-        severity: "High",
-        investigator: "Dr. Michael Park",
-        location: "Convention Center Plaza"
-      }
-    ];
-
     // Create custom markers with different colors based on severity
-    const getMarkerColor = (severity: string) => {
-      switch (severity.toLowerCase()) {
+    const getMarkerColor = (priority: string) => {
+      switch (priority.toLowerCase()) {
         case "critical":
           return "#ff4444";
         case "high":
@@ -117,8 +88,8 @@ export default function MapComponent() {
     };
 
     // Add markers to the map
-    markersRef.current = investigations.map((investigation) => {
-      const markerColor = getMarkerColor(investigation.severity);
+    markersRef.current = cases.map((case_) => {
+      const markerColor = getMarkerColor(case_.priority);
       const customIcon = L.divIcon({
         className: `custom-marker ${markerColor}`,
         html: `<div style="
@@ -136,18 +107,31 @@ export default function MapComponent() {
 
       const popupContent = `
         <div style="min-width: 250px; padding: 12px; background: white; color: #333; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
-          <h3 style="margin: 0 0 12px 0; color: #333; font-size: 16px; border-bottom: 1px solid #eee; padding-bottom: 8px;">${investigation.title}</h3>
-          <p style="margin: 6px 0; font-size: 13px;"><strong>ID:</strong> ${investigation.id}</p>
-          <p style="margin: 6px 0; font-size: 13px;"><strong>Status:</strong> <span style="color: ${investigation.status === 'Active' ? '#00C851' : investigation.status === 'Under Review' ? '#ffbb33' : '#666'}">${investigation.status}</span></p>
-          <p style="margin: 6px 0; font-size: 13px;"><strong>Date:</strong> ${investigation.date}</p>
-          <p style="margin: 6px 0; font-size: 13px;"><strong>Severity:</strong> <span style="color: ${markerColor}">${investigation.severity}</span></p>
-          <p style="margin: 6px 0; font-size: 13px;"><strong>Investigator:</strong> ${investigation.investigator}</p>
-          <p style="margin: 6px 0; font-size: 13px;"><strong>Location:</strong> ${investigation.location}</p>
-          <p style="margin: 12px 0 0 0; font-size: 13px; color: #666;">${investigation.description}</p>
+          <h3 style="margin: 0 0 12px 0; color: #333; font-size: 16px; border-bottom: 1px solid #eee; padding-bottom: 8px;">${case_.title}</h3>
+          <p style="margin: 6px 0; font-size: 13px;"><strong>Case ID:</strong> ${case_.case_number}</p>
+          <p style="margin: 6px 0; font-size: 13px;"><strong>Status:</strong> <span style="color: ${case_.status === 'resolved' ? '#00C851' : case_.status === 'under_investigation' ? '#ffbb33' : '#666'}">${case_.status.replace('_', ' ')}</span></p>
+          <p style="margin: 6px 0; font-size: 13px;"><strong>Priority:</strong> <span style="color: ${markerColor}">${case_.priority}</span></p>
+          <p style="margin: 6px 0; font-size: 13px;"><strong>Category:</strong> ${case_.category}</p>
+          <p style="margin: 6px 0; font-size: 13px;"><strong>Created:</strong> ${new Date(case_.created_at).toLocaleDateString()}</p>
+          ${case_.reward_amount ? `<p style="margin: 6px 0; font-size: 13px;"><strong>Reward:</strong> $${case_.reward_amount.toLocaleString()}</p>` : ''}
+          <p style="margin: 12px 0 0 0; font-size: 13px; color: #666;">${case_.description}</p>
         </div>
       `;
 
-      const marker = L.marker([investigation.lat, investigation.lng], { icon: customIcon })
+      // Extract location from structured data if available
+      let lat = 38.8574; // Default to convention center
+      let lng = -77.0234;
+      
+      if (case_.structured_data?.incident?.location) {
+        // If we have location data, use it
+        const location = case_.structured_data.incident.location;
+        if (location.lat && location.lng) {
+          lat = location.lat;
+          lng = location.lng;
+        }
+      }
+
+      const marker = L.marker([lat, lng], { icon: customIcon })
         .bindPopup(popupContent)
         .addTo(map.current!);
 
@@ -176,7 +160,11 @@ export default function MapComponent() {
       map.current?.remove();
       document.head.removeChild(style);
     };
-  }, []);
+  }, [cases]); // Re-run when cases data changes
+
+  if (loading) {
+    return <div className="h-full w-full flex items-center justify-center">Loading cases...</div>;
+  }
 
   return <div ref={mapContainer} className="h-full w-full" />;
 } 
