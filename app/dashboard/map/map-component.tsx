@@ -35,7 +35,7 @@ const exampleCases: ExampleCase[] = [
     status: "Under Investigation",
     category: "Fraud",
     description: "Unusual transactions detected in procurement department.",
-    location: generateRandomLocation(CONVENTION_CENTER.lat, CONVENTION_CENTER.lng, 250),
+    location: generateRandomLocation(CONVENTION_CENTER.lat, CONVENTION_CENTER.lng, 100),
   },
   {
     id: "2",
@@ -44,7 +44,7 @@ const exampleCases: ExampleCase[] = [
     status: "Open",
     category: "Safety",
     description: "Multiple reports of unsafe working conditions.",
-    location: generateRandomLocation(CONVENTION_CENTER.lat, CONVENTION_CENTER.lng, 250),
+    location: generateRandomLocation(CONVENTION_CENTER.lat, CONVENTION_CENTER.lng, 100),
   },
   {
     id: "3",
@@ -53,9 +53,20 @@ const exampleCases: ExampleCase[] = [
     status: "Resolved",
     category: "Discrimination",
     description: "Employee reports discriminatory practices.",
-    location: generateRandomLocation(CONVENTION_CENTER.lat, CONVENTION_CENTER.lng, 250),
+    location: generateRandomLocation(CONVENTION_CENTER.lat, CONVENTION_CENTER.lng, 100),
   },
 ];
+
+// Debug: Log convention center and case locations
+console.log('Convention Center:', CONVENTION_CENTER);
+console.log('Case Locations:', exampleCases.map(c => ({
+  title: c.title,
+  location: c.location,
+  distance: Math.sqrt(
+    Math.pow(c.location.lat - CONVENTION_CENTER.lat, 2) +
+    Math.pow(c.location.lng - CONVENTION_CENTER.lng, 2)
+  ) * 111000 // Convert to meters
+})));
 
 // Marker color and icon mapping by category
 const categoryStyles: Record<string, { color: string; icon: string }> = {
@@ -77,6 +88,12 @@ export default function MapComponent() {
   const markersRef = useRef<L.Marker[]>([]);
 
   useEffect(() => {
+    // Add Font Awesome CDN
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css';
+    document.head.appendChild(link);
+
     if (!mapContainer.current) return;
     if (mapRef.current) return;
 
@@ -119,9 +136,8 @@ export default function MapComponent() {
       // Use category-specific icon and color
       const style = categoryStyles[c.category] || { color: '#888', icon: 'fa-solid fa-question' };
       const customIcon = L.divIcon({
-        className: 'custom-marker',
+        className: 'custom-marker caseLocationIcon',
         html: `
-          <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
           <div style="background-color:${style.color};width:28px;height:28px;border-radius:50%;border:2px solid white;box-shadow:0 0 8px rgba(0,0,0,0.2);display:flex;align-items:center;justify-content:center;">
             <i class="${style.icon}" style="color:white;font-size:16px;"></i>
           </div>
@@ -129,7 +145,9 @@ export default function MapComponent() {
         iconSize: [32, 32],
         iconAnchor: [16, 16],
       });
-      const marker = L.marker([c.location.lat, c.location.lng], { icon: customIcon }).addTo(map);
+      const marker = L.marker([c.location.lat, c.location.lng], { 
+        icon: customIcon
+      }).addTo(map);
       marker.bindPopup(`
         <div style="min-width:220px;padding:10px 0 0 0;">
           <h3 style="margin:0 0 8px 0;font-size:16px;color:#333;">${c.title}</h3>
@@ -150,6 +168,8 @@ export default function MapComponent() {
       map.remove();
       mapRef.current = null;
       markersRef.current = [];
+      // Remove Font Awesome CDN on cleanup
+      document.head.removeChild(link);
     };
   }, []);
 
