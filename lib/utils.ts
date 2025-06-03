@@ -28,7 +28,14 @@ export function formatCaseText(field: any): string {
       value.title ||
       value.detailed_description ||
       value.description ||
-      (value.incident && (value.incident.description || value.incident.summary)) ||
+      (value.incident &&
+        (value.incident.detailed_description ||
+          value.incident.description ||
+          value.incident.summary)) ||
+      (value.structuredData &&
+        (value.structuredData.detailed_description ||
+          value.structuredData.description ||
+          value.structuredData.summary)) ||
       ""
     )
   }
@@ -67,8 +74,10 @@ export function extractCaseLocation(field: any): string {
 
   return (
     data.location ||
-    (data.incident && data.incident.location) ||
-    (data.structuredData && data.structuredData.location) ||
+    data.location_of_incident ||
+    (data.incident && (data.incident.location || data.incident.location_of_incident)) ||
+    (data.structuredData &&
+      (data.structuredData.location || data.structuredData.location_of_incident)) ||
     ""
   )
 }
@@ -80,7 +89,15 @@ export function extractCaseDate(field: any): string {
   return (
     data.date_received ||
     data.date ||
-    (data.incident && (data.incident.date || data.incident.date_received)) ||
+    data.date_of_incident ||
+    (data.incident &&
+      (data.incident.date ||
+        data.incident.date_received ||
+        data.incident.date_of_incident)) ||
+    (data.structuredData &&
+      (data.structuredData.date ||
+        data.structuredData.date_received ||
+        data.structuredData.date_of_incident)) ||
     ""
   )
 }
