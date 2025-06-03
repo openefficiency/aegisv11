@@ -8,7 +8,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import type { LatLngLiteral } from 'leaflet';
 import { useMapEvents, MapContainer as StaticMapContainer, TileLayer as StaticTileLayer, Marker as StaticMarker, Popup as StaticPopup } from 'react-leaflet';
-import type L from 'leaflet';
+import L from 'leaflet';
 import { FaSearch } from 'react-icons/fa';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
@@ -100,16 +100,18 @@ const ReportOnMap = () => {
       return;
     }
 
+    // Clear existing marker and popup
+    if (mapRef.current) {
+      mapRef.current.eachLayer((layer) => {
+        if (layer instanceof L.Marker) {
+          mapRef.current?.removeLayer(layer);
+        }
+      });
+    }
+
     setSelectedLocation(latlng);
     setMapCenter(latlng);
     await getAddressFromCoordinates(latlng);
-    
-    // Open popup after a short delay to ensure marker is rendered
-    setTimeout(() => {
-      if (popupRef.current && mapRef.current) {
-        popupRef.current.openOn(mapRef.current);
-      }
-    }, 100);
   };
 
   const handleStartReport = () => {
@@ -374,20 +376,9 @@ const ReportOnMap = () => {
   // Add success state UI
   if (isSubmitted) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900">
-        <nav className="border-b border-slate-800 bg-slate-900/50 backdrop-blur-sm">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex justify-between items-center h-16">
-              <Link href="/" className="flex items-center space-x-2">
-                <Shield className="h-8 w-8 text-blue-400" />
-                <span className="text-xl font-bold text-white">AegisWhistle</span>
-              </Link>
-            </div>
-          </div>
-        </nav>
-
-        <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          <Card className="bg-slate-800/50 border-slate-700">
+      <div className="fixed inset-0 bg-slate-900/95 backdrop-blur-sm z-[99999] overflow-y-auto">
+        <div className="min-h-screen flex items-center justify-center p-4">
+          <Card className="bg-slate-800/50 border-slate-700 w-full max-w-2xl">
             <CardHeader className="text-center">
               <div className="mx-auto w-16 h-16 bg-green-600 rounded-full flex items-center justify-center mb-4">
                 <Shield className="h-8 w-8 text-white" />
@@ -473,7 +464,7 @@ const ReportOnMap = () => {
       {/* Navigation */}
       <nav className="border-b border-slate-800 bg-slate-900/50 backdrop-blur-sm sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16" >
+          <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-2">
               <div className="relative w-8 h-8">
                 <Image src="/images/aegis-logo.webp" alt="Aegis Logo" fill className="object-contain" />
@@ -496,7 +487,7 @@ const ReportOnMap = () => {
         </div>
       </nav>
       {/* Search Bar */}
-      <div className="flex justify-center items-center py-6 bg-transparent sticky top-16 z-40" style={{ zIndex: 1000 }}>
+      <div className="flex justify-center items-center py-6 bg-transparent sticky top-16 z-40">
         <form onSubmit={handleSearch} className="relative w-full max-w-xl mx-4">
           <div className="relative">
             <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
@@ -544,7 +535,7 @@ const ReportOnMap = () => {
         </form>
       </div>
       {/* Map */}
-      <div style={{ height: 'calc(100vh - 64px - 56px)', width: '100vw' }}>
+      <div style={{ height: 'calc(100vh - 64px - 56px)', width: '100vw', position: 'relative' }}>
         <MapContainer
           center={mapCenter}
           zoom={14}
@@ -559,8 +550,21 @@ const ReportOnMap = () => {
           />
           <MapEvents onMapClick={handleMapClick} />
           {selectedLocation && (
-            <Marker position={selectedLocation}>
-              <Popup ref={popupRef}>
+            <Marker 
+              position={selectedLocation}
+              eventHandlers={{
+                click: () => {
+                  if (popupRef.current && mapRef.current) {
+                    popupRef.current.openOn(mapRef.current);
+                  }
+                }
+              }}
+            >
+              <Popup 
+                ref={popupRef}
+                className="custom-popup"
+                position={selectedLocation}
+              >
                 <div className="p-3 min-w-[250px]">
                   <h3 className="font-bold text-lg mb-2 text-slate-900">Report Location</h3>
                   <p className="text-sm text-slate-600 mb-2">{address}</p>
