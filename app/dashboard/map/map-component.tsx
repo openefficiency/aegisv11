@@ -35,7 +35,7 @@ const exampleCases: ExampleCase[] = [
     status: "Under Investigation",
     category: "Fraud",
     description: "Unusual transactions detected in procurement department.",
-    location: generateRandomLocation(CONVENTION_CENTER.lat, CONVENTION_CENTER.lng, 200),
+    location: generateRandomLocation(CONVENTION_CENTER.lat, CONVENTION_CENTER.lng, 1000),
   },
   {
     id: "2",
@@ -44,7 +44,7 @@ const exampleCases: ExampleCase[] = [
     status: "Open",
     category: "Safety",
     description: "Multiple reports of unsafe working conditions.",
-    location: generateRandomLocation(CONVENTION_CENTER.lat, CONVENTION_CENTER.lng, 200),
+    location: generateRandomLocation(CONVENTION_CENTER.lat, CONVENTION_CENTER.lng, 1000),
   },
   {
     id: "3",
@@ -53,9 +53,16 @@ const exampleCases: ExampleCase[] = [
     status: "Resolved",
     category: "Discrimination",
     description: "Employee reports discriminatory practices.",
-    location: generateRandomLocation(CONVENTION_CENTER.lat, CONVENTION_CENTER.lng, 200),
+    location: generateRandomLocation(CONVENTION_CENTER.lat, CONVENTION_CENTER.lng, 1000),
   },
 ];
+
+// Marker color mapping by category
+const categoryColors: Record<string, string> = {
+  Fraud: '#ff4444',        // Red
+  Safety: '#ffbb33',       // Yellow
+  Discrimination: '#00C851'// Green
+};
 
 // Fix for default marker icons in Next.js
 L.Icon.Default.mergeOptions({
@@ -104,7 +111,14 @@ export default function MapComponent() {
 
     // Add case markers
     exampleCases.forEach((c) => {
-      const marker = L.marker([c.location.lat, c.location.lng]).addTo(map);
+      const color = categoryColors[c.category] || '#888';
+      const customIcon = L.divIcon({
+        className: 'custom-marker',
+        html: `<div style="background-color:${color};width:18px;height:18px;border-radius:50%;border:2px solid white;box-shadow:0 0 8px rgba(0,0,0,0.2);"></div>`,
+        iconSize: [22, 22],
+        iconAnchor: [11, 11],
+      });
+      const marker = L.marker([c.location.lat, c.location.lng], { icon: customIcon }).addTo(map);
       marker.bindPopup(`
         <div style="min-width:220px;padding:10px 0 0 0;">
           <h3 style="margin:0 0 8px 0;font-size:16px;color:#333;">${c.title}</h3>
