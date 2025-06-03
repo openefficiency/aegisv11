@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+import { type Case } from "@/lib/supabase";
 
 // Fix for default marker icons in Next.js
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -14,12 +15,12 @@ L.Icon.Default.mergeOptions({
 
 // Category icons mapping
 const categoryIcons = {
-  fraud: "fa-hand-holding-dollar",
-  abuse: "fa-triangle-exclamation",
-  discrimination: "fa-scale-balanced",
-  harassment: "fa-user-shield",
-  safety: "fa-hard-hat",
-  corruption: "fa-user-tie",
+  fraud: "fa-solid fa-hand-holding-dollar",
+  abuse: "fa-solid fa-triangle-exclamation",
+  discrimination: "fa-solid fa-scale-balanced",
+  harassment: "fa-solid fa-user-shield",
+  safety: "fa-solid fa-hard-hat",
+  corruption: "fa-solid fa-user-tie",
 };
 
 // Category colors mapping
@@ -32,97 +33,45 @@ const categoryColors = {
   corruption: "#D4A5A5",
 };
 
-// Example cases
-type Case = {
-  id: number;
-  priority: "low" | "medium" | "high" | "critical";
-  created_at: string;
-  structured_data?: {
-    incident?: {
-      category?: "fraud" | "abuse" | "discrimination" | "harassment" | "safety" | "corruption";
-      title?: string;
-      source?: string;
-      description?: string;
-      location?: { lat: number; lng: number };
-    };
-  };
-};
-
-const exampleCases: Case[] = [
-  {
-    id: 1,
-    priority: "high",
-    created_at: "2025-06-01T10:00:00Z",
-    structured_data: {
-      incident: {
-        category: "fraud",
-        title: "Financial Misconduct Report",
-        source: "Internal Audit",
-        description: "Suspected fraudulent transactions detected in accounting system.",
-        location: { lat: 37.7749, lng: -122.4194 },
-      },
-    },
-  },
-  {
-    id: 2,
-    priority: "medium",
-    created_at: "2025-06-02T14:30:00Z",
-    structured_data: {
-      incident: {
-        category: "safety",
-        title: "Workplace Safety Violation",
-        source: "Employee Report",
-        description: "Improper safety equipment usage in warehouse.",
-        location: { lat: 37.7725, lng: -122.4178 },
-      },
-    },
-  },
-  {
-    id: 3,
-    priority: "critical",
-    created_at: "2025-06-03T09:15:00Z",
-    structured_data: {
-      incident: {
-        category: "harassment",
-        title: "Workplace Harassment Complaint",
-        source: "HR Department",
-        description: "Reported verbal harassment in team meeting.",
-        location: { lat: 37.7763, lng: -122.4212 },
-      },
-    },
-  },
-  {
-    id: 4,
-    priority: "low",
-    created_at: "2025-06-03T12:00:00Z",
-    structured_data: {
-      incident: {
-        category: "discrimination",
-        title: "Bias Incident Report",
-        source: "Anonymous",
-        description: "Reported biased language during project discussion.",
-        location: { lat: 37.7738, lng: -122.4201 },
-      },
-    },
-  },
-];
-
+// Add this function after the categoryColors mapping
 const generateRandomLocation = (centerLat: number, centerLng: number, radiusInMeters: number = 500) => {
+  // Convert radius from meters to degrees (approximate)
   const radiusInDegrees = radiusInMeters / 111000;
+  
+  // Generate random angle
   const angle = Math.random() * 2 * Math.PI;
+  
+  // Generate random distance within radius
   const distance = Math.random() * radiusInDegrees;
+  
+  // Calculate new coordinates
   const lat = centerLat + (distance * Math.cos(angle));
   const lng = centerLng + (distance * Math.sin(angle));
+  
   return { lat, lng };
 };
 
-// Safety heatmap colors
+// Fix for default marker icons in Leaflet with Next.js
+const DefaultIcon = L.icon({
+  iconUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png",
+  iconRetinaUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon-2x.png",
+  shadowUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png",
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowSize: [41, 41]
+});
+
+L.Marker.prototype.options.icon = DefaultIcon;
+
+// Add safety heatmap colors
 const safetyColors = {
   safe: "#00C851",
   warning: "#ffbb33",
-  danger: "#ff4444",
+  danger: "#ff4444"
 };
 
+// Add this function to calculate safety score
 const calculateSafetyScore = (cases: Case[], lat: number, lng: number, radius: number = 0.001) => {
   const nearbyCases = cases.filter(case_ => {
     const caseLat = case_.structured_data?.incident?.location?.lat || 0;
@@ -157,52 +106,243 @@ export default function MapComponent() {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<L.Map | null>(null);
   const markersRef = useRef<L.Marker[]>([]);
-  const [cases, setCases] = useState<Case[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [mapError, setMapError] = useState<string | null>(null);
-
-  useEffect(() => {
-    fetchCases();
-  }, []);
-
-  const fetchCases = async () => {
-    try {
-      // Use example cases instead of Supabase
-      setCases(exampleCases);
-    } catch (error) {
-      console.error("Error fetching cases:", error);
-      setMapError("Failed to load case data");
-    } finally {
-      setLoading(false);
+  const heatmapLayer = useRef<L.Layer | null>(null);
+  const [cases, setCases] = useState<Case[]>([
+    {
+      id: "1",
+      case_number: "CASE-001",
+      title: "Suspicious Financial Activity",
+      description: "Multiple large transactions detected in employee accounts",
+      category: "fraud",
+      priority: "critical",
+      status: "under_investigation",
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      secret_code: "FRAUD001",
+      report_id: "R001",
+      reward_status: "pending",
+      structured_data: {
+        incident: {
+          location: {
+            lat: 38.8574,
+            lng: -77.0234
+          }
+        }
+      }
+    },
+    {
+      id: "2",
+      case_number: "CASE-002",
+      title: "Workplace Harassment Report",
+      description: "Employee reported verbal harassment from supervisor",
+      category: "harassment",
+      priority: "high",
+      status: "open",
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      secret_code: "HARASS002",
+      report_id: "R002",
+      reward_status: "pending",
+      structured_data: {
+        incident: {
+          location: {
+            lat: 38.8600,
+            lng: -77.0200
+          }
+        }
+      }
+    },
+    {
+      id: "3",
+      case_number: "CASE-003",
+      title: "Safety Violation in Construction",
+      description: "Workers not wearing required safety equipment",
+      category: "safety",
+      priority: "medium",
+      status: "resolved",
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      secret_code: "SAFETY003",
+      report_id: "R003",
+      reward_status: "paid",
+      structured_data: {
+        incident: {
+          location: {
+            lat: 38.8550,
+            lng: -77.0250
+          }
+        }
+      }
+    },
+    {
+      id: "4",
+      case_number: "CASE-004",
+      title: "Discrimination Complaint",
+      description: "Allegations of age discrimination in hiring process",
+      category: "discrimination",
+      priority: "high",
+      status: "under_investigation",
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      secret_code: "DISC004",
+      report_id: "R004",
+      reward_status: "pending",
+      structured_data: {
+        incident: {
+          location: {
+            lat: 38.8580,
+            lng: -77.0220
+          }
+        }
+      }
+    },
+    {
+      id: "5",
+      case_number: "CASE-005",
+      title: "Corruption Investigation",
+      description: "Suspicious contract awards to specific vendors",
+      category: "corruption",
+      priority: "critical",
+      status: "open",
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      secret_code: "CORR005",
+      report_id: "R005",
+      reward_status: "pending",
+      structured_data: {
+        incident: {
+          location: {
+            lat: 38.8560,
+            lng: -77.0240
+          }
+        }
+      }
     }
-  };
+  ]);
+  const [loading, setLoading] = useState(false);
+  const [viewMode, setViewMode] = useState<'cases' | 'safety'>('cases');
+  const [mapError, setMapError] = useState<string | null>(null);
 
   // Initialize map
   useEffect(() => {
-    if (map.current || !mapContainer.current) return;
+    if (map.current) return;
+    if (!mapContainer.current) return;
 
     try {
+      console.log("Initializing map...");
+      
+      // Initialize the map with explicit options
       map.current = L.map(mapContainer.current, {
-        center: [37.7749, -122.4194], // San Francisco
-        zoom: 13,
-        zoomControl: true,
-        attributionControl: true,
-        dragging: true,
-        scrollWheelZoom: true,
-        doubleClickZoom: true,
-        boxZoom: true,
+        center: [38.8574, -77.0234],
+        zoom: 14,
+        zoomControl: false,
+        attributionControl: false,
+        minZoom: 2,
+        maxZoom: 19,
+        zoomSnap: 1,
+        zoomDelta: 1,
+        wheelDebounceTime: 40,
+        wheelPxPerZoomLevel: 60,
+        tapTolerance: 15,
+        touchZoom: true,
+        bounceAtZoomLimits: true
       });
 
-      // Use CartoDB Positron tiles for light theme
-      L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-        attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors © <a href="https://carto.com/attributions">CARTO</a>',
-        subdomains: 'abcd',
-        maxZoom: 20,
+      console.log("Map initialized, adding tile layer...");
+
+      // Add OpenStreetMap tiles with explicit options
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        maxZoom: 19,
+        attribution: '© OpenStreetMap contributors',
+        tileSize: 256,
+        zoomOffset: 0,
+        updateWhenIdle: true,
+        updateWhenZooming: true,
+        keepBuffer: 2
       }).addTo(map.current);
+
+      console.log("Tile layer added, adding controls...");
+
+      // Add zoom control in top right
+      L.control.zoom({
+        position: 'topright',
+        zoomInText: '+',
+        zoomOutText: '-'
+      }).addTo(map.current);
+
+      // Add attribution in bottom right
+      L.control.attribution({
+        position: 'bottomright',
+        prefix: '© OpenStreetMap contributors'
+      }).addTo(map.current);
+
+      // Add view mode toggle control
+      const ViewModeControl = L.Control.extend({
+        options: {
+          position: 'topright'
+        },
+        onAdd: function() {
+          const div = L.DomUtil.create('div', 'leaflet-control leaflet-bar');
+          div.innerHTML = `
+            <div style="
+              background-color: rgba(0, 0, 0, 0.8);
+              padding: 8px;
+              border-radius: 4px;
+              margin-bottom: 8px;
+            ">
+              <button id="viewModeToggle" style="
+                background-color: #2c3e50;
+                border: none;
+                color: white;
+                padding: 8px 16px;
+                border-radius: 4px;
+                cursor: pointer;
+                font-size: 14px;
+                width: 100%;
+              ">
+                Switch to ${viewMode === 'cases' ? 'Safety View' : 'Cases View'}
+              </button>
+            </div>
+          `;
+          return div;
+        }
+      });
+
+      new ViewModeControl().addTo(map.current);
+
+      console.log("Controls added, map initialization complete");
+
+      // Force multiple resize events to ensure the map renders properly
+      const resizeMap = () => {
+        if (map.current) {
+          map.current.invalidateSize();
+          console.log("Map resized");
+        }
+      };
+
+      // Initial resize
+      setTimeout(resizeMap, 100);
+      
+      // Additional resizes
+      setTimeout(resizeMap, 500);
+      setTimeout(resizeMap, 1000);
+
+      // Add event listener for view mode toggle
+      setTimeout(() => {
+        const toggleButton = document.getElementById('viewModeToggle');
+        if (toggleButton) {
+          toggleButton.addEventListener('click', () => {
+            setViewMode(prev => prev === 'cases' ? 'safety' : 'cases');
+          });
+        }
+      }, 100);
+
     } catch (error) {
+      console.error("Error initializing map:", error);
       setMapError(error instanceof Error ? error.message : "Failed to initialize map");
     }
 
+    // Cleanup on unmount
     return () => {
       if (map.current) {
         map.current.remove();
@@ -211,86 +351,141 @@ export default function MapComponent() {
     };
   }, []);
 
-  // Update markers
+  // Update markers or heatmap when cases or view mode changes
   useEffect(() => {
-    if (!map.current) return;
+    if (!map.current || !cases.length) return;
 
-    // Clear existing markers
+    // Clear existing markers and heatmap
     markersRef.current.forEach(marker => marker.remove());
     markersRef.current = [];
+    if (heatmapLayer.current) {
+      map.current.removeLayer(heatmapLayer.current);
+    }
 
-    cases.forEach((case_) => {
-      const category = case_.structured_data?.incident?.category || 'safety';
-      const color = categoryColors[category] || '#4CAF50';
-      
-      // Create custom icon with FontAwesome
-      const customIcon = L.divIcon({
-        className: 'custom-icon',
-        html: `
-          <div style="
-            background: ${color};
-            width: 32px;
-            height: 32px;
+    if (viewMode === 'cases') {
+      // Show individual case markers
+      markersRef.current = cases.map((case_) => {
+        const markerColor = calculateSafetyScore(cases, case_.structured_data?.incident?.location?.lat || 0, case_.structured_data?.incident?.location?.lng || 0).color;
+        const customIcon = L.divIcon({
+          className: `custom-marker ${markerColor}`,
+          html: `<div style="
+            background-color: ${markerColor};
+            width: 16px;
+            height: 16px;
             border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border: 2px solid #fff;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-          ">
-            <i class="fa-solid ${categoryIcons[category] || 'fa-hard-hat'}" style="color: white; font-size: 16px;"></i>
-          </div>
-        `,
-        iconSize: [32, 32],
-        iconAnchor: [16, 16],
-        popupAnchor: [0, -16],
-      });
+            border: 2px solid white;
+            box-shadow: 0 0 8px rgba(0,0,0,0.3);
+            animation: pulse 2s infinite;
+          "></div>`,
+          iconSize: [20, 20],
+          iconAnchor: [10, 10]
+        });
 
-      // Enhanced popup
-      const popupContent = `
-        <div style="min-width:220px;background:#fff;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,0.15);padding:12px;">
-          <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
-            <div style="width:32px;height:32px;border-radius:6px;background:${color};display:flex;align-items:center;justify-content:center;">
-              <i class="fa-solid ${categoryIcons[category] || 'fa-hard-hat'}" style="color:white;font-size:16px;"></i>
-            </div>
-            <div>
-              <div style="font-weight:600;font-size:15px;">${case_.structured_data?.incident?.title || 'Incident'}</div>
-              <div style="font-size:12px;color:#666;">${case_.structured_data?.incident?.source || 'Unknown'}</div>
-            </div>
+        const popupContent = `
+          <div style="min-width: 250px; padding: 12px; background: white; color: #333; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+            <h3 style="margin: 0 0 12px 0; color: #333; font-size: 16px; border-bottom: 1px solid #eee; padding-bottom: 8px;">${case_.title}</h3>
+            <p style="margin: 6px 0; font-size: 13px;"><strong>Case ID:</strong> ${case_.case_number}</p>
+            <p style="margin: 6px 0; font-size: 13px;"><strong>Status:</strong> <span style="color: ${case_.status === 'resolved' ? '#00C851' : case_.status === 'under_investigation' ? '#ffbb33' : '#666'}">${case_.status.replace('_', ' ')}</span></p>
+            <p style="margin: 6px 0; font-size: 13px;"><strong>Priority:</strong> <span style="color: ${markerColor}">${case_.priority}</span></p>
+            <p style="margin: 6px 0; font-size: 13px;"><strong>Category:</strong> ${case_.category}</p>
+            <p style="margin: 6px 0; font-size: 13px;"><strong>Created:</strong> ${new Date(case_.created_at).toLocaleDateString()}</p>
+            ${case_.reward_amount ? `<p style="margin: 6px 0; font-size: 13px;"><strong>Reward:</strong> $${case_.reward_amount.toLocaleString()}</p>` : ''}
+            <p style="margin: 12px 0 0 0; font-size: 13px; color: #666;">${case_.description}</p>
           </div>
-          <div style="font-size:13px;color:#444;margin-bottom:8px;">${case_.structured_data?.incident?.description || 'No description'}</div>
-          <div style="display:flex;align-items:center;gap:6px;font-size:12px;">
-            <div style="width:8px;height:8px;border-radius:50%;background:${color};"></div>
-            <span style="color:#666;">Priority:</span>
-            <span style="font-weight:500;color:${color};text-transform:capitalize;">${case_.priority || 'unknown'}</span>
-          </div>
-        </div>
-      `;
+        `;
 
-      const location = case_.structured_data?.incident?.location?.lat && case_.structured_data?.incident?.location?.lng
-        ? {
+        // Get location from structured data or generate random location
+        let location;
+        if (case_.structured_data?.incident?.location?.lat && case_.structured_data?.incident?.location?.lng) {
+          location = {
             lat: case_.structured_data.incident.location.lat,
             lng: case_.structured_data.incident.location.lng
-          }
-        : generateRandomLocation(37.7749, -122.4194);
+          };
+        } else {
+          // Generate random location around convention center
+          location = generateRandomLocation(38.8574, -77.0234);
+        }
 
-      const marker = L.marker([location.lat, location.lng], { icon: customIcon })
-        .bindPopup(popupContent, {
-          closeButton: true,
-          offset: [0, -16],
-          className: 'custom-popup',
-        })
-        .addTo(map.current!);
-      markersRef.current.push(marker);
-    });
-  }, [cases]);
+        const marker = L.marker([location.lat, location.lng], { icon: customIcon })
+          .bindPopup(popupContent)
+          .addTo(map.current!);
+
+        return marker;
+      });
+    } else {
+      // Show safety heatmap
+      const gridSize = 0.001; // Size of each grid cell
+      const bounds = map.current.getBounds();
+      const heatmapData: { lat: number; lng: number; color: string }[] = [];
+
+      for (let lat = bounds.getSouth(); lat < bounds.getNorth(); lat += gridSize) {
+        for (let lng = bounds.getWest(); lng < bounds.getEast(); lng += gridSize) {
+          const { color } = calculateSafetyScore(cases, lat, lng);
+          heatmapData.push({ lat, lng, color });
+        }
+      }
+
+      // Create heatmap layer
+      const heatmap = L.layerGroup().addTo(map.current);
+      heatmapData.forEach(({ lat, lng, color }) => {
+        L.rectangle(
+          [[lat, lng], [lat + gridSize, lng + gridSize]],
+          {
+            color: color,
+            fillColor: color,
+            fillOpacity: 0.3,
+            weight: 0
+          }
+        ).addTo(heatmap);
+      });
+      heatmapLayer.current = heatmap;
+
+      // Add legend
+      const LegendControl = L.Control.extend({
+        options: {
+          position: 'bottomleft'
+        },
+        onAdd: function() {
+          const div = L.DomUtil.create('div', 'leaflet-control leaflet-bar');
+          div.innerHTML = `
+            <div style="
+              background-color: rgba(0, 0, 0, 0.8);
+              padding: 8px;
+              border-radius: 4px;
+              color: white;
+              font-size: 12px;
+            ">
+              <h4 style="margin: 0 0 8px 0;">Safety Level</h4>
+              <div style="display: flex; flex-direction: column; gap: 4px;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <div style="width: 16px; height: 16px; background-color: ${safetyColors.safe};"></div>
+                  <span>Safe</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <div style="width: 16px; height: 16px; background-color: ${safetyColors.warning};"></div>
+                  <span>Warning</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <div style="width: 16px; height: 16px; background-color: ${safetyColors.danger};"></div>
+                  <span>Danger</span>
+                </div>
+              </div>
+            </div>
+          `;
+          return div;
+        }
+      });
+
+      new LegendControl().addTo(map.current);
+    }
+  }, [cases, viewMode]);
 
   if (loading) {
     return (
-      <div className="h-full w-full flex items-center justify-center bg-gray-50">
-        <div className="flex flex-col items-center gap-3">
-          <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-blue-400"></div>
-          <div className="text-gray-500 text-sm">Loading map data...</div>
+      <div className="h-full w-full flex items-center justify-center bg-gray-100">
+        <div className="flex flex-col items-center gap-4">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+          <div className="text-gray-600">Loading map data...</div>
         </div>
       </div>
     );
@@ -298,15 +493,15 @@ export default function MapComponent() {
 
   if (mapError) {
     return (
-      <div className="h-full w-full flex items-center justify-center bg-gray-50">
-        <div className="bg-white p-5 rounded-md shadow-md">
-          <div className="text-red-400 text-sm font-medium mb-2">Map Error</div>
-          <div className="text-gray-500 text-sm mb-4">{mapError}</div>
+      <div className="h-full w-full flex items-center justify-center bg-gray-100">
+        <div className="bg-white p-6 rounded-lg shadow-lg">
+          <div className="text-red-500 mb-2">Error Loading Map</div>
+          <div className="text-gray-600">{mapError}</div>
           <button 
             onClick={() => window.location.reload()} 
-            className="px-3 py-1 bg-blue-400 text-white rounded hover:bg-blue-500 transition-colors text-sm"
+            className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
           >
-            Try Again
+            Retry
           </button>
         </div>
       </div>
@@ -314,26 +509,20 @@ export default function MapComponent() {
   }
 
   return (
-    <>
-      <style>
-        {`
-          .leaflet-container {
-            background: #f5f5f5 !important;
-          }
-          .custom-popup .leaflet-popup-content-wrapper {
-            border-radius: 8px;
-            padding: 0;
-          }
-          .custom-popup .leaflet-popup-tip {
-            background: #fff;
-          }
-        `}
-      </style>
-      <div
-        ref={mapContainer}
-        className="relative w-full h-full"
-        style={{ minHeight: "500px", zIndex: 1 }}
-      />
-    </>
+    <div
+      ref={mapContainer}
+      style={{
+        position: "absolute",
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        minHeight: "500px",
+        width: "100%",
+        height: "100%",
+        backgroundColor: "#f5f5f5",
+        zIndex: 1,
+      }}
+    />
   );
-}
+} 
