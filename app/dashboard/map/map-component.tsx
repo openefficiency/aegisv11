@@ -160,33 +160,38 @@ export default function MapComponent() {
     }).addTo(map.current);
 
     // Add view mode toggle control
-    const viewModeControl = L.control({ position: 'topright' });
-    viewModeControl.onAdd = () => {
-      const div = L.DomUtil.create('div', 'leaflet-control leaflet-bar');
-      div.innerHTML = `
-        <div style="
-          background-color: rgba(0, 0, 0, 0.8);
-          padding: 8px;
-          border-radius: 4px;
-          margin-bottom: 8px;
-        ">
-          <button id="viewModeToggle" style="
-            background-color: #2c3e50;
-            border: none;
-            color: white;
-            padding: 8px 16px;
+    const ViewModeControl = L.Control.extend({
+      options: {
+        position: 'topright'
+      },
+      onAdd: function() {
+        const div = L.DomUtil.create('div', 'leaflet-control leaflet-bar');
+        div.innerHTML = `
+          <div style="
+            background-color: rgba(0, 0, 0, 0.8);
+            padding: 8px;
             border-radius: 4px;
-            cursor: pointer;
-            font-size: 14px;
-            width: 100%;
+            margin-bottom: 8px;
           ">
-            Switch to ${viewMode === 'cases' ? 'Safety View' : 'Cases View'}
-          </button>
-        </div>
-      `;
-      return div;
-    };
-    viewModeControl.addTo(map.current);
+            <button id="viewModeToggle" style="
+              background-color: #2c3e50;
+              border: none;
+              color: white;
+              padding: 8px 16px;
+              border-radius: 4px;
+              cursor: pointer;
+              font-size: 14px;
+              width: 100%;
+            ">
+              Switch to ${viewMode === 'cases' ? 'Safety View' : 'Cases View'}
+            </button>
+          </div>
+        `;
+        return div;
+      }
+    });
+
+    new ViewModeControl().addTo(map.current);
 
     // Add event listener for view mode toggle
     setTimeout(() => {
@@ -247,9 +252,6 @@ export default function MapComponent() {
           </div>
         `;
 
-        // Convention center coordinates
-        const conventionCenter = { lat: 38.8574, lng: -77.0234 };
-        
         // Get location from structured data or generate random location
         let location;
         if (case_.structured_data?.incident?.location?.lat && case_.structured_data?.incident?.location?.lng) {
@@ -259,7 +261,7 @@ export default function MapComponent() {
           };
         } else {
           // Generate random location around convention center
-          location = generateRandomLocation(conventionCenter.lat, conventionCenter.lng);
+          location = generateRandomLocation(38.8574, -77.0234);
         }
 
         const marker = L.marker([location.lat, location.lng], { icon: customIcon })
@@ -297,37 +299,42 @@ export default function MapComponent() {
       heatmapLayer.current = heatmap;
 
       // Add legend
-      const legend = L.control({ position: 'bottomleft' });
-      legend.onAdd = () => {
-        const div = L.DomUtil.create('div', 'leaflet-control leaflet-bar');
-        div.innerHTML = `
-          <div style="
-            background-color: rgba(0, 0, 0, 0.8);
-            padding: 8px;
-            border-radius: 4px;
-            color: white;
-            font-size: 12px;
-          ">
-            <h4 style="margin: 0 0 8px 0;">Safety Level</h4>
-            <div style="display: flex; flex-direction: column; gap: 4px;">
-              <div style="display: flex; align-items: center; gap: 8px;">
-                <div style="width: 16px; height: 16px; background-color: ${safetyColors.safe};"></div>
-                <span>Safe</span>
-              </div>
-              <div style="display: flex; align-items: center; gap: 8px;">
-                <div style="width: 16px; height: 16px; background-color: ${safetyColors.warning};"></div>
-                <span>Warning</span>
-              </div>
-              <div style="display: flex; align-items: center; gap: 8px;">
-                <div style="width: 16px; height: 16px; background-color: ${safetyColors.danger};"></div>
-                <span>Danger</span>
+      const LegendControl = L.Control.extend({
+        options: {
+          position: 'bottomleft'
+        },
+        onAdd: function() {
+          const div = L.DomUtil.create('div', 'leaflet-control leaflet-bar');
+          div.innerHTML = `
+            <div style="
+              background-color: rgba(0, 0, 0, 0.8);
+              padding: 8px;
+              border-radius: 4px;
+              color: white;
+              font-size: 12px;
+            ">
+              <h4 style="margin: 0 0 8px 0;">Safety Level</h4>
+              <div style="display: flex; flex-direction: column; gap: 4px;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <div style="width: 16px; height: 16px; background-color: ${safetyColors.safe};"></div>
+                  <span>Safe</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <div style="width: 16px; height: 16px; background-color: ${safetyColors.warning};"></div>
+                  <span>Warning</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <div style="width: 16px; height: 16px; background-color: ${safetyColors.danger};"></div>
+                  <span>Danger</span>
+                </div>
               </div>
             </div>
-          </div>
-        `;
-        return div;
-      };
-      legend.addTo(map.current);
+          `;
+          return div;
+        }
+      });
+
+      new LegendControl().addTo(map.current);
     }
   }, [cases, viewMode]);
 
