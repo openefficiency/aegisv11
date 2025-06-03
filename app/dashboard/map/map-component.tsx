@@ -35,7 +35,7 @@ const exampleCases: ExampleCase[] = [
     status: "Under Investigation",
     category: "Fraud",
     description: "Unusual transactions detected in procurement department.",
-    location: generateRandomLocation(CONVENTION_CENTER.lat, CONVENTION_CENTER.lng, 1000),
+    location: { lat: CONVENTION_CENTER.lat, lng: CONVENTION_CENTER.lng },
   },
   {
     id: "2",
@@ -44,7 +44,7 @@ const exampleCases: ExampleCase[] = [
     status: "Open",
     category: "Safety",
     description: "Multiple reports of unsafe working conditions.",
-    location: generateRandomLocation(CONVENTION_CENTER.lat, CONVENTION_CENTER.lng, 1000),
+    location: { lat: CONVENTION_CENTER.lat, lng: CONVENTION_CENTER.lng },
   },
   {
     id: "3",
@@ -53,7 +53,7 @@ const exampleCases: ExampleCase[] = [
     status: "Resolved",
     category: "Discrimination",
     description: "Employee reports discriminatory practices.",
-    location: generateRandomLocation(CONVENTION_CENTER.lat, CONVENTION_CENTER.lng, 1000),
+    location: { lat: CONVENTION_CENTER.lat, lng: CONVENTION_CENTER.lng },
   },
 ];
 
