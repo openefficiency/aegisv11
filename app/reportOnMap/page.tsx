@@ -235,20 +235,12 @@ const ReportOnMap = () => {
               {suggestions.map((suggestion, index) => (
                 <div
                   key={index}
-                  className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 cursor-pointer transition-colors border-b last:border-b-0 border-gray-100 group"
+                  className="px-4 py-3 hover:bg-gray-50 cursor-pointer transition-colors border-b last:border-b-0 border-gray-100"
                   onClick={() => handleSuggestionClick(suggestion)}
                 >
-                  <div className="flex-shrink-0">
-                    {getSuggestionIcon(suggestion)}
-                  </div>
-                  <div className="flex flex-col min-w-0">
-                    <span className="truncate text-gray-900 text-base group-hover:font-semibold">
-                      {highlightMatch(formatAddress(suggestion), searchQuery)}
-                    </span>
-                    <span className="text-sm text-gray-500 truncate">
-                      {suggestion.display_name}
-                    </span>
-                  </div>
+                  <span className="truncate text-gray-900 text-base">
+                    {highlightMatch(suggestion.display_name, searchQuery)}
+                  </span>
                 </div>
               ))}
             </div>
