@@ -204,7 +204,7 @@ export default function MapComponent() {
         
         // Initialize the map with explicit options
         mapInstance = L.map(mapContainer.current, {
-          // Walter E. Washington Convention Center coordinates
+          // Walter E. Washington Convention Center coordinates (38.8574, -77.0234)
           center: [38.8574, -77.0234],
           zoom: 14,
           zoomControl: false,
