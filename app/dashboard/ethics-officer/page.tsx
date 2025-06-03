@@ -77,6 +77,8 @@ export default function EthicsOfficerDashboard() {
   });
   const [loading, setLoading] = useState(true);
   const [loadingVAPI, setLoadingVAPI] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
   const [selectedCase, setSelectedCase] = useState<Case | null>(null);
   const [selectedVAPIReport, setSelectedVAPIReport] = useState<any>(null);
   const [actionType, setActionType] = useState<
@@ -556,19 +558,36 @@ export default function EthicsOfficerDashboard() {
     if (!caseItem) return null;
     const fields = [caseItem.description as any, caseItem.title as any];
     for (const val of fields) {
-      if (typeof val === "object" && val !== null) {
-        return val;
-      }
+      if (typeof val === "object" && val !== null) return val;
       if (typeof val === "string") {
         try {
           const parsed = JSON.parse(val);
           if (parsed && typeof parsed === "object") return parsed;
         } catch {
-          continue;
+          // ignore parse errors
         }
       }
     }
     return null;
+  };
+
+  const getCaseDescription = (caseItem: Case) => {
+    const data = parseCaseData(caseItem);
+    if (data) {
+      if (data.incident?.description) return data.incident.description;
+      if (data.report_content?.description)
+        return data.report_content.description;
+    }
+    return caseItem.description;
+  };
+
+  const getCaseLocation = (caseItem: Case) => {
+    const data = parseCaseData(caseItem);
+    if (data) {
+      if (data.incident?.location) return data.incident.location;
+      if (data.report_content?.location) return data.report_content.location;
+    }
+    return "";
   };
 
   const handleAssignCase = async (caseId: string, investigatorId: string) => {
@@ -791,6 +810,12 @@ export default function EthicsOfficerDashboard() {
     );
   }
 
+  const totalPages = Math.ceil(cases.length / itemsPerPage) || 1;
+  const paginatedCases = cases.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
   return (
     <DashboardLayout role="ethics-officer">
       <div className="space-y-6">
@@ -927,6 +952,7 @@ export default function EthicsOfficerDashboard() {
                     </p>
                   </div>
                 ) : (
+                  <>
                   <Table>
                     <TableHeader>
                       <TableRow className="border-slate-700">
@@ -948,7 +974,7 @@ export default function EthicsOfficerDashboard() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {cases.map((case_) => (
+                      {paginatedCases.map((case_) => (
                         <TableRow key={case_.id} className="border-slate-700">
                           <TableCell className="text-slate-300 font-mono">
                             {case_.report_id || case_.case_number}
@@ -958,7 +984,7 @@ export default function EthicsOfficerDashboard() {
                           </TableCell>
                           <TableCell className="text-slate-300 max-w-sm">
                             <span className="truncate block">
-                              {case_.vapi_report_summary || case_.description}
+                              {case_.vapi_report_summary || getCaseDescription(case_)}
                             </span>
                             <Dialog>
                               <DialogTrigger asChild>
@@ -1069,6 +1095,32 @@ export default function EthicsOfficerDashboard() {
                       ))}
                     </TableBody>
                   </Table>
+                  <div className="flex justify-between items-center mt-4">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="border-slate-600 text-slate-300"
+                      disabled={currentPage === 1}
+                      onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                    >
+                      Previous
+                    </Button>
+                    <span className="text-slate-300">
+                      Page {currentPage} of {totalPages}
+                    </span>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="border-slate-600 text-slate-300"
+                      disabled={currentPage === totalPages}
+                      onClick={() =>
+                        setCurrentPage((p) => Math.min(totalPages, p + 1))
+                      }
+                    >
+                      Next
+                    </Button>
+                  </div>
+                  </>
                 )}
               </CardContent>
             </Card>
@@ -1342,11 +1394,15 @@ export default function EthicsOfficerDashboard() {
           >
             {(() => {
               const parsed = parseCaseData(selectedCase);
-              const incident: any = parsed?.incident || {};
-              const reporter: any = parsed?.reporter || {};
+              const incident: any =
+                parsed?.incident || parsed?.report_content || {};
+              const reporter: any =
+                parsed?.reporter || parsed?.reporter_info || {};
               const evidence: any = parsed?.evidence || {};
               const followUp: any = parsed?.follow_up || {};
-              const parties: any[] = incident.parties_involved || [];
+              const callSummary: any = parsed?.call_summary || {};
+              const parties: any[] =
+                incident.parties_involved || incident.individuals_involved || [];
               return (
                 <DialogContent className="bg-slate-800 border-slate-700 max-w-4xl max-h-[80vh] overflow-y-auto">
                   <DialogHeader>
@@ -1374,18 +1430,46 @@ export default function EthicsOfficerDashboard() {
                     </div>
                     <div>
                       <Label className="text-slate-300">Title</Label>
-                      <p className="text-white">{`HI TITLE - ${incident.location || ""}`}</p>
+                      <p className="text-white">{`HI TITLE - ${getCaseLocation(selectedCase)}`}</p>
                     </div>
                     <div>
                       <Label className="text-slate-300">Description</Label>
                       <div className="bg-slate-900/50 p-3 rounded border border-slate-600">
                         <p className="text-slate-300">
-                          {incident.description || selectedCase.description}
+                          {getCaseDescription(selectedCase)}
                         </p>
                       </div>
                     </div>
                     {parsed && (
                       <div className="space-y-4">
+                        {(callSummary.call_type || callSummary.call_status) && (
+                          <div className="grid grid-cols-2 gap-4">
+                            <div>
+                              <Label className="text-slate-300">Call Type</Label>
+                              <p className="text-white">
+                                {callSummary.call_type || "N/A"}
+                              </p>
+                            </div>
+                            <div>
+                              <Label className="text-slate-300">Call Status</Label>
+                              <p className="text-white">
+                                {callSummary.call_status || "N/A"}
+                              </p>
+                            </div>
+                            <div>
+                              <Label className="text-slate-300">Ended Reason</Label>
+                              <p className="text-white">
+                                {callSummary.ended_reason || "N/A"}
+                              </p>
+                            </div>
+                            <div>
+                              <Label className="text-slate-300">Urgent Help Requested</Label>
+                              <p className="text-white">
+                                {callSummary.urgent_help_requested ? "Yes" : "No"}
+                              </p>
+                            </div>
+                          </div>
+                        )}
                         <div className="grid grid-cols-2 gap-4">
                           <div>
                             <Label className="text-slate-300">Reporter Name</Label>
