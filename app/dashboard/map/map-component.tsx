@@ -35,7 +35,7 @@ const exampleCases: ExampleCase[] = [
     status: "Under Investigation",
     category: "Fraud",
     description: "Unusual transactions detected in procurement department.",
-    location: { lat: CONVENTION_CENTER.lat, lng: CONVENTION_CENTER.lng },
+    location: generateRandomLocation(CONVENTION_CENTER.lat, CONVENTION_CENTER.lng, 250),
   },
   {
     id: "2",
@@ -44,7 +44,7 @@ const exampleCases: ExampleCase[] = [
     status: "Open",
     category: "Safety",
     description: "Multiple reports of unsafe working conditions.",
-    location: { lat: CONVENTION_CENTER.lat, lng: CONVENTION_CENTER.lng },
+    location: generateRandomLocation(CONVENTION_CENTER.lat, CONVENTION_CENTER.lng, 250),
   },
   {
     id: "3",
@@ -53,7 +53,7 @@ const exampleCases: ExampleCase[] = [
     status: "Resolved",
     category: "Discrimination",
     description: "Employee reports discriminatory practices.",
-    location: { lat: CONVENTION_CENTER.lat, lng: CONVENTION_CENTER.lng },
+    location: generateRandomLocation(CONVENTION_CENTER.lat, CONVENTION_CENTER.lng, 250),
   },
 ];
 
@@ -125,6 +125,9 @@ export default function MapComponent() {
           <div style="font-size:13px;margin-bottom:4px;"><b>Status:</b> ${c.status}</div>
           <div style="font-size:13px;margin-bottom:4px;"><b>Category:</b> ${c.category}</div>
           <div style="font-size:13px;color:#666;">${c.description}</div>
+          <button style='margin-top:12px;padding:8px 16px;background:#007bff;color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:14px;' onclick='alert("Deploying drone for: ${c.title}")'>
+            🚁 Deploy Drone
+          </button>
         </div>
       `);
       markersRef.current.push(marker);
