@@ -234,6 +234,25 @@ export default function InvestigatorDashboard() {
     }
   };
 
+  const getCaseDescription = (caseItem: Case) => {
+    if (caseItem.vapi_report_summary) return caseItem.vapi_report_summary;
+    const desc = caseItem.description as any;
+    if (typeof desc === "object" && desc !== null && desc.description) {
+      return desc.description;
+    }
+    if (typeof desc === "string") {
+      try {
+        const parsed = JSON.parse(desc);
+        if (parsed && typeof parsed === "object" && parsed.description) {
+          return parsed.description;
+        }
+      } catch {
+        // ignore
+      }
+    }
+    return caseItem.description;
+  };
+
   if (loading) {
     return (
       <DashboardLayout role="investigator">
@@ -365,7 +384,7 @@ export default function InvestigatorDashboard() {
                           {case_.title}
                         </TableCell>
                         <TableCell className="text-slate-300 max-w-sm truncate">
-                          {case_.vapi_report_summary || case_.description}
+                          {getCaseDescription(case_)}
                         </TableCell>
                         <TableCell>
                           <Badge
