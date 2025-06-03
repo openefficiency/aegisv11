@@ -390,13 +390,29 @@ export default function MapComponent() {
   }, [cases, viewMode]);
 
   if (loading) {
-    return <div className="h-full w-full flex items-center justify-center">Loading cases...</div>;
+    return (
+      <div className="h-full w-full flex items-center justify-center bg-gray-100">
+        <div className="flex flex-col items-center gap-4">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+          <div className="text-gray-600">Loading map data...</div>
+        </div>
+      </div>
+    );
   }
 
   if (mapError) {
     return (
-      <div className="h-full w-full flex items-center justify-center">
-        <div className="text-red-500">Error: {mapError}</div>
+      <div className="h-full w-full flex items-center justify-center bg-gray-100">
+        <div className="bg-white p-6 rounded-lg shadow-lg">
+          <div className="text-red-500 mb-2">Error Loading Map</div>
+          <div className="text-gray-600">{mapError}</div>
+          <button 
+            onClick={() => window.location.reload()} 
+            className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
+          >
+            Retry
+          </button>
+        </div>
       </div>
     );
   }
@@ -413,7 +429,7 @@ export default function MapComponent() {
         minHeight: "500px",
         width: "100%",
         height: "100%",
-        backgroundColor: "#e0e0e0", // slightly different gray for debug
+        backgroundColor: "#f5f5f5",
         zIndex: 1,
       }}
     />
