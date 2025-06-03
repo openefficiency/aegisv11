@@ -177,33 +177,11 @@ export default function MapComponent() {
   const map = useRef<L.Map | null>(null);
   const markersRef = useRef<L.Marker[]>([]);
   const heatmapLayer = useRef<L.Layer | null>(null);
-  const [cases, setCases] = useState<Case[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [cases, setCases] = useState<Case[]>(exampleCases);
+  const [loading, setLoading] = useState(false);
   const [viewMode, setViewMode] = useState<'cases' | 'safety'>('cases');
   const [mapError, setMapError] = useState<string | null>(null);
   const [isMounted, setIsMounted] = useState(false);
-
-  // Fetch cases from Supabase
-  useEffect(() => {
-    const fetchCases = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('cases')
-          .select('*')
-          .order('created_at', { ascending: false });
-
-        if (error) throw error;
-        setCases(data || []);
-      } catch (error) {
-        console.error('Error fetching cases:', error);
-        setMapError(error instanceof Error ? error.message : 'Failed to fetch cases');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchCases();
-  }, []);
 
   // Set mounted state
   useEffect(() => {
@@ -234,7 +212,7 @@ export default function MapComponent() {
         
         mapInstance = L.map(mapContainer.current, {
           center: conventionCenterCoords,
-          zoom: 15, // Increased zoom level for better visibility
+          zoom: 15,
           zoomControl: false,
           attributionControl: false,
           minZoom: 2,
@@ -256,9 +234,9 @@ export default function MapComponent() {
         });
 
         // Add OpenStreetMap tiles with explicit options
-        const tileLayer = L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", {
+        const tileLayer = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
           maxZoom: 19,
-          attribution: '&copy; <a href="https://carto.com/attributions">CARTO</a>',
+          attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
           tileSize: 256,
           zoomOffset: 0,
           updateWhenIdle: true,
@@ -397,8 +375,8 @@ export default function MapComponent() {
           </div>
         `;
 
-        // Generate random location around convention center
-        const location = generateRandomLocation(38.8574, -77.0234, 100); // Reduced radius to 100m
+        // Use the actual location from the case data if available
+        const location = case_.structured_data?.incident?.location || generateRandomLocation(38.8574, -77.0234, 100);
         console.log("Creating marker at location:", location);
 
         const marker = L.marker([location.lat, location.lng], { icon: customIcon })
