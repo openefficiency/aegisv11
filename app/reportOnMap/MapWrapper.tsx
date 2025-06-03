@@ -44,11 +44,19 @@ const MapWrapper: React.FC<MapWrapperProps> = ({
   useEffect(() => {
     if (mapRef.current) {
       const map = mapRef.current;
-      map.on('click', (e: any) => {
-        onMapClick(e.latlng);
-      });
+      
+      // Add click event listener
+      const handleClick = (e: any) => {
+        if (e && e.latlng) {
+          onMapClick(e.latlng);
+        }
+      };
+      
+      map.on('click', handleClick);
+      
+      // Cleanup
       return () => {
-        map.off('click');
+        map.off('click', handleClick);
       };
     }
   }, [mapRef, onMapClick]);
