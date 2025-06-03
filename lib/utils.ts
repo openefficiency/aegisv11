@@ -16,35 +16,68 @@ export function formatCaseText(field: any): string {
       try {
         value = JSON.parse(trimmed)
       } catch {
-        return value
+
+        return trimmed
       }
     } else {
-      return value
+      return trimmed
     }
   }
 
-  if (typeof value === "object" && value !== null) {
-    return (
-      value.title ||
-      value.detailed_description ||
-      value.description ||
+export function formatCaseText(field: any): string {
+  if (field === null || field === undefined) return ""
 
-      (value.incident &&
-        (value.incident.detailed_description ||
-          value.incident.description ||
-          value.incident.summary)) ||
-      (value.structuredData &&
-        (value.structuredData.detailed_description ||
-          value.structuredData.description ||
-          value.structuredData.summary)) ||
+  let value: any = field
 
-      ""
-    )
+  if (typeof value === "string") {
+    const trimmed = value.trim()
+    if (trimmed.startsWith("{") && trimmed.endsWith("}")) {
+      try {
+        value = JSON.parse(trimmed)
+      } catch {
+        return trimmed
+      }
+    } else {
+      return trimmed
+    }
   }
 
-  return String(value)
-}
+  const extractString = (v: any): string => {
+    if (v === null || v === undefined) return ""
+    if (typeof v === "string") return v
+    if (typeof v === "number" || typeof v === "boolean") return String(v)
+    if (Array.isArray(v)) {
+      for (const item of v) {
+        const res = extractString(item)
+        if (res) return res
+      }
+      return ""
+    }
+    if (typeof v === "object") {
+      const keys = [
+        "title",
+        "detailed_description",
+        "description",
+        "summary",
+        "name",
+        "area",
+      ]
+      for (const key of keys) {
+        if (key in v) {
+          const res = extractString(v[key])
+          if (res) return res
+        }
+      }
+      for (const key of Object.keys(v)) {
+        const res = extractString(v[key])
+        if (res) return res
+      }
+    }
+    return ""
+  }
 
+  return extractString(value)
+}
 
 export function parseCaseData(field: any): any | null {
   if (field === null || field === undefined) return null
@@ -75,37 +108,45 @@ export function extractCaseLocation(field: any): string {
   const data = parseCaseData(field)
   if (!data) return ""
 
-  return (
-    data.location ||
+  const candidates = [
+    data.location,
+    data.location_of_incident,
+    data.incident?.location,
+    data.incident?.location_of_incident,
+    data.structuredData?.location,
+    data.structuredData?.location_of_incident,
+  ]
 
-    data.location_of_incident ||
-    (data.incident && (data.incident.location || data.incident.location_of_incident)) ||
-    (data.structuredData &&
-      (data.structuredData.location || data.structuredData.location_of_incident)) ||
+  for (const cand of candidates) {
+    const res = formatCaseText(cand)
+    if (res) return res
+  }
 
-  )
+  return ""
 }
 
 export function extractCaseDate(field: any): string {
   const data = parseCaseData(field)
   if (!data) return ""
 
-  return (
-    data.date_received ||
-    data.date ||
+  const candidates = [
+    data.date_received,
+    data.date,
+    data.date_of_incident,
+    data.incident?.date,
+    data.incident?.date_received,
+    data.incident?.date_of_incident,
+    data.structuredData?.date,
+    data.structuredData?.date_received,
+    data.structuredData?.date_of_incident,
+  ]
 
-    data.date_of_incident ||
-    (data.incident &&
-      (data.incident.date ||
-        data.incident.date_received ||
-        data.incident.date_of_incident)) ||
-    (data.structuredData &&
-      (data.structuredData.date ||
-        data.structuredData.date_received ||
-        data.structuredData.date_of_incident)) ||
+  for (const cand of candidates) {
+    const res = formatCaseText(cand)
+    if (res) return res
+  }
 
-    ""
-  )
+  return ""
 }
 
 export function getCaseDateReceived(
@@ -141,4 +182,3 @@ export function formatCaseTitle(
 
   return formatCaseText(titleField)
 }
-
