@@ -134,11 +134,23 @@ export default function MapComponent() {
 
   // Initialize map
   useEffect(() => {
-    if (map.current) return;
-    if (!mapContainer.current) return;
+    if (map.current) {
+      console.log("Map already initialized");
+      return;
+    }
+    if (!mapContainer.current) {
+      console.error("Map container ref is not available");
+      return;
+    }
 
     try {
-      console.log("Initializing map...");
+      console.log("Starting map initialization...");
+      console.log("Container dimensions:", {
+        width: mapContainer.current.offsetWidth,
+        height: mapContainer.current.offsetHeight,
+        clientWidth: mapContainer.current.clientWidth,
+        clientHeight: mapContainer.current.clientHeight
+      });
       
       // Initialize the map with explicit options
       map.current = L.map(mapContainer.current, {
@@ -157,10 +169,10 @@ export default function MapComponent() {
         bounceAtZoomLimits: true
       });
 
-      console.log("Map initialized, adding tile layer...");
+      console.log("Map object created:", map.current);
 
       // Add OpenStreetMap tiles with explicit options
-      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      const tileLayer = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
         maxZoom: 19,
         attribution: '© OpenStreetMap contributors',
         tileSize: 256,
@@ -168,9 +180,10 @@ export default function MapComponent() {
         updateWhenIdle: true,
         updateWhenZooming: true,
         keepBuffer: 2
-      }).addTo(map.current);
+      });
 
-      console.log("Tile layer added, adding controls...");
+      console.log("Tile layer created, adding to map...");
+      tileLayer.addTo(map.current);
 
       // Add zoom control in top right
       L.control.zoom({
@@ -184,6 +197,8 @@ export default function MapComponent() {
         position: 'bottomright',
         prefix: '© OpenStreetMap contributors'
       }).addTo(map.current);
+
+      console.log("Basic controls added");
 
       // Add view mode toggle control
       const ViewModeControl = L.Control.extend({
@@ -218,14 +233,17 @@ export default function MapComponent() {
       });
 
       new ViewModeControl().addTo(map.current);
-
-      console.log("Controls added, map initialization complete");
+      console.log("View mode control added");
 
       // Force multiple resize events to ensure the map renders properly
       const resizeMap = () => {
         if (map.current) {
+          console.log("Resizing map...");
           map.current.invalidateSize();
-          console.log("Map resized");
+          console.log("Map resized, new size:", {
+            width: map.current.getSize().x,
+            height: map.current.getSize().y
+          });
         }
       };
 
@@ -246,6 +264,8 @@ export default function MapComponent() {
         }
       }, 100);
 
+      console.log("Map initialization complete");
+
     } catch (error) {
       console.error("Error initializing map:", error);
       setMapError(error instanceof Error ? error.message : "Failed to initialize map");
@@ -254,10 +274,38 @@ export default function MapComponent() {
     // Cleanup on unmount
     return () => {
       if (map.current) {
+        console.log("Cleaning up map...");
         map.current.remove();
         map.current = null;
       }
     };
+  }, []);
+
+  // Add a debug effect to monitor map container dimensions
+  useEffect(() => {
+    const checkDimensions = () => {
+      if (mapContainer.current) {
+        console.log("Map container dimensions:", {
+          width: mapContainer.current.offsetWidth,
+          height: mapContainer.current.offsetHeight,
+          clientWidth: mapContainer.current.clientWidth,
+          clientHeight: mapContainer.current.clientHeight,
+          style: mapContainer.current.style.cssText
+        });
+      }
+    };
+
+    // Check dimensions initially and after a short delay
+    checkDimensions();
+    setTimeout(checkDimensions, 1000);
+
+    // Set up a resize observer
+    const resizeObserver = new ResizeObserver(checkDimensions);
+    if (mapContainer.current) {
+      resizeObserver.observe(mapContainer.current);
+    }
+
+    return () => resizeObserver.disconnect();
   }, []);
 
   // Update markers or heatmap when cases or view mode changes
@@ -432,6 +480,7 @@ export default function MapComponent() {
         backgroundColor: "#f5f5f5",
         zIndex: 1,
       }}
+      className="map-container"
     />
   );
 } 
