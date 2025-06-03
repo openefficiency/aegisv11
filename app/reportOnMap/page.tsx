@@ -71,9 +71,6 @@ const ReportOnMap = () => {
     contactInfo: ''
   });
   const [isLoading, setIsLoading] = useState(false);
-  const [isSubmitted, setIsSubmitted] = useState(false);
-  const [secretCode, setSecretCode] = useState('');
-  const [showSecretCode, setShowSecretCode] = useState(false);
 
   const getAddressFromCoordinates = async (latlng: LatLngLiteral) => {
     try {
@@ -317,10 +314,8 @@ const ReportOnMap = () => {
         created_at: new Date().toISOString()
       };
 
-      console.log('Submitting report:', reportData); // Debug log
-
       // Send to API
-      const response = await fetch('/api/reports', {
+      const response = await fetch('/api/repostOnMap', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -331,131 +326,42 @@ const ReportOnMap = () => {
       const data = await response.json();
 
       if (!response.ok) {
-        // Construct a detailed error message
-        let errorMessage = data.error || 'Failed to submit report';
-        if (data.details) errorMessage += `\nDetails: ${data.details}`;
-        if (data.hint) errorMessage += `\nHint: ${data.hint}`;
-        if (data.code) errorMessage += `\nError Code: ${data.code}`;
-        
-        throw new Error(errorMessage);
+        throw new Error(data.error || 'Failed to submit report');
       }
 
-      // Set success state and case ID
-      setSecretCode(data.caseId || caseId);
-      setIsSubmitted(true);
-      setShowReportModal(false);
-
-      // Show success toast
+      // Show success toast and close modal
       toast({
-        title: "Report Submitted Successfully",
-        description: "Your report has been securely submitted and is now in our system.",
-        duration: 5000,
+        title: "Success",
+        description: "Your report has been submitted successfully.",
+        duration: 3000,
       });
+      
+      setShowReportModal(false);
+      setFormData({
+        category: '',
+        title: '',
+        description: '',
+        dateOccurred: '',
+        anonymous: true,
+        contactInfo: ''
+      });
+      setSelectedLocation(null);
+      setAddress('');
 
     } catch (error) {
       console.error('Error submitting report:', error);
       
-      // Show error toast with more details
+      // Show error toast
       toast({
         variant: "destructive",
-        title: "Error Submitting Report",
-        description: error instanceof Error ? error.message : "An unexpected error occurred. Please try again.",
-        action: (
-          <ToastAction altText="Try again" onClick={() => setShowReportModal(true)}>
-            Try again
-          </ToastAction>
-        ),
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to submit report",
+        duration: 3000,
       });
     } finally {
       setIsLoading(false);
     }
   };
-
-  // Add success state UI
-  if (isSubmitted) {
-    return (
-      <div className="fixed inset-0 bg-slate-900/95 backdrop-blur-sm z-[99999] overflow-y-auto">
-        <div className="min-h-screen flex items-center justify-center p-4">
-          <Card className="bg-slate-800/50 border-slate-700 w-full max-w-2xl">
-            <CardHeader className="text-center">
-              <div className="mx-auto w-16 h-16 bg-green-600 rounded-full flex items-center justify-center mb-4">
-                <Shield className="h-8 w-8 text-white" />
-              </div>
-              <CardTitle className="text-white text-2xl">Report Submitted Successfully</CardTitle>
-              <CardDescription className="text-slate-400">
-                Your report has been securely submitted and is now in our system
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="bg-slate-900/50 p-4 rounded border border-slate-600">
-                <div className="flex justify-between items-center mb-2">
-                  <Label className="text-slate-300">Your Secret Tracking Code</Label>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setShowSecretCode(!showSecretCode)}
-                    className="text-slate-400 hover:text-white"
-                  >
-                    {showSecretCode ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </Button>
-                </div>
-                <div className="font-mono text-lg text-white bg-slate-800 p-3 rounded border">
-                  {showSecretCode ? secretCode : "•".repeat(secretCode.length)}
-                </div>
-                <p className="text-sm text-slate-400 mt-2">
-                  Save this code securely. You'll need it to track your report's progress.
-                </p>
-              </div>
-
-              <div className="space-y-4">
-                <div className="flex items-start gap-3">
-                  <div className="w-2 h-2 bg-green-500 rounded-full mt-2" />
-                  <div>
-                    <h4 className="text-white font-semibold">What happens next?</h4>
-                    <p className="text-slate-400 text-sm">
-                      Your report will be reviewed by our AI system within 24 hours and assigned to the appropriate
-                      team.
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-3">
-                  <div className="w-2 h-2 bg-blue-500 rounded-full mt-2" />
-                  <div>
-                    <h4 className="text-white font-semibold">Track your progress</h4>
-                    <p className="text-slate-400 text-sm">
-                      Use your secret code on our follow-up page to check the status of your report anonymously.
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-3">
-                  <div className="w-2 h-2 bg-yellow-500 rounded-full mt-2" />
-                  <div>
-                    <h4 className="text-white font-semibold">Potential rewards</h4>
-                    <p className="text-slate-400 text-sm">
-                      If your report leads to recovery of funds, you may be eligible for up to 15% as a crypto reward.
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex gap-4">
-                <Link href="/follow-up" className="flex-1">
-                  <Button className="w-full bg-blue-600 hover:bg-blue-700">Track My Report</Button>
-                </Link>
-                <Link href="/" className="flex-1">
-                  <Button variant="outline" className="w-full border-slate-600 text-slate-300">
-                    Return Home
-                  </Button>
-                </Link>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900">

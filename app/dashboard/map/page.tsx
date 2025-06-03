@@ -2,7 +2,6 @@
 
 import dynamic from "next/dynamic";
 import { DashboardLayout } from "@/components/dashboard-layout";
-import "./map.css";
 
 // Dynamically import the Map component with no SSR
 const MapComponent = dynamic(() => import("./map-component"), {
@@ -17,10 +16,8 @@ const MapComponent = dynamic(() => import("./map-component"), {
 export default function MapDashboard() {
   return (
     <DashboardLayout role="ethics-officer">
-      <div className="h-[calc(100vh-4rem)] w-full relative overflow-hidden" style={{ minHeight: "500px" }}>
-        <div className="absolute inset-0 w-full h-full" style={{ visibility: "visible", display: "block" }}>
-          <MapComponent />
-        </div>
+      <div className="h-[calc(100vh-4rem)] w-full relative">
+        <MapComponent />
       </div>
     </DashboardLayout>
   );
