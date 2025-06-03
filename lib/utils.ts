@@ -16,25 +16,6 @@ export function formatCaseText(field: any): string {
       try {
         value = JSON.parse(trimmed)
       } catch {
-
-        return trimmed
-      }
-    } else {
-      return trimmed
-    }
-  }
-
-export function formatCaseText(field: any): string {
-  if (field === null || field === undefined) return ""
-
-  let value: any = field
-
-  if (typeof value === "string") {
-    const trimmed = value.trim()
-    if (trimmed.startsWith("{") && trimmed.endsWith("}")) {
-      try {
-        value = JSON.parse(trimmed)
-      } catch {
         return trimmed
       }
     } else {
