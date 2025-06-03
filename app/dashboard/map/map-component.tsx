@@ -223,9 +223,9 @@ export default function MapComponent() {
         console.log("Map object created:", map.current);
 
         // Add OpenStreetMap tiles with explicit options
-        const tileLayer = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        const tileLayer = L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", {
           maxZoom: 19,
-          attribution: '© OpenStreetMap contributors',
+          attribution: '&copy; <a href="https://carto.com/attributions">CARTO</a>',
           tileSize: 256,
           zoomOffset: 0,
           updateWhenIdle: true,
@@ -503,12 +503,12 @@ export default function MapComponent() {
         ref={mapContainer}
         className="map-container"
         style={{
-          borderRadius: "18px",
-          boxShadow: "0 4px 24px 0 rgba(0,0,0,0.12)",
-          border: "4px solid white",
+          borderRadius: "0px",
+          boxShadow: "none",
+          border: "none",
           minHeight: "500px",
-          width: "90vw",
-          height: "80vh",
+          width: "100vw",
+          height: "100vh",
           backgroundColor: "#f5f5f5",
           zIndex: 1
         }}
