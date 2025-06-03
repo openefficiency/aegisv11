@@ -52,31 +52,46 @@ export async function POST(request: Request) {
       })
     }
 
+    // Prepare the report data
+    const reportData = {
+      case_id: body.case_id,
+      category: body.category,
+      title: body.title,
+      description: body.description,
+      location: body.location,
+      coordinates: body.coordinates,
+      date_occurred: body.dateOccurred,
+      is_anonymous: body.anonymous,
+      contact_info: body.contactInfo,
+      status: 'open',
+      priority: 'medium',
+      created_at: new Date().toISOString()
+    }
+
+    console.log('Attempting to insert report:', reportData)
+
     // Insert the report into the database
     const { data, error } = await supabase
       .from('reports')
-      .insert([
-        {
-          case_id: body.case_id,
-          category: body.category,
-          title: body.title,
-          description: body.description,
-          location: body.location,
-          coordinates: body.coordinates,
-          date_occurred: body.dateOccurred,
-          is_anonymous: body.anonymous,
-          contact_info: body.contactInfo,
-          status: 'open',
-          priority: 'medium',
-          created_at: new Date().toISOString()
-        }
-      ])
+      .insert([reportData])
       .select()
 
     if (error) {
-      console.error('Error inserting report:', error)
+      console.error('Database error details:', {
+        message: error.message,
+        details: error.details,
+        hint: error.hint,
+        code: error.code
+      })
+      
+      // Return a more detailed error message
       return NextResponse.json(
-        { error: `Database error: ${error.message}` },
+        { 
+          error: `Database error: ${error.message || 'Unknown error'}`,
+          details: error.details,
+          hint: error.hint,
+          code: error.code
+        },
         { status: 500 }
       )
     }
@@ -91,7 +106,10 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error('Error processing report:', error)
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Internal server error' },
+      { 
+        error: error instanceof Error ? error.message : 'Internal server error',
+        details: error instanceof Error ? error.stack : undefined
+      },
       { status: 500 }
     )
   }
