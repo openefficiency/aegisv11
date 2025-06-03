@@ -54,6 +54,11 @@ const menuItems = {
   "ethics-officer": [
     { title: "Dashboard", url: "/dashboard/ethics-officer", icon: Home },
     {
+      title: "Map",
+      url: "/dashboard/ethics-officer/map",
+      icon: Map,
+    },
+    {
       title: "Case Review",
       url: "/dashboard/ethics-officer/review",
       icon: FileText,
