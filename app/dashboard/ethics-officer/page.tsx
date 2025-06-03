@@ -552,6 +552,25 @@ export default function EthicsOfficerDashboard() {
     return result;
   };
 
+  const parseCaseData = (caseItem: Case | null) => {
+    if (!caseItem) return null;
+    const fields = [caseItem.description as any, caseItem.title as any];
+    for (const val of fields) {
+      if (typeof val === "object" && val !== null) {
+        return val;
+      }
+      if (typeof val === "string") {
+        try {
+          const parsed = JSON.parse(val);
+          if (parsed && typeof parsed === "object") return parsed;
+        } catch {
+          continue;
+        }
+      }
+    }
+    return null;
+  };
+
   const handleAssignCase = async (caseId: string, investigatorId: string) => {
     try {
       // Update local state immediately
@@ -1321,52 +1340,142 @@ export default function EthicsOfficerDashboard() {
               setActionType(null);
             }}
           >
-            <DialogContent className="bg-slate-800 border-slate-700 max-w-4xl max-h-[80vh] overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle className="text-white">
-                  Case Details: {selectedCase.case_number}
-                </DialogTitle>
-                <DialogDescription className="text-slate-400">
-                  Complete case information and evidence
-                </DialogDescription>
-              </DialogHeader>
-              <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label className="text-slate-300">Case Number</Label>
-                    <p className="text-white font-mono">
-                      {selectedCase.case_number}
-                    </p>
-                  </div>
-                  <div>
-                    <Label className="text-slate-300">Report ID</Label>
-                    <p className="text-white font-mono">
-                      {selectedCase.report_id}
-                    </p>
-                  </div>
-                </div>
-                <div>
-                  <Label className="text-slate-300">Title</Label>
-                  <p className="text-white">{selectedCase.title}</p>
-                </div>
-                <div>
-                  <Label className="text-slate-300">Description</Label>
-                  <div className="bg-slate-900/50 p-3 rounded border border-slate-600">
-                    <p className="text-slate-300">{selectedCase.description}</p>
-                  </div>
-                </div>
-                {selectedCase.vapi_transcript && (
-                  <div>
-                    <Label className="text-slate-300">Voice Transcript</Label>
-                    <div className="bg-slate-900/50 p-3 rounded border border-slate-600 max-h-40 overflow-y-auto">
-                      <p className="text-slate-300 whitespace-pre-wrap">
-                        {selectedCase.vapi_transcript}
-                      </p>
+            {(() => {
+              const parsed = parseCaseData(selectedCase);
+              const incident: any = parsed?.incident || {};
+              const reporter: any = parsed?.reporter || {};
+              const evidence: any = parsed?.evidence || {};
+              const followUp: any = parsed?.follow_up || {};
+              const parties: any[] = incident.parties_involved || [];
+              return (
+                <DialogContent className="bg-slate-800 border-slate-700 max-w-4xl max-h-[80vh] overflow-y-auto">
+                  <DialogHeader>
+                    <DialogTitle className="text-white">
+                      Case Details: {selectedCase.case_number}
+                    </DialogTitle>
+                    <DialogDescription className="text-slate-400">
+                      Complete case information and evidence
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label className="text-slate-300">Case Number</Label>
+                        <p className="text-white font-mono">
+                          {selectedCase.case_number}
+                        </p>
+                      </div>
+                      <div>
+                        <Label className="text-slate-300">Report ID</Label>
+                        <p className="text-white font-mono">
+                          {selectedCase.report_id}
+                        </p>
+                      </div>
                     </div>
+                    <div>
+                      <Label className="text-slate-300">Title</Label>
+                      <p className="text-white">{`HI TITLE - ${incident.location || ""}`}</p>
+                    </div>
+                    <div>
+                      <Label className="text-slate-300">Description</Label>
+                      <div className="bg-slate-900/50 p-3 rounded border border-slate-600">
+                        <p className="text-slate-300">
+                          {incident.description || selectedCase.description}
+                        </p>
+                      </div>
+                    </div>
+                    {parsed && (
+                      <div className="space-y-4">
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <Label className="text-slate-300">Reporter Name</Label>
+                            <p className="text-white">{reporter.name || "N/A"}</p>
+                          </div>
+                          <div>
+                            <Label className="text-slate-300">Contact Info</Label>
+                            <p className="text-white">
+                              {reporter.contact_info || "N/A"}
+                            </p>
+                          </div>
+                          <div>
+                            <Label className="text-slate-300">Employee ID</Label>
+                            <p className="text-white">
+                              {reporter.employee_id || "N/A"}
+                            </p>
+                          </div>
+                          <div>
+                            <Label className="text-slate-300">Department</Label>
+                            <p className="text-white">{reporter.department || "N/A"}</p>
+                          </div>
+                          <div>
+                            <Label className="text-slate-300">Relationship</Label>
+                            <p className="text-white">
+                              {reporter.relationship_to_company || "N/A"}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <Label className="text-slate-300">Incident Type</Label>
+                            <p className="text-white">{incident.type || "N/A"}</p>
+                          </div>
+                          <div>
+                            <Label className="text-slate-300">Incident Date</Label>
+                            <p className="text-white">{incident.date || "N/A"}</p>
+                          </div>
+                          <div>
+                            <Label className="text-slate-300">Location</Label>
+                            <p className="text-white">{incident.location || "N/A"}</p>
+                          </div>
+                        </div>
+                        {parties.length > 0 && (
+                          <div>
+                            <Label className="text-slate-300">Parties Involved</Label>
+                            <div className="bg-slate-900/50 p-3 rounded border border-slate-600 space-y-1">
+                              {parties.map((p, idx) => (
+                                <p key={idx} className="text-slate-300">
+                                  {p.role}: {p.description || p.name || "N/A"}
+                                </p>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                        {followUp && (
+                          <div className="grid grid-cols-2 gap-4">
+                            <div>
+                              <Label className="text-slate-300">Follow Up Status</Label>
+                              <p className="text-white">{followUp.status || "N/A"}</p>
+                            </div>
+                            <div>
+                              <Label className="text-slate-300">Action Taken</Label>
+                              <p className="text-white">{followUp.action_taken || "N/A"}</p>
+                            </div>
+                            <div className="col-span-2">
+                              <Label className="text-slate-300">Follow Up Notes</Label>
+                              <div className="bg-slate-900/50 p-3 rounded border border-slate-600">
+                                <p className="text-slate-300 whitespace-pre-wrap">
+                                  {followUp.notes || "N/A"}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                    {selectedCase.vapi_transcript && (
+                      <div>
+                        <Label className="text-slate-300">Voice Transcript</Label>
+                        <div className="bg-slate-900/50 p-3 rounded border border-slate-600 max-h-40 overflow-y-auto">
+                          <p className="text-slate-300 whitespace-pre-wrap">
+                            {selectedCase.vapi_transcript}
+                          </p>
+                        </div>
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
-            </DialogContent>
+                </DialogContent>
+              );
+            })()}
           </Dialog>
         )}
 
