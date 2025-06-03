@@ -183,8 +183,11 @@ export default function MapComponent() {
   const [mapError, setMapError] = useState<string | null>(null);
   const [isMounted, setIsMounted] = useState(false);
 
+  console.log('Initial cases:', exampleCases);
+
   // Set mounted state
   useEffect(() => {
+    console.log('Component mounted');
     setIsMounted(true);
     return () => setIsMounted(false);
   }, []);
@@ -234,9 +237,9 @@ export default function MapComponent() {
         });
 
         // Add OpenStreetMap tiles with explicit options
-        const tileLayer = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        const tileLayer = L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", {
           maxZoom: 19,
-          attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+          attribution: '&copy; <a href="https://carto.com/attributions">CARTO</a>',
           tileSize: 256,
           zoomOffset: 0,
           updateWhenIdle: true,
@@ -279,10 +282,8 @@ export default function MapComponent() {
     };
 
     if (isMounted && !map.current) {
-      // Wait for the next tick to ensure the container is mounted
-      requestAnimationFrame(() => {
-        initializeMap();
-      });
+      console.log('Initializing map...');
+      initializeMap();
     }
 
     // Cleanup on unmount
@@ -294,7 +295,7 @@ export default function MapComponent() {
         map.current = null;
       }
     };
-  }, [isMounted, viewMode]);
+  }, [isMounted]);
 
   // Update markers or heatmap when cases or view mode changes
   useEffect(() => {
@@ -303,7 +304,7 @@ export default function MapComponent() {
       casesCount: cases.length,
       viewMode,
       isMounted,
-      cases: cases // Log the actual cases
+      cases: cases
     });
 
     if (!map.current || !cases.length) {
