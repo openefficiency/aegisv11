@@ -10,6 +10,7 @@ import type { LatLngLiteral } from 'leaflet';
 import { useMapEvents, MapContainer as StaticMapContainer, TileLayer as StaticTileLayer, Marker as StaticMarker, Popup as StaticPopup } from 'react-leaflet';
 import type L from 'leaflet';
 import { FaSearch } from 'react-icons/fa';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 
 const MapContainer = dynamic(() => import('react-leaflet').then((mod) => mod.MapContainer), { ssr: false });
 const TileLayer = dynamic(() => import('react-leaflet').then((mod) => mod.TileLayer), { ssr: false });
@@ -27,6 +28,16 @@ function MapEvents({ onMapClick }: { onMapClick: (latlng: LatLngLiteral) => void
   return null;
 }
 
+const exampleReport = {
+  case_id: "WA30530001",
+  reporter: { name: "Mr. Riaz", role: "Employee", company: "Uber" },
+  incident: { type: "Sexual Harassment", date: "2023-05-30", time: "6:30 PM", location: "Palo Alto", setting: "Company party" },
+  accused: { name: "Patel", relationship_to_reporter: "Senior colleague" },
+  witnesses: { present: true, count: "multiple", details: "A couple of other colleagues who witnessed the situation" },
+  evidence: { type: "Video", details: "Reporter claims to have video artifacts" },
+  follow_up_plan: "Reporter will use follow-up system and submit application as necessary"
+};
+
 const ReportOnMap = () => {
   const [selectedLocation, setSelectedLocation] = useState<LatLngLiteral | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -38,6 +49,7 @@ const ReportOnMap = () => {
   const mapRef = useRef<L.Map | null>(null);
   const popupRef = useRef<L.Popup | null>(null);
   const searchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [showReportModal, setShowReportModal] = useState(false);
 
   const getAddressFromCoordinates = async (latlng: LatLngLiteral) => {
     try {
@@ -67,8 +79,7 @@ const ReportOnMap = () => {
   };
 
   const handleStartReport = () => {
-    // TODO: Implement report creation logic
-    console.log('Starting report at:', selectedLocation, 'Address:', address);
+    setShowReportModal(true);
   };
 
   const handleSearch = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -350,6 +361,24 @@ const ReportOnMap = () => {
           )}
         </MapContainer>
       </div>
+      {/* Report Modal */}
+      <Dialog open={showReportModal} onOpenChange={setShowReportModal}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Report Summary</DialogTitle>
+            <DialogDescription>Example of a filled report (demo)</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2 text-sm">
+            <div><b>Case ID:</b> {exampleReport.case_id}</div>
+            <div><b>Reporter:</b> {exampleReport.reporter.name} ({exampleReport.reporter.role}, {exampleReport.reporter.company})</div>
+            <div><b>Incident:</b> {exampleReport.incident.type} on {exampleReport.incident.date} at {exampleReport.incident.time}, {exampleReport.incident.location} ({exampleReport.incident.setting})</div>
+            <div><b>Accused:</b> {exampleReport.accused.name} ({exampleReport.accused.relationship_to_reporter})</div>
+            <div><b>Witnesses:</b> {exampleReport.witnesses.present ? `${exampleReport.witnesses.count} - ${exampleReport.witnesses.details}` : 'None'}</div>
+            <div><b>Evidence:</b> {exampleReport.evidence.type} - {exampleReport.evidence.details}</div>
+            <div><b>Follow-up Plan:</b> {exampleReport.follow_up_plan}</div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
