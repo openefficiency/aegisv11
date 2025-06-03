@@ -4,30 +4,30 @@ import { useEffect, useRef } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 
-// Convention Center coordinates
+// Convention Center coordinates (Washington DC)
 const CONVENTION_CENTER = { lat: 38.9033, lng: -77.0230 };
 
-// Generate random location near the convention center
-function generateRandomLocation(centerLat: number, centerLng: number, radiusInMeters: number = 200): { lat: number; lng: number } {
-  const y0 = centerLat;
-  const x0 = centerLng;
-  const rd = radiusInMeters / 111300; // ~111300 meters per degree latitude
+// Generate a random location within a given radius (in meters) from a center point
+function generateRandomLocation(centerLat: number, centerLng: number, radiusInMeters: number = 500): { lat: number; lng: number } {
+  // Convert radius from meters to degrees
+  const radiusInDegrees = radiusInMeters / 111320; // 1 degree latitude ~ 111.32 km
 
+  // Generate two random numbers	note: sqrt for uniform distribution
   const u = Math.random();
   const v = Math.random();
-
-  const w = rd * Math.sqrt(u);
+  const w = radiusInDegrees * Math.sqrt(u);
   const t = 2 * Math.PI * v;
-  const x = w * Math.cos(t);
-  const y = w * Math.sin(t);
-
-  // Adjust the x-coordinate for the shrinking of the east-west distances
-  const newLat = y0 + y;
-  const newLng = x0 + x / Math.cos(y0 * Math.PI / 180);
-
-  return { lat: newLat, lng: newLng };
+  // Calculate deltas
+  const deltaLat = w * Math.sin(t);
+  const deltaLng = w * Math.cos(t) / Math.cos(centerLat * Math.PI / 180);
+  // Return new coordinates
+  return {
+    lat: centerLat + deltaLat,
+    lng: centerLng + deltaLng,
+  };
 }
 
+// Example case type
 type ExampleCase = {
   id: string;
   title: string;
@@ -38,6 +38,7 @@ type ExampleCase = {
   location: { lat: number; lng: number };
 };
 
+// Example cases with random locations around the convention center
 const exampleCases: ExampleCase[] = [
   {
     id: "1",
@@ -46,7 +47,7 @@ const exampleCases: ExampleCase[] = [
     status: "Under Investigation",
     category: "Fraud",
     description: "Unusual transactions detected in procurement department.",
-    location: generateRandomLocation(CONVENTION_CENTER.lat, CONVENTION_CENTER.lng, 1000),
+    location: generateRandomLocation(CONVENTION_CENTER.lat, CONVENTION_CENTER.lng, 500),
   },
   {
     id: "2",
@@ -55,7 +56,7 @@ const exampleCases: ExampleCase[] = [
     status: "Open",
     category: "Safety",
     description: "Multiple reports of unsafe working conditions.",
-    location: generateRandomLocation(CONVENTION_CENTER.lat, CONVENTION_CENTER.lng, 1000),
+    location: generateRandomLocation(CONVENTION_CENTER.lat, CONVENTION_CENTER.lng, 500),
   },
   {
     id: "3",
@@ -64,18 +65,18 @@ const exampleCases: ExampleCase[] = [
     status: "Resolved",
     category: "Discrimination",
     description: "Employee reports discriminatory practices.",
-    location: generateRandomLocation(CONVENTION_CENTER.lat, CONVENTION_CENTER.lng, 1000),
+    location: generateRandomLocation(CONVENTION_CENTER.lat, CONVENTION_CENTER.lng, 500),
   },
 ];
 
-// Debug: Log convention center and case locations
+// Debug: Log all generated locations and their distances from the center
 console.log('Convention Center:', CONVENTION_CENTER);
 exampleCases.forEach((c, i) => {
   const dist = Math.sqrt(
     Math.pow(c.location.lat - CONVENTION_CENTER.lat, 2) +
     Math.pow(c.location.lng - CONVENTION_CENTER.lng, 2)
-  ) * 111000;
-  console.log(`Case ${i+1}:`, c.title, c.location, `Distance: ${dist.toFixed(2)}m`);
+  ) * 111320;
+  console.log(`Case ${i+1}: ${c.title} | Lat: ${c.location.lat}, Lng: ${c.location.lng} | Distance: ${dist.toFixed(2)}m`);
 });
 
 // Marker color and icon mapping by category
@@ -98,7 +99,7 @@ export default function MapComponent() {
   const markersRef = useRef<L.Marker[]>([]);
 
   useEffect(() => {
-    // Add Font Awesome CDN
+    // Add Font Awesome CDN for marker icons
     const link = document.createElement('link');
     link.rel = 'stylesheet';
     link.href = 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css';
@@ -107,10 +108,10 @@ export default function MapComponent() {
     if (!mapContainer.current) return;
     if (mapRef.current) return;
 
-    // Initialize map
+    // Initialize the map centered on the convention center
     const map = L.map(mapContainer.current!, {
       center: [CONVENTION_CENTER.lat, CONVENTION_CENTER.lng],
-      zoom: 15,
+      zoom: 16,
       zoomControl: false,
       attributionControl: false,
     });
@@ -136,14 +137,8 @@ export default function MapComponent() {
       .bindPopup("Walter E. Washington Convention Center")
       .addTo(map);
 
-    // Debug: Log example cases
-    console.log('exampleCases:', exampleCases);
-
     // Add case markers
     exampleCases.forEach((c) => {
-      // Debug: Log each case
-      console.log('Adding marker for case:', c);
-      // Use category-specific icon and color
       const style = categoryStyles[c.category] || { color: '#888', icon: 'fa-solid fa-question' };
       const customIcon = L.divIcon({
         className: `custom-marker caseLocationIcon caseLocationIcon${c.id}`,
@@ -155,9 +150,12 @@ export default function MapComponent() {
         iconSize: [32, 32],
         iconAnchor: [16, 16],
       });
-      const marker = L.marker([c.location.lat, c.location.lng], { 
-        icon: customIcon
-      }).addTo(map);
+      const marker = L.marker([c.location.lat, c.location.lng], { icon: customIcon }).addTo(map);
+      // Calculate distance for popup
+      const distance = Math.sqrt(
+        Math.pow(c.location.lat - CONVENTION_CENTER.lat, 2) +
+        Math.pow(c.location.lng - CONVENTION_CENTER.lng, 2)
+      ) * 111320;
       marker.bindPopup(`
         <div style="min-width:220px;padding:10px 0 0 0;">
           <h3 style="margin:0 0 8px 0;font-size:16px;color:#333;">${c.title}</h3>
@@ -166,12 +164,7 @@ export default function MapComponent() {
           <div style="font-size:13px;margin-bottom:4px;"><b>Category:</b> ${c.category}</div>
           <div style="font-size:13px;color:#666;">${c.description}</div>
           <div style="font-size:12px;color:#888;margin-top:8px;">Lat: ${c.location.lat.toFixed(6)}, Lng: ${c.location.lng.toFixed(6)}</div>
-          <div style="font-size:12px;color:#888;">Distance from center: ${(
-            Math.sqrt(
-              Math.pow(c.location.lat - CONVENTION_CENTER.lat, 2) +
-              Math.pow(c.location.lng - CONVENTION_CENTER.lng, 2)
-            ) * 111000
-          ).toFixed(2)} m</div>
+          <div style="font-size:12px;color:#888;">Distance from center: ${distance.toFixed(2)} m</div>
           <button style='margin-top:12px;padding:8px 16px;background:#007bff;color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:14px;' onclick='alert("Deploying drone for: ${c.title}")'>
             🚁 Deploy Drone
           </button>
@@ -185,7 +178,6 @@ export default function MapComponent() {
       map.remove();
       mapRef.current = null;
       markersRef.current = [];
-      // Remove Font Awesome CDN on cleanup
       document.head.removeChild(link);
     };
   }, []);
