@@ -204,6 +204,7 @@ export default function MapComponent() {
         
         // Initialize the map with explicit options
         mapInstance = L.map(mapContainer.current, {
+          // Walter E. Washington Convention Center coordinates
           center: [38.8574, -77.0234],
           zoom: 14,
           zoomControl: false,
@@ -355,7 +356,8 @@ export default function MapComponent() {
     if (viewMode === 'cases') {
       // Show individual case markers
       markersRef.current = cases.map((case_) => {
-        const markerColor = calculateSafetyScore(cases, case_.structured_data?.incident?.location?.lat || 0, case_.structured_data?.incident?.location?.lng || 0).color;
+        // Use category color for marker
+        const markerColor = categoryColors[case_.category] || '#888';
         const customIcon = L.divIcon({
           className: `custom-marker ${markerColor}`,
           html: `<div style="
@@ -383,17 +385,8 @@ export default function MapComponent() {
           </div>
         `;
 
-        // Get location from structured data or generate random location
-        let location;
-        if (case_.structured_data?.incident?.location?.lat && case_.structured_data?.incident?.location?.lng) {
-          location = {
-            lat: case_.structured_data.incident.location.lat,
-            lng: case_.structured_data.incident.location.lng
-          };
-        } else {
-          // Generate random location around convention center
-          location = generateRandomLocation(38.8574, -77.0234);
-        }
+        // Always generate random location around map center
+        const location = generateRandomLocation(38.8574, -77.0234);
 
         const marker = L.marker([location.lat, location.lng], { icon: customIcon })
           .bindPopup(popupContent)
