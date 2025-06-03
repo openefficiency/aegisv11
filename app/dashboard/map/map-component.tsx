@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 
@@ -20,8 +20,6 @@ L.Marker.prototype.options.icon = DefaultIcon;
 export default function MapComponent() {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<L.Map | null>(null);
-  const [selectedSeverity, setSelectedSeverity] = useState<string | null>(null);
-  const [selectedStatus, setSelectedStatus] = useState<string | null>(null);
   const markersRef = useRef<L.Marker[]>([]);
 
   useEffect(() => {
@@ -153,14 +151,10 @@ export default function MapComponent() {
         .bindPopup(popupContent)
         .addTo(map.current!);
 
-      // Add data attributes for filtering
-      marker.getElement()?.setAttribute('data-severity', investigation.severity.toLowerCase());
-      marker.getElement()?.setAttribute('data-status', investigation.status.toLowerCase());
-
       return marker;
     });
 
-    // Add a style tag for the pulse animation and custom controls
+    // Add a style tag for the pulse animation
     const style = document.createElement('style');
     style.textContent = `
       @keyframes pulse {
@@ -174,176 +168,15 @@ export default function MapComponent() {
           box-shadow: 0 0 0 0 rgba(0, 0, 0, 0);
         }
       }
-
-      .map-controls {
-        position: absolute;
-        top: 20px;
-        left: 20px;
-        z-index: 1000;
-        background: rgba(255, 255, 255, 0.95);
-        padding: 15px;
-        border-radius: 8px;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-        color: #333;
-        min-width: 200px;
-      }
-
-      .map-controls h3 {
-        margin: 0 0 10px 0;
-        font-size: 14px;
-        color: #333;
-        border-bottom: 1px solid #eee;
-        padding-bottom: 8px;
-      }
-
-      .map-controls h4 {
-        margin: 0 0 8px 0;
-        font-size: 12px;
-        color: #666;
-      }
-
-      .filter-group {
-        margin-bottom: 15px;
-      }
-
-      .filter-group:last-child {
-        margin-bottom: 0;
-      }
-
-      .filter-buttons {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 5px;
-      }
-
-      .filter-button {
-        padding: 4px 8px;
-        border: none;
-        border-radius: 4px;
-        font-size: 12px;
-        cursor: pointer;
-        transition: all 0.2s;
-        background: #f5f5f5;
-        color: #333;
-        border: 1px solid #eee;
-      }
-
-      .filter-button:hover {
-        background: #eee;
-      }
-
-      .filter-button.active {
-        background: #e0e0e0;
-        border-color: #ddd;
-      }
-
-      .severity-critical {
-        background: #ff4444 !important;
-        color: white !important;
-      }
-
-      .severity-high {
-        background: #ffbb33 !important;
-        color: white !important;
-      }
-
-      .severity-medium {
-        background: #ffeb3b !important;
-        color: #333 !important;
-      }
-
-      .severity-low {
-        background: #00C851 !important;
-        color: white !important;
-      }
-
-      .status-active {
-        background: #00C851 !important;
-        color: white !important;
-      }
-
-      .status-under-review {
-        background: #ffbb33 !important;
-        color: white !important;
-      }
-
-      .status-pending {
-        background: #666 !important;
-        color: white !important;
-      }
     `;
     document.head.appendChild(style);
-
-    // Add custom controls
-    const controlsDiv = document.createElement('div');
-    controlsDiv.className = 'map-controls';
-    controlsDiv.innerHTML = `
-      <h3>Filters</h3>
-      <div class="filter-group">
-        <h4>Severity</h4>
-        <div class="filter-buttons">
-          <button class="filter-button severity-critical" data-severity="critical">Critical</button>
-          <button class="filter-button severity-high" data-severity="high">High</button>
-          <button class="filter-button severity-medium" data-severity="medium">Medium</button>
-          <button class="filter-button severity-low" data-severity="low">Low</button>
-        </div>
-      </div>
-      <div class="filter-group">
-        <h4>Status</h4>
-        <div class="filter-buttons">
-          <button class="filter-button status-active" data-status="active">Active</button>
-          <button class="filter-button status-under-review" data-status="under review">Under Review</button>
-          <button class="filter-button status-pending" data-status="pending">Pending</button>
-        </div>
-      </div>
-    `;
-    mapContainer.current.appendChild(controlsDiv);
-
-    // Add click handlers for filter buttons
-    const filterButtons = controlsDiv.querySelectorAll('.filter-button');
-    filterButtons.forEach(button => {
-      button.addEventListener('click', () => {
-        const severity = button.getAttribute('data-severity');
-        const status = button.getAttribute('data-status');
-        
-        if (severity) {
-          setSelectedSeverity(selectedSeverity === severity ? null : severity);
-          button.classList.toggle('active');
-        }
-        if (status) {
-          setSelectedStatus(selectedStatus === status ? null : status);
-          button.classList.toggle('active');
-        }
-
-        // Update marker visibility
-        markersRef.current.forEach(marker => {
-          const markerElement = marker.getElement();
-          if (!markerElement) return;
-
-          const markerSeverity = markerElement.getAttribute('data-severity');
-          const markerStatus = markerElement.getAttribute('data-status');
-
-          const severityMatch = !selectedSeverity || markerSeverity === selectedSeverity;
-          const statusMatch = !selectedStatus || markerStatus === selectedStatus;
-
-          if (severityMatch && statusMatch) {
-            marker.addTo(map.current!);
-          } else {
-            marker.remove();
-          }
-        });
-      });
-    });
 
     // Cleanup on unmount
     return () => {
       map.current?.remove();
       document.head.removeChild(style);
-      if (mapContainer.current) {
-        mapContainer.current.removeChild(controlsDiv);
-      }
     };
-  }, [selectedSeverity, selectedStatus]);
+  }, []);
 
   return <div ref={mapContainer} className="h-full w-full" />;
 } 
