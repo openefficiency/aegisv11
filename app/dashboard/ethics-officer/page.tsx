@@ -973,7 +973,9 @@ export default function EthicsOfficerDashboard() {
                           <TableCell className="text-white max-w-xs truncate">
 
 
+
                             {formatCaseTitle(case_.title, case_.description, case_.created_at)}
+
 
 
                           </TableCell>
@@ -1318,8 +1320,9 @@ export default function EthicsOfficerDashboard() {
                             </TableCell>
                             <TableCell className="text-white">
 
-
                               {formatCaseTitle(case_.title, case_.description, case_.created_at)}
+
+
 
 
                             </TableCell>
@@ -1406,11 +1409,9 @@ export default function EthicsOfficerDashboard() {
                 <div>
                   <Label className="text-slate-300">Title</Label>
 
-
                   <p className="text-white">
                     {formatCaseTitle(selectedCase.title, selectedCase.description, selectedCase.created_at)}
                   </p>
-
 
                 </div>
                 <div>

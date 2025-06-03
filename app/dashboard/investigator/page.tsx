@@ -44,6 +44,7 @@ import {
 import { DashboardLayout } from "@/components/dashboard-layout";
 import { supabase, type Case, type InvestigatorQuery } from "@/lib/supabase";
 import { auditLogger } from "@/lib/audit-logger";
+import { formatCaseText, formatCaseTitle } from "@/lib/utils";
 
 
 import { formatCaseText, formatCaseTitle } from "@/lib/utils";
@@ -368,8 +369,9 @@ export default function InvestigatorDashboard() {
                         </TableCell>
                         <TableCell className="text-white max-w-xs truncate">
 
-
                           {formatCaseTitle(case_.title, case_.description, case_.created_at)}
+
+
 
 
                         </TableCell>

@@ -220,7 +220,9 @@ export default function AdminDashboard() {
                         <TableCell className="text-slate-300 font-mono">{case_.case_number}</TableCell>
 
 
+
                         <TableCell className="text-white">{formatCaseTitle(case_.title, case_.description, case_.created_at)}</TableCell>
+
 
 
                         <TableCell>
