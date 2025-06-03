@@ -106,19 +106,76 @@ const ReportOnMap = () => {
     searchTimeoutRef.current = setTimeout(async () => {
       if (value.length > 1) {
         try {
-          const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(value)}&limit=10&addressdetails=1`, {
+          // Popular US cities for boosting
+          const popularCities = [
+            {
+              display_name: 'Los Angeles, CA, USA',
+              lat: '34.052235',
+              lon: '-118.243683',
+              extratags: { city: 'Los Angeles', state: 'California', country: 'United States' }
+            },
+            {
+              display_name: 'New York, NY, USA',
+              lat: '40.712776',
+              lon: '-74.005974',
+              extratags: { city: 'New York', state: 'New York', country: 'United States' }
+            },
+            {
+              display_name: 'Chicago, IL, USA',
+              lat: '41.878113',
+              lon: '-87.629799',
+              extratags: { city: 'Chicago', state: 'Illinois', country: 'United States' }
+            },
+            {
+              display_name: 'San Francisco, CA, USA',
+              lat: '37.774929',
+              lon: '-122.419418',
+              extratags: { city: 'San Francisco', state: 'California', country: 'United States' }
+            },
+            {
+              display_name: 'Washington, DC, USA',
+              lat: '38.89511',
+              lon: '-77.03637',
+              extratags: { city: 'Washington', state: 'District of Columbia', country: 'United States' }
+            }
+          ];
+
+          // 1. Fetch US results (with extratags for business info)
+          const usRes = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(value)}&limit=10&addressdetails=1&extratags=1&countrycodes=us`, {
             headers: { 'accept-language': 'en' }
           });
-          let data = await res.json();
-          // Filter to only English results (display_name in Latin chars)
-          data = data.filter((item: any) => /^[\x00-\x7F]+$/.test(item.display_name));
-          // Sort by distance to mapCenter
-          data.sort((a: any, b: any) => {
+          let usData = await usRes.json();
+          usData = usData.filter((item: any) => /^[\x00-\x7F]+$/.test(item.display_name));
+          let businessData = usData.filter((item: any) => item.extratags && (item.extratags.shop || item.extratags.amenity || item.extratags.office));
+          let otherUSData = usData.filter((item: any) => !businessData.includes(item));
+          let suggestions = [...businessData, ...otherUSData];
+
+          // 2. If less than 5, fetch global results and fill
+          if (suggestions.length < 5) {
+            const worldRes = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(value)}&limit=10&addressdetails=1&extratags=1`, {
+              headers: { 'accept-language': 'en' }
+            });
+            let worldData = await worldRes.json();
+            worldData = worldData.filter((item: any) => /^[\x00-\x7F]+$/.test(item.display_name));
+            worldData = worldData.filter((item: any) => !suggestions.some((s: any) => s.lat === item.lat && s.lon === item.lon));
+            suggestions = [...suggestions, ...worldData];
+          }
+
+          // 3. Boost popular US cities if query matches
+          const lowerValue = value.toLowerCase();
+          const boosted = popularCities.find(city => city.display_name.toLowerCase().startsWith(lowerValue));
+          if (boosted && !suggestions.some(s => s.display_name === boosted.display_name)) {
+            suggestions = [boosted, ...suggestions];
+          }
+
+          // 4. Sort by distance to mapCenter
+          suggestions.sort((a: any, b: any) => {
             const distA = Math.pow(parseFloat(a.lat) - mapCenter.lat, 2) + Math.pow(parseFloat(a.lon) - mapCenter.lng, 2);
             const distB = Math.pow(parseFloat(b.lat) - mapCenter.lat, 2) + Math.pow(parseFloat(b.lon) - mapCenter.lng, 2);
             return distA - distB;
           });
-          setSuggestions(data.slice(0, 5)); // Show top 5 closest English suggestions
+
+          setSuggestions(suggestions.slice(0, 5)); // Show up to 5 suggestions
           setShowSuggestions(true);
         } catch (error) {
           console.error('Error fetching suggestions:', error);
