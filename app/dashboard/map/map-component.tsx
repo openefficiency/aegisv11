@@ -302,7 +302,8 @@ export default function MapComponent() {
       hasMap: !!map.current, 
       casesCount: cases.length,
       viewMode,
-      isMounted 
+      isMounted,
+      cases: cases // Log the actual cases
     });
 
     if (!map.current || !cases.length) {
@@ -345,7 +346,8 @@ export default function MapComponent() {
     if (viewMode === 'cases') {
       console.log("Creating case markers for", cases.length, "cases");
       // Show individual case markers
-      markersRef.current = markersRef.current.concat(cases.map((case_) => {
+      cases.forEach((case_) => {
+        console.log("Processing case:", case_);
         // Use category color for marker
         const markerColor = categoryColors[case_.category] || '#888';
         const customIcon = L.divIcon({
@@ -383,8 +385,8 @@ export default function MapComponent() {
           .bindPopup(popupContent)
           .addTo(map.current!);
 
-        return marker;
-      }));
+        markersRef.current.push(marker);
+      });
       console.log("Created", markersRef.current.length, "markers");
     } else {
       // Show safety heatmap
@@ -483,42 +485,19 @@ export default function MapComponent() {
   }
 
   return (
-    <div className="w-full h-full flex flex-col items-center justify-center bg-transparent">
-      <div className="w-full flex justify-end p-4 gap-2">
-        <button
-          onClick={() => setViewMode('cases')}
-          className={`px-4 py-2 rounded-lg transition-colors ${
-            viewMode === 'cases'
-              ? 'bg-blue-500 text-white'
-              : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-          }`}
-        >
-          Cases View
-        </button>
-        <button
-          onClick={() => setViewMode('safety')}
-          className={`px-4 py-2 rounded-lg transition-colors ${
-            viewMode === 'safety'
-              ? 'bg-blue-500 text-white'
-              : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-          }`}
-        >
-          Safety Heatmap
-        </button>
-      </div>
+    <div className="w-full h-full flex items-center justify-center bg-transparent">
       <div
         ref={mapContainer}
         className="map-container"
         style={{
-          borderRadius: "8px",
-          boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-          border: "1px solid #e5e7eb",
+          borderRadius: "0px",
+          boxShadow: "none",
+          border: "none",
           minHeight: "500px",
-          width: "100%",
-          height: "calc(100vh - 80px)",
+          width: "100vw",
+          height: "100vh",
           backgroundColor: "#f5f5f5",
-          zIndex: 1,
-          transition: "all 0.3s ease-in-out"
+          zIndex: 1
         }}
       />
     </div>
