@@ -18,7 +18,7 @@ export default function MapDashboard() {
   return (
     <DashboardLayout role="ethics-officer">
       <div className="h-[calc(100vh-4rem)] w-full relative overflow-hidden">
-        <div className="absolute inset-0">
+        <div className="absolute inset-0 w-full h-full">
           <MapComponent />
         </div>
       </div>
