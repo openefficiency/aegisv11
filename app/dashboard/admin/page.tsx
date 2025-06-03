@@ -11,6 +11,7 @@ import { DashboardLayout } from "@/components/dashboard-layout"
 import { supabase, type Case, type Profile } from "@/lib/supabase"
 import { formatCaseText, formatCaseTitle } from "@/lib/utils"
 
+
 export default function AdminDashboard() {
   const [cases, setCases] = useState<Case[]>([])
   const [profiles, setProfiles] = useState<Profile[]>([])
@@ -217,7 +218,9 @@ export default function AdminDashboard() {
                     {cases.slice(0, 5).map((case_) => (
                       <TableRow key={case_.id} className="border-slate-700">
                         <TableCell className="text-slate-300 font-mono">{case_.case_number}</TableCell>
+
                         <TableCell className="text-white">{formatCaseTitle(case_.title, case_.description, case_.created_at)}</TableCell>
+
                         <TableCell>
                           <Badge variant="outline" className="border-orange-500 text-orange-400 capitalize">
                             {case_.category}

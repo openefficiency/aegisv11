@@ -63,8 +63,8 @@ import {
 import { DashboardLayout } from "@/components/dashboard-layout";
 import { supabase, type Case, type Profile } from "@/lib/supabase";
 import { cryptoRewardSystem, supportedCurrencies } from "@/lib/crypto-utils";
-import { auditLogger } from "@/lib/audit-logger";
-import { formatCaseText, formatCaseTitle, extractCaseLocation, getCaseDateReceived } from "@/lib/utils";
+import { auditLogger } from "@/lib/audit-logger";import { formatCaseText, formatCaseTitle, extractCaseLocation, getCaseDateReceived } from "@/lib/utils";
+
 
 export default function EthicsOfficerDashboard() {
   const [cases, setCases] = useState<Case[]>([]);
@@ -936,7 +936,9 @@ export default function EthicsOfficerDashboard() {
                             {case_.report_id || case_.case_number}
                           </TableCell>
                           <TableCell className="text-white max-w-xs truncate">
+
                             {formatCaseTitle(case_.title, case_.description, case_.created_at)}
+
                           </TableCell>
                           <TableCell className="text-slate-300 max-w-sm">
                             <span className="truncate block">
@@ -1278,7 +1280,9 @@ export default function EthicsOfficerDashboard() {
                               {case_.case_number}
                             </TableCell>
                             <TableCell className="text-white">
+
                               {formatCaseTitle(case_.title, case_.description, case_.created_at)}
+
                             </TableCell>
                             <TableCell className="text-green-400">
                               ${case_.recovery_amount?.toLocaleString() || "0"}
@@ -1362,9 +1366,11 @@ export default function EthicsOfficerDashboard() {
                 </div>
                 <div>
                   <Label className="text-slate-300">Title</Label>
+
                   <p className="text-white">
                     {formatCaseTitle(selectedCase.title, selectedCase.description, selectedCase.created_at)}
                   </p>
+
                 </div>
                 <div>
                   <Label className="text-slate-300">Description</Label>
