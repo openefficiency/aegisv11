@@ -104,9 +104,9 @@ const ReportOnMap = () => {
 
     // Set new timeout for search
     searchTimeoutRef.current = setTimeout(async () => {
-      if (value.length > 2) {
+      if (value.length > 1) {
         try {
-          const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(value)}`);
+          const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(value)}&limit=5&addressdetails=1`);
           const data = await res.json();
           setSuggestions(data.slice(0, 5)); // Show top 5 suggestions
           setShowSuggestions(true);
@@ -117,7 +117,7 @@ const ReportOnMap = () => {
         setSuggestions([]);
         setShowSuggestions(false);
       }
-    }, 300); // 300ms delay
+    }, 200); // Reduced from 300ms to 200ms for faster response
   };
 
   const handleSuggestionClick = (suggestion: { lat: string; lon: string; display_name: string }) => {
@@ -131,12 +131,24 @@ const ReportOnMap = () => {
     setShowSuggestions(false);
   };
 
+  // Helper to format address for display
+  const formatAddress = (suggestion: any) => {
+    if (!suggestion.address) return suggestion.display_name;
+    
+    const parts = [];
+    if (suggestion.address.city) parts.push(suggestion.address.city);
+    if (suggestion.address.state) parts.push(suggestion.address.state);
+    if (suggestion.address.country) parts.push(suggestion.address.country);
+    
+    return parts.join(', ') || suggestion.display_name;
+  };
+
   // Helper to highlight matched text
   const highlightMatch = (text: string, query: string) => {
     if (!query) return text;
     const regex = new RegExp(`(${query})`, 'ig');
     return text.split(regex).map((part, i) =>
-      regex.test(part) ? <span key={i} className="font-semibold">{part}</span> : part
+      regex.test(part) ? <span key={i} className="font-semibold text-blue-600">{part}</span> : part
     );
   };
 
@@ -165,7 +177,7 @@ const ReportOnMap = () => {
       {/* Navigation */}
       <nav className="border-b border-slate-800 bg-slate-900/50 backdrop-blur-sm sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
+          <div className="flex justify-between items-center h-16" >
             <div className="flex items-center space-x-2">
               <div className="relative w-8 h-8">
                 <Image src="/images/aegis-logo.webp" alt="Aegis Logo" fill className="object-contain" />
@@ -188,7 +200,7 @@ const ReportOnMap = () => {
         </div>
       </nav>
       {/* Search Bar */}
-      <div className="flex justify-center items-center py-6 bg-transparent sticky top-16 z-40">
+      <div className="flex justify-center items-center py-6 bg-transparent sticky top-16 z-40" style={{ zIndex: 1000 }}>
         <form onSubmit={handleSearch} className="relative w-full max-w-xl mx-4">
           <div className="relative">
             <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
@@ -219,11 +231,11 @@ const ReportOnMap = () => {
             </button>
           </div>
           {showSuggestions && suggestions.length > 0 && (
-            <div className="absolute top-full left-0 w-full mt-2 bg-white rounded-2xl shadow-2xl z-[9999] border border-gray-200">
+            <div className="absolute top-full left-0 w-full mt-2 bg-white rounded-2xl shadow-2xl z-[9999] border border-gray-200 max-h-[300px] overflow-y-auto">
               {suggestions.map((suggestion, index) => (
                 <div
                   key={index}
-                  className="flex items-center gap-3 px-4 py-3 hover:bg-gray-100 cursor-pointer transition-colors border-b last:border-b-0 border-gray-100 group"
+                  className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 cursor-pointer transition-colors border-b last:border-b-0 border-gray-100 group"
                   onClick={() => handleSuggestionClick(suggestion)}
                 >
                   <div className="flex-shrink-0">
@@ -231,7 +243,10 @@ const ReportOnMap = () => {
                   </div>
                   <div className="flex flex-col min-w-0">
                     <span className="truncate text-gray-900 text-base group-hover:font-semibold">
-                      {highlightMatch(suggestion.display_name, searchQuery)}
+                      {highlightMatch(formatAddress(suggestion), searchQuery)}
+                    </span>
+                    <span className="text-sm text-gray-500 truncate">
+                      {suggestion.display_name}
                     </span>
                   </div>
                 </div>
