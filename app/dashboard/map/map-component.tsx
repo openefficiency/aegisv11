@@ -144,6 +144,8 @@ export default function MapComponent() {
   // Initialize map
   useEffect(() => {
     let mapInstance: L.Map | null = null;
+    let initAttempts = 0;
+    const maxAttempts = 5;
 
     const initializeMap = async () => {
       if (!mapContainer.current) {
@@ -151,11 +153,29 @@ export default function MapComponent() {
         return;
       }
 
+      // Check if container has dimensions
+      const containerWidth = mapContainer.current.offsetWidth;
+      const containerHeight = mapContainer.current.offsetHeight;
+
+      if (containerWidth === 0 || containerHeight === 0) {
+        console.log("Container has no dimensions, waiting...", {
+          width: containerWidth,
+          height: containerHeight,
+          attempts: initAttempts
+        });
+        
+        if (initAttempts < maxAttempts) {
+          initAttempts++;
+          setTimeout(initializeMap, 500);
+          return;
+        }
+      }
+
       try {
         console.log("Starting map initialization...");
         console.log("Container dimensions:", {
-          width: mapContainer.current.offsetWidth,
-          height: mapContainer.current.offsetHeight,
+          width: containerWidth,
+          height: containerHeight,
           clientWidth: mapContainer.current.clientWidth,
           clientHeight: mapContainer.current.clientHeight
         });
@@ -498,6 +518,8 @@ export default function MapComponent() {
         height: "100%",
         backgroundColor: "#f5f5f5",
         zIndex: 1,
+        visibility: "visible",
+        display: "block"
       }}
     />
   );
