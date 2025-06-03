@@ -64,12 +64,52 @@ const DefaultIcon = L.icon({
 
 L.Marker.prototype.options.icon = DefaultIcon;
 
+// Add safety heatmap colors
+const safetyColors = {
+  safe: "#00C851",
+  warning: "#ffbb33",
+  danger: "#ff4444"
+};
+
+// Add this function to calculate safety score
+const calculateSafetyScore = (cases: Case[], lat: number, lng: number, radius: number = 0.001) => {
+  const nearbyCases = cases.filter(case_ => {
+    const caseLat = case_.structured_data?.incident?.location?.lat || 0;
+    const caseLng = case_.structured_data?.incident?.location?.lng || 0;
+    const distance = Math.sqrt(
+      Math.pow(caseLat - lat, 2) + Math.pow(caseLng - lng, 2)
+    );
+    return distance <= radius;
+  });
+
+  if (nearbyCases.length === 0) return { score: 1, color: safetyColors.safe };
+
+  const criticalCases = nearbyCases.filter(c => c.priority === "critical").length;
+  const highCases = nearbyCases.filter(c => c.priority === "high").length;
+  const mediumCases = nearbyCases.filter(c => c.priority === "medium").length;
+
+  const score = 1 - (
+    (criticalCases * 0.5) +
+    (highCases * 0.3) +
+    (mediumCases * 0.2)
+  ) / Math.max(nearbyCases.length, 1);
+
+  let color;
+  if (score > 0.7) color = safetyColors.safe;
+  else if (score > 0.4) color = safetyColors.warning;
+  else color = safetyColors.danger;
+
+  return { score, color };
+};
+
 export default function MapComponent() {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<L.Map | null>(null);
   const markersRef = useRef<L.Marker[]>([]);
+  const heatmapLayer = useRef<L.Layer | null>(null);
   const [cases, setCases] = useState<Case[]>([]);
   const [loading, setLoading] = useState(true);
+  const [viewMode, setViewMode] = useState<'cases' | 'safety'>('cases');
 
   useEffect(() => {
     fetchCases();
@@ -92,15 +132,15 @@ export default function MapComponent() {
   };
 
   useEffect(() => {
-    if (map.current) return; // initialize map only once
+    if (map.current) return;
     if (!mapContainer.current) return;
 
-    // Initialize the map centered on Walter E. Washington Convention Center
+    // Initialize the map
     map.current = L.map(mapContainer.current, {
-      center: [38.8574, -77.0234], // Walter E. Washington Convention Center coordinates
+      center: [38.8574, -77.0234],
       zoom: 14,
-      zoomControl: false, // We'll add it in a specific position
-      attributionControl: false // We'll add it in a specific position
+      zoomControl: false,
+      attributionControl: false
     });
 
     // Add the light-themed map tiles
@@ -119,96 +159,177 @@ export default function MapComponent() {
       position: 'bottomright'
     }).addTo(map.current);
 
-    // Create custom markers with different colors based on severity
-    const getMarkerColor = (priority: string) => {
-      switch (priority.toLowerCase()) {
-        case "critical":
-          return "#ff4444";
-        case "high":
-          return "#ffbb33";
-        case "medium":
-          return "#ffeb3b";
-        default:
-          return "#00C851";
-      }
-    };
-
-    // Add markers to the map
-    markersRef.current = cases.map((case_) => {
-      const markerColor = getMarkerColor(case_.priority);
-      const customIcon = L.divIcon({
-        className: `custom-marker ${markerColor}`,
-        html: `<div style="
-          background-color: ${markerColor};
-          width: 16px;
-          height: 16px;
-          border-radius: 50%;
-          border: 2px solid white;
-          box-shadow: 0 0 8px rgba(0,0,0,0.3);
-          animation: pulse 2s infinite;
-        "></div>`,
-        iconSize: [20, 20],
-        iconAnchor: [10, 10]
-      });
-
-      const popupContent = `
-        <div style="min-width: 250px; padding: 12px; background: white; color: #333; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
-          <h3 style="margin: 0 0 12px 0; color: #333; font-size: 16px; border-bottom: 1px solid #eee; padding-bottom: 8px;">${case_.title}</h3>
-          <p style="margin: 6px 0; font-size: 13px;"><strong>Case ID:</strong> ${case_.case_number}</p>
-          <p style="margin: 6px 0; font-size: 13px;"><strong>Status:</strong> <span style="color: ${case_.status === 'resolved' ? '#00C851' : case_.status === 'under_investigation' ? '#ffbb33' : '#666'}">${case_.status.replace('_', ' ')}</span></p>
-          <p style="margin: 6px 0; font-size: 13px;"><strong>Priority:</strong> <span style="color: ${markerColor}">${case_.priority}</span></p>
-          <p style="margin: 6px 0; font-size: 13px;"><strong>Category:</strong> ${case_.category}</p>
-          <p style="margin: 6px 0; font-size: 13px;"><strong>Created:</strong> ${new Date(case_.created_at).toLocaleDateString()}</p>
-          ${case_.reward_amount ? `<p style="margin: 6px 0; font-size: 13px;"><strong>Reward:</strong> $${case_.reward_amount.toLocaleString()}</p>` : ''}
-          <p style="margin: 12px 0 0 0; font-size: 13px; color: #666;">${case_.description}</p>
+    // Add view mode toggle control
+    const viewModeControl = L.control({ position: 'topright' });
+    viewModeControl.onAdd = () => {
+      const div = L.DomUtil.create('div', 'leaflet-control leaflet-bar');
+      div.innerHTML = `
+        <div style="
+          background-color: rgba(0, 0, 0, 0.8);
+          padding: 8px;
+          border-radius: 4px;
+          margin-bottom: 8px;
+        ">
+          <button id="viewModeToggle" style="
+            background-color: #2c3e50;
+            border: none;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            width: 100%;
+          ">
+            Switch to ${viewMode === 'cases' ? 'Safety View' : 'Cases View'}
+          </button>
         </div>
       `;
+      return div;
+    };
+    viewModeControl.addTo(map.current);
 
-      // Convention center coordinates
-      const conventionCenter = { lat: 38.8574, lng: -77.0234 };
-      
-      // Get location from structured data or generate random location
-      let location;
-      if (case_.structured_data?.incident?.location?.lat && case_.structured_data?.incident?.location?.lng) {
-        location = {
-          lat: case_.structured_data.incident.location.lat,
-          lng: case_.structured_data.incident.location.lng
-        };
-      } else {
-        // Generate random location around convention center
-        location = generateRandomLocation(conventionCenter.lat, conventionCenter.lng);
+    // Add event listener for view mode toggle
+    setTimeout(() => {
+      const toggleButton = document.getElementById('viewModeToggle');
+      if (toggleButton) {
+        toggleButton.addEventListener('click', () => {
+          setViewMode(prev => prev === 'cases' ? 'safety' : 'cases');
+        });
       }
-
-      const marker = L.marker([location.lat, location.lng], { icon: customIcon })
-        .bindPopup(popupContent)
-        .addTo(map.current!);
-
-      return marker;
-    });
-
-    // Add a style tag for the pulse animation
-    const style = document.createElement('style');
-    style.textContent = `
-      @keyframes pulse {
-        0% {
-          box-shadow: 0 0 0 0 rgba(0, 0, 0, 0.2);
-        }
-        70% {
-          box-shadow: 0 0 0 10px rgba(0, 0, 0, 0);
-        }
-        100% {
-          box-shadow: 0 0 0 0 rgba(0, 0, 0, 0);
-        }
-      }
-    `;
-    document.head.appendChild(style);
+    }, 100);
 
     // Cleanup on unmount
     return () => {
       map.current?.remove();
-      document.head.removeChild(style);
     };
-  }, [cases]); // Re-run when cases data changes
+  }, []);
+
+  // Update markers or heatmap when cases or view mode changes
+  useEffect(() => {
+    if (!map.current || !cases.length) return;
+
+    // Clear existing markers and heatmap
+    markersRef.current.forEach(marker => marker.remove());
+    markersRef.current = [];
+    if (heatmapLayer.current) {
+      map.current.removeLayer(heatmapLayer.current);
+    }
+
+    if (viewMode === 'cases') {
+      // Show individual case markers
+      markersRef.current = cases.map((case_) => {
+        const markerColor = calculateSafetyScore(cases, case_.structured_data?.incident?.location?.lat || 0, case_.structured_data?.incident?.location?.lng || 0).color;
+        const customIcon = L.divIcon({
+          className: `custom-marker ${markerColor}`,
+          html: `<div style="
+            background-color: ${markerColor};
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            border: 2px solid white;
+            box-shadow: 0 0 8px rgba(0,0,0,0.3);
+            animation: pulse 2s infinite;
+          "></div>`,
+          iconSize: [20, 20],
+          iconAnchor: [10, 10]
+        });
+
+        const popupContent = `
+          <div style="min-width: 250px; padding: 12px; background: white; color: #333; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+            <h3 style="margin: 0 0 12px 0; color: #333; font-size: 16px; border-bottom: 1px solid #eee; padding-bottom: 8px;">${case_.title}</h3>
+            <p style="margin: 6px 0; font-size: 13px;"><strong>Case ID:</strong> ${case_.case_number}</p>
+            <p style="margin: 6px 0; font-size: 13px;"><strong>Status:</strong> <span style="color: ${case_.status === 'resolved' ? '#00C851' : case_.status === 'under_investigation' ? '#ffbb33' : '#666'}">${case_.status.replace('_', ' ')}</span></p>
+            <p style="margin: 6px 0; font-size: 13px;"><strong>Priority:</strong> <span style="color: ${markerColor}">${case_.priority}</span></p>
+            <p style="margin: 6px 0; font-size: 13px;"><strong>Category:</strong> ${case_.category}</p>
+            <p style="margin: 6px 0; font-size: 13px;"><strong>Created:</strong> ${new Date(case_.created_at).toLocaleDateString()}</p>
+            ${case_.reward_amount ? `<p style="margin: 6px 0; font-size: 13px;"><strong>Reward:</strong> $${case_.reward_amount.toLocaleString()}</p>` : ''}
+            <p style="margin: 12px 0 0 0; font-size: 13px; color: #666;">${case_.description}</p>
+          </div>
+        `;
+
+        // Convention center coordinates
+        const conventionCenter = { lat: 38.8574, lng: -77.0234 };
+        
+        // Get location from structured data or generate random location
+        let location;
+        if (case_.structured_data?.incident?.location?.lat && case_.structured_data?.incident?.location?.lng) {
+          location = {
+            lat: case_.structured_data.incident.location.lat,
+            lng: case_.structured_data.incident.location.lng
+          };
+        } else {
+          // Generate random location around convention center
+          location = generateRandomLocation(conventionCenter.lat, conventionCenter.lng);
+        }
+
+        const marker = L.marker([location.lat, location.lng], { icon: customIcon })
+          .bindPopup(popupContent)
+          .addTo(map.current!);
+
+        return marker;
+      });
+    } else {
+      // Show safety heatmap
+      const gridSize = 0.001; // Size of each grid cell
+      const bounds = map.current.getBounds();
+      const heatmapData: { lat: number; lng: number; color: string }[] = [];
+
+      for (let lat = bounds.getSouth(); lat < bounds.getNorth(); lat += gridSize) {
+        for (let lng = bounds.getWest(); lng < bounds.getEast(); lng += gridSize) {
+          const { color } = calculateSafetyScore(cases, lat, lng);
+          heatmapData.push({ lat, lng, color });
+        }
+      }
+
+      // Create heatmap layer
+      const heatmap = L.layerGroup().addTo(map.current);
+      heatmapData.forEach(({ lat, lng, color }) => {
+        L.rectangle(
+          [[lat, lng], [lat + gridSize, lng + gridSize]],
+          {
+            color: color,
+            fillColor: color,
+            fillOpacity: 0.3,
+            weight: 0
+          }
+        ).addTo(heatmap);
+      });
+      heatmapLayer.current = heatmap;
+
+      // Add legend
+      const legend = L.control({ position: 'bottomleft' });
+      legend.onAdd = () => {
+        const div = L.DomUtil.create('div', 'leaflet-control leaflet-bar');
+        div.innerHTML = `
+          <div style="
+            background-color: rgba(0, 0, 0, 0.8);
+            padding: 8px;
+            border-radius: 4px;
+            color: white;
+            font-size: 12px;
+          ">
+            <h4 style="margin: 0 0 8px 0;">Safety Level</h4>
+            <div style="display: flex; flex-direction: column; gap: 4px;">
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <div style="width: 16px; height: 16px; background-color: ${safetyColors.safe};"></div>
+                <span>Safe</span>
+              </div>
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <div style="width: 16px; height: 16px; background-color: ${safetyColors.warning};"></div>
+                <span>Warning</span>
+              </div>
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <div style="width: 16px; height: 16px; background-color: ${safetyColors.danger};"></div>
+                <span>Danger</span>
+              </div>
+            </div>
+          </div>
+        `;
+        return div;
+      };
+      legend.addTo(map.current);
+    }
+  }, [cases, viewMode]);
 
   if (loading) {
     return <div className="h-full w-full flex items-center justify-center">Loading cases...</div>;
