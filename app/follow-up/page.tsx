@@ -37,7 +37,9 @@ import {
   type InvestigatorQuery,
 } from "@/lib/supabase";
 
+
 import { formatCaseText, formatCaseTitle, getCaseDateReceived, extractCaseLocation } from "@/lib/utils";
+
 
 
 export default function FollowUpPage() {
@@ -286,7 +288,9 @@ export default function FollowUpPage() {
                   <div>
                     <CardTitle className="text-white">
 
+
                       {formatCaseTitle(caseData.title, caseData.description, caseData.created_at)}
+
 
                     </CardTitle>
                     <CardDescription className="text-slate-400">
