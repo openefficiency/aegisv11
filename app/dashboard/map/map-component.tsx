@@ -498,23 +498,40 @@ export default function MapComponent() {
   }
 
   return (
-    <div
-      ref={mapContainer}
-      className="map-container"
-      style={{
-        position: "absolute",
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        minHeight: "500px",
-        width: "100%",
-        height: "100%",
-        backgroundColor: "#f5f5f5",
-        zIndex: 1,
-        visibility: "visible",
-        display: "block"
-      }}
-    />
+    <div className="relative w-full h-full">
+      <div className="absolute top-4 left-4 z-10 bg-white p-4 rounded-lg shadow-lg">
+        <h2 className="text-xl font-bold mb-4">Alert Management</h2>
+        <div className="space-y-2">
+          <button className="w-full bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition-colors">
+            Upload Video
+          </button>
+          <button className="w-full bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition-colors">
+            Run Clarifai Analysis
+          </button>
+          <button className="w-full bg-purple-500 text-white px-4 py-2 rounded hover:bg-purple-600 transition-colors">
+            Run Bemai Analysis
+          </button>
+          <button className="w-full bg-orange-500 text-white px-4 py-2 rounded hover:bg-orange-600 transition-colors">
+            Run Minimax Analysis
+          </button>
+        </div>
+      </div>
+      <div
+        ref={mapContainer}
+        className="map-container"
+        style={{
+          position: "absolute",
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          minHeight: "500px",
+          width: "100%",
+          height: "100%",
+          backgroundColor: "#f5f5f5",
+          zIndex: 1
+        }}
+      />
+    </div>
   );
 } 
