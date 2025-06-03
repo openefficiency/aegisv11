@@ -3,7 +3,6 @@
 import { useEffect, useRef, useState } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
-import { supabase, type Case } from "@/lib/supabase";
 
 // Fix for default marker icons in Next.js
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -15,12 +14,12 @@ L.Icon.Default.mergeOptions({
 
 // Category icons mapping
 const categoryIcons = {
-  fraud: "fa-solid fa-hand-holding-dollar",
-  abuse: "fa-solid fa-triangle-exclamation",
-  discrimination: "fa-solid fa-scale-balanced",
-  harassment: "fa-solid fa-user-shield",
-  safety: "fa-solid fa-hard-hat",
-  corruption: "fa-solid fa-user-tie",
+  fraud: "fa-hand-holding-dollar",
+  abuse: "fa-triangle-exclamation",
+  discrimination: "fa-scale-balanced",
+  harassment: "fa-user-shield",
+  safety: "fa-hard-hat",
+  corruption: "fa-user-tie",
 };
 
 // Category colors mapping
@@ -33,45 +32,97 @@ const categoryColors = {
   corruption: "#D4A5A5",
 };
 
-// Add this function after the categoryColors mapping
+// Example cases
+type Case = {
+  id: number;
+  priority: "low" | "medium" | "high" | "critical";
+  created_at: string;
+  structured_data?: {
+    incident?: {
+      category?: "fraud" | "abuse" | "discrimination" | "harassment" | "safety" | "corruption";
+      title?: string;
+      source?: string;
+      description?: string;
+      location?: { lat: number; lng: number };
+    };
+  };
+};
+
+const exampleCases: Case[] = [
+  {
+    id: 1,
+    priority: "high",
+    created_at: "2025-06-01T10:00:00Z",
+    structured_data: {
+      incident: {
+        category: "fraud",
+        title: "Financial Misconduct Report",
+        source: "Internal Audit",
+        description: "Suspected fraudulent transactions detected in accounting system.",
+        location: { lat: 37.7749, lng: -122.4194 },
+      },
+    },
+  },
+  {
+    id: 2,
+    priority: "medium",
+    created_at: "2025-06-02T14:30:00Z",
+    structured_data: {
+      incident: {
+        category: "safety",
+        title: "Workplace Safety Violation",
+        source: "Employee Report",
+        description: "Improper safety equipment usage in warehouse.",
+        location: { lat: 37.7725, lng: -122.4178 },
+      },
+    },
+  },
+  {
+    id: 3,
+    priority: "critical",
+    created_at: "2025-06-03T09:15:00Z",
+    structured_data: {
+      incident: {
+        category: "harassment",
+        title: "Workplace Harassment Complaint",
+        source: "HR Department",
+        description: "Reported verbal harassment in team meeting.",
+        location: { lat: 37.7763, lng: -122.4212 },
+      },
+    },
+  },
+  {
+    id: 4,
+    priority: "low",
+    created_at: "2025-06-03T12:00:00Z",
+    structured_data: {
+      incident: {
+        category: "discrimination",
+        title: "Bias Incident Report",
+        source: "Anonymous",
+        description: "Reported biased language during project discussion.",
+        location: { lat: 37.7738, lng: -122.4201 },
+      },
+    },
+  },
+];
+
 const generateRandomLocation = (centerLat: number, centerLng: number, radiusInMeters: number = 500) => {
-  // Convert radius from meters to degrees (approximate)
   const radiusInDegrees = radiusInMeters / 111000;
-  
-  // Generate random angle
   const angle = Math.random() * 2 * Math.PI;
-  
-  // Generate random distance within radius
   const distance = Math.random() * radiusInDegrees;
-  
-  // Calculate new coordinates
   const lat = centerLat + (distance * Math.cos(angle));
   const lng = centerLng + (distance * Math.sin(angle));
-  
   return { lat, lng };
 };
 
-// Fix for default marker icons in Leaflet with Next.js
-const DefaultIcon = L.icon({
-  iconUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png",
-  iconRetinaUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon-2x.png",
-  shadowUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png",
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-  popupAnchor: [1, -34],
-  shadowSize: [41, 41]
-});
-
-L.Marker.prototype.options.icon = DefaultIcon;
-
-// Add safety heatmap colors
+// Safety heatmap colors
 const safetyColors = {
   safe: "#00C851",
   warning: "#ffbb33",
-  danger: "#ff4444"
+  danger: "#ff4444",
 };
 
-// Add this function to calculate safety score
 const calculateSafetyScore = (cases: Case[], lat: number, lng: number, radius: number = 0.001) => {
   const nearbyCases = cases.filter(case_ => {
     const caseLat = case_.structured_data?.incident?.location?.lat || 0;
@@ -106,10 +157,8 @@ export default function MapComponent() {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<L.Map | null>(null);
   const markersRef = useRef<L.Marker[]>([]);
-  const heatmapLayer = useRef<L.Layer | null>(null);
   const [cases, setCases] = useState<Case[]>([]);
   const [loading, setLoading] = useState(true);
-  const [viewMode, setViewMode] = useState<'cases' | 'safety'>('cases');
   const [mapError, setMapError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -118,15 +167,11 @@ export default function MapComponent() {
 
   const fetchCases = async () => {
     try {
-      const { data, error } = await supabase
-        .from("cases")
-        .select("*")
-        .order("created_at", { ascending: false });
-
-      if (error) throw error;
-      setCases(data || []);
+      // Use example cases instead of Supabase
+      setCases(exampleCases);
     } catch (error) {
       console.error("Error fetching cases:", error);
+      setMapError("Failed to load case data");
     } finally {
       setLoading(false);
     }
@@ -134,26 +179,25 @@ export default function MapComponent() {
 
   // Initialize map
   useEffect(() => {
-    if (map.current) return;
-    if (!mapContainer.current) return;
+    if (map.current || !mapContainer.current) return;
 
     try {
       map.current = L.map(mapContainer.current, {
-        center: [37.7749, -122.4194], // San Francisco for demo
-        zoom: 14,
-        zoomControl: false,
-        attributionControl: false,
+        center: [37.7749, -122.4194], // San Francisco
+        zoom: 13,
+        zoomControl: true,
+        attributionControl: true,
         dragging: true,
         scrollWheelZoom: true,
         doubleClickZoom: true,
-        boxZoom: false,
-        keyboard: false,
+        boxZoom: true,
       });
 
-      // Use CartoDB Positron tiles for a light, minimal look
+      // Use CartoDB Positron tiles for light theme
       L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-        attribution: '',
-        maxZoom: 19,
+        attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors © <a href="https://carto.com/attributions">CARTO</a>',
+        subdomains: 'abcd',
+        maxZoom: 20,
       }).addTo(map.current);
     } catch (error) {
       setMapError(error instanceof Error ? error.message : "Failed to initialize map");
@@ -167,60 +211,75 @@ export default function MapComponent() {
     };
   }, []);
 
-  // Update markers when cases change
+  // Update markers
   useEffect(() => {
     if (!map.current) return;
+
+    // Clear existing markers
     markersRef.current.forEach(marker => marker.remove());
     markersRef.current = [];
 
     cases.forEach((case_) => {
-      // Choose color by priority
-      let color = '#4CAF50'; // green default
-      if (case_.priority === 'medium') color = '#FFC107'; // yellow
-      if (case_.priority === 'high' || case_.priority === 'critical') color = '#F44336'; // red
-
-      // Flat dot marker
+      const category = case_.structured_data?.incident?.category || 'safety';
+      const color = categoryColors[category] || '#4CAF50';
+      
+      // Create custom icon with FontAwesome
       const customIcon = L.divIcon({
-        className: '',
-        html: `<div style="width:18px;height:18px;border-radius:50%;background:${color};"></div>`,
-        iconSize: [18, 18],
-        iconAnchor: [9, 9],
+        className: 'custom-icon',
+        html: `
+          <div style="
+            background: ${color};
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid #fff;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+          ">
+            <i class="fa-solid ${categoryIcons[category] || 'fa-hard-hat'}" style="color: white; font-size: 16px;"></i>
+          </div>
+        `,
+        iconSize: [32, 32],
+        iconAnchor: [16, 16],
+        popupAnchor: [0, -16],
       });
 
-      // Modern popup card
+      // Enhanced popup
       const popupContent = `
-        <div style="min-width:220px;max-width:260px;background:#fff;border-radius:12px;box-shadow:0 2px 16px rgba(0,0,0,0.12);padding:18px 18px 14px 18px;">
-          <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
-            <div style="width:32px;height:32px;border-radius:8px;background:#FFF3CD;display:flex;align-items:center;justify-content:center;">
-              <svg width='20' height='20' fill='#FFC107' viewBox='0 0 24 24'><path d='M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z'/></svg>
+        <div style="min-width:220px;background:#fff;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,0.15);padding:12px;">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+            <div style="width:32px;height:32px;border-radius:6px;background:${color};display:flex;align-items:center;justify-content:center;">
+              <i class="fa-solid ${categoryIcons[category] || 'fa-hard-hat'}" style="color:white;font-size:16px;"></i>
             </div>
             <div>
-              <div style="font-weight:700;font-size:16px;line-height:1.2;">Sanitation Issue</div>
-              <div style="font-size:13px;color:#888;">Clarifai</div>
+              <div style="font-weight:600;font-size:15px;">${case_.structured_data?.incident?.title || 'Incident'}</div>
+              <div style="font-size:12px;color:#666;">${case_.structured_data?.incident?.source || 'Unknown'}</div>
             </div>
           </div>
-          <div style="font-size:14px;color:#444;margin-bottom:10px;">Waste/Trash detected</div>
-          <div style="display:flex;align-items:center;gap:7px;font-size:13px;">
-            <div style="width:10px;height:10px;border-radius:50%;background:${color};"></div>
-            <span style="color:#888;">Priority:</span>
-            <span style="font-weight:500;color:${color};text-transform:capitalize;">${case_.priority}</span>
+          <div style="font-size:13px;color:#444;margin-bottom:8px;">${case_.structured_data?.incident?.description || 'No description'}</div>
+          <div style="display:flex;align-items:center;gap:6px;font-size:12px;">
+            <div style="width:8px;height:8px;border-radius:50%;background:${color};"></div>
+            <span style="color:#666;">Priority:</span>
+            <span style="font-weight:500;color:${color};text-transform:capitalize;">${case_.priority || 'unknown'}</span>
           </div>
         </div>
       `;
 
-      // Use provided or random location
-      let location;
-      if (case_.structured_data?.incident?.location?.lat && case_.structured_data?.incident?.location?.lng) {
-        location = {
-          lat: case_.structured_data.incident.location.lat,
-          lng: case_.structured_data.incident.location.lng
-        };
-      } else {
-        location = generateRandomLocation(37.7749, -122.4194);
-      }
+      const location = case_.structured_data?.incident?.location?.lat && case_.structured_data?.incident?.location?.lng
+        ? {
+            lat: case_.structured_data.incident.location.lat,
+            lng: case_.structured_data.incident.location.lng
+          }
+        : generateRandomLocation(37.7749, -122.4194);
 
       const marker = L.marker([location.lat, location.lng], { icon: customIcon })
-        .bindPopup(popupContent, { closeButton: false, offset: [0, -10] })
+        .bindPopup(popupContent, {
+          closeButton: true,
+          offset: [0, -16],
+          className: 'custom-popup',
+        })
         .addTo(map.current!);
       markersRef.current.push(marker);
     });
@@ -228,10 +287,10 @@ export default function MapComponent() {
 
   if (loading) {
     return (
-      <div className="h-full w-full flex items-center justify-center bg-gray-100">
-        <div className="flex flex-col items-center gap-4">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
-          <div className="text-gray-600">Loading map data...</div>
+      <div className="h-full w-full flex items-center justify-center bg-gray-50">
+        <div className="flex flex-col items-center gap-3">
+          <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-blue-400"></div>
+          <div className="text-gray-500 text-sm">Loading map data...</div>
         </div>
       </div>
     );
@@ -239,15 +298,15 @@ export default function MapComponent() {
 
   if (mapError) {
     return (
-      <div className="h-full w-full flex items-center justify-center bg-gray-100">
-        <div className="bg-white p-6 rounded-lg shadow-lg">
-          <div className="text-red-500 mb-2">Error Loading Map</div>
-          <div className="text-gray-600">{mapError}</div>
+      <div className="h-full w-full flex items-center justify-center bg-gray-50">
+        <div className="bg-white p-5 rounded-md shadow-md">
+          <div className="text-red-400 text-sm font-medium mb-2">Map Error</div>
+          <div className="text-gray-500 text-sm mb-4">{mapError}</div>
           <button 
             onClick={() => window.location.reload()} 
-            className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
+            className="px-3 py-1 bg-blue-400 text-white rounded hover:bg-blue-500 transition-colors text-sm"
           >
-            Retry
+            Try Again
           </button>
         </div>
       </div>
@@ -255,20 +314,26 @@ export default function MapComponent() {
   }
 
   return (
-    <div
-      ref={mapContainer}
-      style={{
-        position: "absolute",
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        minHeight: "500px",
-        width: "100%",
-        height: "100%",
-        backgroundColor: "#f5f5f5",
-        zIndex: 1,
-      }}
-    />
+    <>
+      <style>
+        {`
+          .leaflet-container {
+            background: #f5f5f5 !important;
+          }
+          .custom-popup .leaflet-popup-content-wrapper {
+            border-radius: 8px;
+            padding: 0;
+          }
+          .custom-popup .leaflet-popup-tip {
+            background: #fff;
+          }
+        `}
+      </style>
+      <div
+        ref={mapContainer}
+        className="relative w-full h-full"
+        style={{ minHeight: "500px", zIndex: 1 }}
+      />
+    </>
   );
-} 
+}
