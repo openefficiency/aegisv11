@@ -16,7 +16,7 @@ const MapComponent = dynamic(() => import("./map-component"), {
 export default function MapDashboard() {
   return (
     <DashboardLayout role="ethics-officer">
-      <div className="h-[calc(100vh-4rem)] w-full">
+      <div className="h-[calc(100vh-4rem)] w-full relative">
         <MapComponent />
       </div>
     </DashboardLayout>
