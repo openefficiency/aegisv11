@@ -1,0 +1,36 @@
+.map-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  height: 100%;
+  min-height: 500px;
+}
+
+.leaflet-container {
+  width: 100%;
+  height: 100%;
+  min-height: 500px;
+  z-index: 1;
+}
+
+/* Ensure the map container is visible */
+.leaflet-pane {
+  z-index: 1;
+}
+
+.leaflet-control {
+  z-index: 2;
+}
+
+/* Fix for map tiles */
+.leaflet-tile-pane {
+  z-index: 1;
+}
+
+/* Ensure controls are above the map */
+.leaflet-control-container {
+  z-index: 2;
+} 
