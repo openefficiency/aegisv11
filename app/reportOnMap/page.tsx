@@ -37,7 +37,7 @@ const ReportOnMap = () => {
   const [address, setAddress] = useState<string>('');
   const mapRef = useRef<L.Map | null>(null);
   const popupRef = useRef<L.Popup | null>(null);
-  const searchTimeoutRef = useRef<ReturnType<typeof setTimeout>>();
+  const searchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const getAddressFromCoordinates = async (latlng: LatLngLiteral) => {
     try {
@@ -219,7 +219,7 @@ const ReportOnMap = () => {
             </button>
           </div>
           {showSuggestions && suggestions.length > 0 && (
-            <div className="absolute top-full left-0 w-full mt-2 bg-white rounded-2xl shadow-2xl z-50 border border-gray-200 overflow-hidden animate-fade-in">
+            <div className="absolute top-full left-0 w-full mt-2 bg-white rounded-2xl shadow-2xl z-[9999] border border-gray-200">
               {suggestions.map((suggestion, index) => (
                 <div
                   key={index}
