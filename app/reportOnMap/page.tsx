@@ -19,6 +19,10 @@ import { Upload } from "lucide-react";
 import { Shield } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Lock } from "lucide-react";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
+import { Eye, EyeOff } from "lucide-react";
+import { useToast } from "@/components/ui/use-toast";
+import { ToastAction } from "@/components/ui/toast";
 
 const MapContainer = dynamic(() => import('react-leaflet').then((mod) => mod.MapContainer), { ssr: false });
 const TileLayer = dynamic(() => import('react-leaflet').then((mod) => mod.TileLayer), { ssr: false });
@@ -47,6 +51,7 @@ const exampleReport = {
 };
 
 const ReportOnMap = () => {
+  const { toast } = useToast();
   const [selectedLocation, setSelectedLocation] = useState<LatLngLiteral | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [mapCenter, setMapCenter] = useState<LatLngLiteral>(DEFAULT_CENTER);
@@ -70,6 +75,9 @@ const ReportOnMap = () => {
     contactInfo: ''
   });
   const [isLoading, setIsLoading] = useState(false);
+  const [isSubmitted, setIsSubmitted] = useState(false);
+  const [secretCode, setSecretCode] = useState('');
+  const [showSecretCode, setShowSecretCode] = useState(false);
 
   const getAddressFromCoordinates = async (latlng: LatLngLiteral) => {
     try {
@@ -273,14 +281,167 @@ const ReportOnMap = () => {
   const handleReportSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsLoading(true);
+
     try {
-      // Handle form submission
-      console.log('Report submitted:', { reporterName, reporterRole, reporterCompany });
-      // You can add more fields and send this data to an API or log it
+      // Generate a unique case ID
+      const timestamp = new Date().toISOString().slice(2, 10).replace(/-/g, '');
+      const random = Math.random().toString(36).substring(2, 6).toUpperCase();
+      const caseId = `WA${timestamp}${random}`;
+
+      // Prepare the report data
+      const reportData = {
+        ...formData,
+        location: address,
+        coordinates: selectedLocation,
+        case_id: caseId,
+        status: 'open',
+        priority: 'medium', // Default priority
+        created_at: new Date().toISOString()
+      };
+
+      // Send to API
+      const response = await fetch('/api/reports', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(reportData),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to submit report');
+      }
+
+      const data = await response.json();
+
+      // Show success state
+      setSecretCode(data.caseId);
+      setIsSubmitted(true);
+      setShowReportModal(false);
+
+      // Show success toast
+      toast({
+        title: "Report Submitted Successfully",
+        description: "Your report has been securely submitted and is now in our system.",
+        duration: 5000,
+      });
+
+    } catch (error) {
+      console.error('Error submitting report:', error);
+      
+      // Show error toast
+      toast({
+        variant: "destructive",
+        title: "Error Submitting Report",
+        description: error instanceof Error ? error.message : "An unexpected error occurred. Please try again.",
+        action: (
+          <ToastAction altText="Try again" onClick={() => setShowReportModal(true)}>
+            Try again
+          </ToastAction>
+        ),
+      });
     } finally {
       setIsLoading(false);
     }
   };
+
+  // Add success state UI
+  if (isSubmitted) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900">
+        <nav className="border-b border-slate-800 bg-slate-900/50 backdrop-blur-sm">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex justify-between items-center h-16">
+              <Link href="/" className="flex items-center space-x-2">
+                <Shield className="h-8 w-8 text-blue-400" />
+                <span className="text-xl font-bold text-white">AegisWhistle</span>
+              </Link>
+            </div>
+          </div>
+        </nav>
+
+        <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          <Card className="bg-slate-800/50 border-slate-700">
+            <CardHeader className="text-center">
+              <div className="mx-auto w-16 h-16 bg-green-600 rounded-full flex items-center justify-center mb-4">
+                <Shield className="h-8 w-8 text-white" />
+              </div>
+              <CardTitle className="text-white text-2xl">Report Submitted Successfully</CardTitle>
+              <CardDescription className="text-slate-400">
+                Your report has been securely submitted and is now in our system
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="bg-slate-900/50 p-4 rounded border border-slate-600">
+                <div className="flex justify-between items-center mb-2">
+                  <Label className="text-slate-300">Your Secret Tracking Code</Label>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setShowSecretCode(!showSecretCode)}
+                    className="text-slate-400 hover:text-white"
+                  >
+                    {showSecretCode ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </Button>
+                </div>
+                <div className="font-mono text-lg text-white bg-slate-800 p-3 rounded border">
+                  {showSecretCode ? secretCode : "•".repeat(secretCode.length)}
+                </div>
+                <p className="text-sm text-slate-400 mt-2">
+                  Save this code securely. You'll need it to track your report's progress.
+                </p>
+              </div>
+
+              <div className="space-y-4">
+                <div className="flex items-start gap-3">
+                  <div className="w-2 h-2 bg-green-500 rounded-full mt-2" />
+                  <div>
+                    <h4 className="text-white font-semibold">What happens next?</h4>
+                    <p className="text-slate-400 text-sm">
+                      Your report will be reviewed by our AI system within 24 hours and assigned to the appropriate
+                      team.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-3">
+                  <div className="w-2 h-2 bg-blue-500 rounded-full mt-2" />
+                  <div>
+                    <h4 className="text-white font-semibold">Track your progress</h4>
+                    <p className="text-slate-400 text-sm">
+                      Use your secret code on our follow-up page to check the status of your report anonymously.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-3">
+                  <div className="w-2 h-2 bg-yellow-500 rounded-full mt-2" />
+                  <div>
+                    <h4 className="text-white font-semibold">Potential rewards</h4>
+                    <p className="text-slate-400 text-sm">
+                      If your report leads to recovery of funds, you may be eligible for up to 15% as a crypto reward.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex gap-4">
+                <Link href="/follow-up" className="flex-1">
+                  <Button className="w-full bg-blue-600 hover:bg-blue-700">Track My Report</Button>
+                </Link>
+                <Link href="/" className="flex-1">
+                  <Button variant="outline" className="w-full border-slate-600 text-slate-300">
+                    Return Home
+                  </Button>
+                </Link>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900">
@@ -412,17 +573,16 @@ const ReportOnMap = () => {
                 value={formData.category}
                 onValueChange={(value) => setFormData({ ...formData, category: value })}
               >
-                <SelectTrigger className="bg-slate-900/50 border-slate-600 text-white">
+                <SelectTrigger className="bg-slate-900/50 border-slate-600 text-white hover:bg-slate-800/50 focus:ring-2 focus:ring-blue-500">
                   <SelectValue placeholder="Select the type of issue" />
                 </SelectTrigger>
                 <SelectContent className="bg-slate-800 border-slate-600">
-                  <SelectItem value="fraud">Fraud</SelectItem>
-                  <SelectItem value="abuse">Abuse</SelectItem>
-                  <SelectItem value="discrimination">Discrimination</SelectItem>
-                  <SelectItem value="harassment">Harassment</SelectItem>
-                  <SelectItem value="safety">Safety Violations</SelectItem>
-                  <SelectItem value="corruption">Corruption</SelectItem>
-                  <SelectItem value="other">Other</SelectItem>
+                  <SelectItem value="fraud" className="text-white hover:bg-slate-700 focus:bg-slate-700">Fraud</SelectItem>
+                  <SelectItem value="abuse" className="text-white hover:bg-slate-700 focus:bg-slate-700">Abuse</SelectItem>
+                  <SelectItem value="discrimination" className="text-white hover:bg-slate-700 focus:bg-slate-700">Discrimination</SelectItem>
+                  <SelectItem value="harassment" className="text-white hover:bg-slate-700 focus:bg-slate-700">Harassment</SelectItem>
+                  <SelectItem value="safety" className="text-white hover:bg-slate-700 focus:bg-slate-700">Safety Violations</SelectItem>
+                  <SelectItem value="corruption" className="text-white hover:bg-slate-700 focus:bg-slate-700">Corruption</SelectItem>
                 </SelectContent>
               </Select>
             </div>
