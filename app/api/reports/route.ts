@@ -1,10 +1,18 @@
 import { createClient } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
 
-// Initialize Supabase client
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
-const supabase = createClient(supabaseUrl, supabaseServiceKey)
+// Check for required environment variables
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+
+// Initialize Supabase client if environment variables are available
+let supabase: ReturnType<typeof createClient> | null = null
+
+if (supabaseUrl && supabaseServiceKey) {
+  supabase = createClient(supabaseUrl, supabaseServiceKey)
+} else {
+  console.warn('Supabase environment variables not found. Running in test mode.')
+}
 
 export async function POST(request: Request) {
   try {
@@ -28,6 +36,17 @@ export async function POST(request: Request) {
         { error: `Invalid category. Must be one of: ${validCategories.join(', ')}` },
         { status: 400 }
       )
+    }
+
+    // If Supabase is not configured, return a test response
+    if (!supabase) {
+      console.log('Test mode: Report data received:', body)
+      return NextResponse.json({ 
+        success: true, 
+        caseId: body.case_id,
+        message: 'Report submitted successfully (test mode)',
+        testMode: true
+      })
     }
 
     // Insert the report into the database
