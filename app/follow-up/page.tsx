@@ -39,9 +39,6 @@ import {
 import { formatCaseText, formatCaseTitle, getCaseDateReceived, extractCaseLocation } from "@/lib/utils";
 
 
-import { formatCaseText, formatCaseTitle, getCaseDateReceived, extractCaseLocation } from "@/lib/utils";
-
-
 
 export default function FollowUpPage() {
   const [secretCode, setSecretCode] = useState("");
