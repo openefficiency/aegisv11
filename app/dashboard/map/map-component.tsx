@@ -402,15 +402,20 @@ export default function MapComponent() {
   }
 
   return (
-    <div 
-      ref={mapContainer} 
-      className="h-full w-full"
-      style={{ 
+    <div
+      ref={mapContainer}
+      style={{
+        position: "absolute",
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
         minHeight: "500px",
-        backgroundColor: "#f0f0f0",
-        position: "relative",
-        zIndex: 1
-      }} 
+        width: "100%",
+        height: "100%",
+        backgroundColor: "#e0e0e0", // slightly different gray for debug
+        zIndex: 1,
+      }}
     />
   );
 } 
