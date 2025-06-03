@@ -44,7 +44,7 @@ import {
 import { DashboardLayout } from "@/components/dashboard-layout";
 import { supabase, type Case, type InvestigatorQuery } from "@/lib/supabase";
 import { auditLogger } from "@/lib/audit-logger";
-import { formatCaseText } from "@/lib/utils";
+import { formatCaseText, formatCaseTitle } from "@/lib/utils";
 
 export default function InvestigatorDashboard() {
   const [cases, setCases] = useState<Case[]>([]);
@@ -363,7 +363,7 @@ export default function InvestigatorDashboard() {
                           {case_.report_id || case_.case_number}
                         </TableCell>
                         <TableCell className="text-white max-w-xs truncate">
-                          {formatCaseText(case_.title)}
+                          {formatCaseTitle(case_.title, case_.description, case_.created_at)}
                         </TableCell>
                         <TableCell className="text-slate-300 max-w-sm truncate">
                           {formatCaseText(case_.vapi_report_summary || case_.description)}
