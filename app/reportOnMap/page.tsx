@@ -106,9 +106,19 @@ const ReportOnMap = () => {
     searchTimeoutRef.current = setTimeout(async () => {
       if (value.length > 1) {
         try {
-          const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(value)}&limit=5&addressdetails=1`);
-          const data = await res.json();
-          setSuggestions(data.slice(0, 5)); // Show top 5 suggestions
+          const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(value)}&limit=10&addressdetails=1`, {
+            headers: { 'accept-language': 'en' }
+          });
+          let data = await res.json();
+          // Filter to only English results (display_name in Latin chars)
+          data = data.filter((item: any) => /^[\x00-\x7F]+$/.test(item.display_name));
+          // Sort by distance to mapCenter
+          data.sort((a: any, b: any) => {
+            const distA = Math.pow(parseFloat(a.lat) - mapCenter.lat, 2) + Math.pow(parseFloat(a.lon) - mapCenter.lng, 2);
+            const distB = Math.pow(parseFloat(b.lat) - mapCenter.lat, 2) + Math.pow(parseFloat(b.lon) - mapCenter.lng, 2);
+            return distA - distB;
+          });
+          setSuggestions(data.slice(0, 5)); // Show top 5 closest English suggestions
           setShowSuggestions(true);
         } catch (error) {
           console.error('Error fetching suggestions:', error);
@@ -117,7 +127,7 @@ const ReportOnMap = () => {
         setSuggestions([]);
         setShowSuggestions(false);
       }
-    }, 200); // Reduced from 300ms to 200ms for faster response
+    }, 200);
   };
 
   const handleSuggestionClick = (suggestion: { lat: string; lon: string; display_name: string }) => {
