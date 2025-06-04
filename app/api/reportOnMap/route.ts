@@ -41,6 +41,11 @@ interface ReportData {
   dateOccurred?: string
   anonymous?: boolean
   contactInfo?: string
+  // VAPI fields (optional)
+  vapi_session_id?: string
+  vapi_transcript?: string
+  vapi_audio_url?: string
+  vapi_report_summary?: string
 }
 
 // Simple rate limiting
@@ -72,6 +77,24 @@ function sanitizeInput(input: string): string {
     .trim()
 }
 
+function generateTrackingCode(): string {
+  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+  let result = ""
+  for (let i = 0; i < 10; i++) {
+    result += chars.charAt(Math.floor(Math.random() * chars.length))
+  }
+  return result
+}
+
+function generateSecretCode(): string {
+  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+  let result = ""
+  for (let i = 0; i < 12; i++) {
+    result += chars.charAt(Math.floor(Math.random() * chars.length))
+  }
+  return result
+}
+
 export async function POST(request: Request) {
   try {
     // Check rate limit
@@ -94,6 +117,7 @@ export async function POST(request: Request) {
     console.log("Received report data:", {
       ...body,
       contactInfo: body.contactInfo ? "[REDACTED]" : undefined,
+      vapi_transcript: body.vapi_transcript ? "[TRANSCRIPT_PRESENT]" : undefined,
     })
 
     // Validate required fields
@@ -149,6 +173,9 @@ export async function POST(request: Request) {
     // Sanitize inputs
     const sanitizedData = {
       case_id: body.case_id,
+      tracking_code: generateTrackingCode(),
+      report_id: body.case_id,
+      secret_code: generateSecretCode(),
       category: body.category,
       title: sanitizeInput(body.title),
       description: sanitizeInput(body.description),
@@ -160,6 +187,14 @@ export async function POST(request: Request) {
       contact_info: body.contactInfo ? sanitizeInput(body.contactInfo) : null,
       status: "open" as Status,
       priority: VALID_CATEGORIES[body.category].priority as Priority,
+      // VAPI fields
+      vapi_session_id: body.vapi_session_id || null,
+      vapi_transcript: body.vapi_transcript || null,
+      vapi_audio_url: body.vapi_audio_url || null,
+      vapi_report_summary: body.vapi_report_summary || null,
+      reward_amount: 0,
+      recovery_amount: 0,
+      reward_status: "pending",
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     }
@@ -186,9 +221,13 @@ export async function POST(request: Request) {
         date_occurred: sanitizedData.date_occurred,
         is_anonymous: sanitizedData.is_anonymous,
         contact_info: sanitizedData.contact_info,
-        secret_code: Math.random().toString(36).substring(2, 10).toUpperCase(),
-        report_id: body.case_id,
-        tracking_code: body.case_id,
+        secret_code: sanitizedData.secret_code,
+        report_id: sanitizedData.report_id,
+        tracking_code: sanitizedData.tracking_code,
+        vapi_session_id: sanitizedData.vapi_session_id,
+        vapi_transcript: sanitizedData.vapi_transcript,
+        vapi_audio_url: sanitizedData.vapi_audio_url,
+        vapi_report_summary: sanitizedData.vapi_report_summary,
         created_at: sanitizedData.created_at,
         updated_at: sanitizedData.updated_at,
       }
@@ -212,6 +251,7 @@ export async function POST(request: Request) {
       return NextResponse.json({
         success: true,
         caseId: body.case_id,
+        trackingCode: sanitizedData.tracking_code,
         message: "Report submitted successfully",
         priority: sanitizedData.priority,
         table: "cases",
@@ -222,6 +262,7 @@ export async function POST(request: Request) {
     return NextResponse.json({
       success: true,
       caseId: body.case_id,
+      trackingCode: sanitizedData.tracking_code,
       message: "Report submitted successfully",
       priority: sanitizedData.priority,
       table: "reports",
