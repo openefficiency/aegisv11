@@ -25,12 +25,12 @@ const categoryIcons = {
 
 // Category colors mapping
 const categoryColors = {
-  fraud: "#808080",
-  abuse: "#A9A9A9",
-  discrimination: "#D3D3D3",
-  harassment: "#C0C0C0",
-  safety: "#E8E8E8",
-  corruption: "#B8B8B8",
+  fraud: "#F44336",    // Red
+  abuse: "#FFC107",    // Yellow
+  discrimination: "#4CAF50",  // Green
+  harassment: "#F44336",    // Red
+  safety: "#FFC107",    // Yellow
+  corruption: "#F44336",    // Red
 };
 
 // Add this function after the categoryColors mapping
@@ -66,9 +66,9 @@ L.Marker.prototype.options.icon = DefaultIcon;
 
 // Add safety heatmap colors
 const safetyColors = {
-  safe: "#4CAF50",    // Green
-  warning: "#FFC107",  // Yellow
-  danger: "#F44336"    // Red
+  safe: "rgba(76, 175, 80, 0.7)",    // Brighter green with higher opacity
+  warning: "rgba(255, 193, 7, 0.7)",  // Brighter yellow with higher opacity
+  danger: "rgba(244, 67, 54, 0.7)"    // Brighter red with higher opacity
 };
 
 // Add this function to calculate safety score
@@ -124,7 +124,7 @@ export default function MapComponent() {
       structured_data: {
         incident: {
           location: {
-            lat: 38.8574,
+            lat: 38.8574,  // Convention Center Main Entrance
             lng: -77.0234
           }
         }
@@ -146,8 +146,8 @@ export default function MapComponent() {
       structured_data: {
         incident: {
           location: {
-            lat: 38.8580,
-            lng: -77.0220
+            lat: 38.8582,  // North of Convention Center (Mount Vernon Square)
+            lng: -77.0225
           }
         }
       }
@@ -168,7 +168,7 @@ export default function MapComponent() {
       structured_data: {
         incident: {
           location: {
-            lat: 38.8568,
+            lat: 38.8565,  // South of Convention Center (L Street)
             lng: -77.0240
           }
         }
@@ -190,8 +190,8 @@ export default function MapComponent() {
       structured_data: {
         incident: {
           location: {
-            lat: 38.8578,
-            lng: -77.0245
+            lat: 38.8578,  // East of Convention Center (7th Street)
+            lng: -77.0215
           }
         }
       }
@@ -212,8 +212,8 @@ export default function MapComponent() {
       structured_data: {
         incident: {
           location: {
-            lat: 38.8565,
-            lng: -77.0225
+            lat: 38.8570,  // West of Convention Center (9th Street)
+            lng: -77.0250
           }
         }
       }
@@ -245,10 +245,10 @@ export default function MapComponent() {
       // Initialize the map with explicit options
       map.current = L.map(mapContainer.current, {
         center: [38.8574, -77.0234], // Walter E. Washington Convention Center coordinates
-        zoom: 16, // Closer zoom to focus on the convention center area
+        zoom: 17, // Increased zoom level for better focus on the convention center area
         zoomControl: false,
         attributionControl: false,
-        minZoom: 2,
+        minZoom: 15, // Prevent zooming out too far
         maxZoom: 19,
         zoomSnap: 1,
         zoomDelta: 1,
@@ -271,6 +271,36 @@ export default function MapComponent() {
         updateWhenZooming: true,
         keepBuffer: 2
       }).addTo(map.current);
+
+      // Add a marker for the Convention Center
+      const conventionCenterIcon = L.divIcon({
+        className: 'convention-center-marker',
+        html: `<div style="
+          background-color: #2196F3;
+          width: 16px;
+          height: 16px;
+          border-radius: 50%;
+          border: 2px solid white;
+          box-shadow: 0 0 8px rgba(0,0,0,0.3);
+        "></div>`,
+        iconSize: [20, 20],
+        iconAnchor: [10, 10]
+      });
+
+      L.marker([38.8574, -77.0234], { icon: conventionCenterIcon })
+        .bindPopup(`
+          <div style="
+            padding: 8px;
+            background: white;
+            color: #333;
+            border-radius: 4px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+          ">
+            <h3 style="margin: 0 0 4px 0; font-size: 14px; font-weight: 600;">Walter E. Washington Convention Center</h3>
+            <p style="margin: 0; font-size: 12px; color: #666;">801 Mount Vernon Place NW</p>
+          </div>
+        `)
+        .addTo(map.current);
 
       console.log("Tile layer added, adding controls...");
 
@@ -376,20 +406,35 @@ export default function MapComponent() {
     if (viewMode === 'cases') {
       // Show individual case markers
       markersRef.current = cases.map((case_) => {
-        const markerColor = calculateSafetyScore(cases, case_.structured_data?.incident?.location?.lat || 0, case_.structured_data?.incident?.location?.lng || 0).color;
+        // Determine marker color based on priority
+        let markerColor;
+        switch(case_.priority) {
+          case 'critical':
+            markerColor = '#F44336'; // Red
+            break;
+          case 'high':
+            markerColor = '#FFC107'; // Yellow
+            break;
+          case 'medium':
+            markerColor = '#4CAF50'; // Green
+            break;
+          default:
+            markerColor = '#4CAF50'; // Default to green
+        }
+
         const customIcon = L.divIcon({
           className: `custom-marker ${markerColor}`,
           html: `<div style="
             background-color: ${markerColor};
-            width: 12px;
-            height: 12px;
+            width: 14px;
+            height: 14px;
             border-radius: 50%;
-            border: 1px solid #666;
-            box-shadow: 0 0 4px rgba(0,0,0,0.2);
+            border: 2px solid white;
+            box-shadow: 0 0 8px rgba(0,0,0,0.3);
             animation: pulse 2s infinite;
           "></div>`,
-          iconSize: [16, 16],
-          iconAnchor: [8, 8]
+          iconSize: [18, 18],
+          iconAnchor: [9, 9]
         });
 
         const popupContent = `
@@ -474,26 +519,29 @@ export default function MapComponent() {
                   align-items: center;
                   justify-content: center;
                   gap: 8px;
-                  transition: all 0.2s;
+                  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                  position: relative;
+                  overflow: hidden;
+                  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
                 "
-                onmouseover="this.style.opacity='0.9'"
-                onmouseout="this.style.opacity='1'"
+                onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 4px 12px rgba(0,0,0,0.15)'"
+                onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='0 2px 4px rgba(0,0,0,0.1)'"
               >
                 ${deployingDrone === case_.id ? `
                   <div style="
-                    width: 16px;
-                    height: 16px;
+                    width: 18px;
+                    height: 18px;
                     border: 2px solid white;
                     border-top-color: transparent;
                     border-radius: 50%;
                     animation: spin 1s linear infinite;
                   "></div>
-                  Deploying Drone...
+                  <span style="font-weight: 600;">Deploying Drone...</span>
                 ` : `
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
                   </svg>
-                  Deploy Drone
+                  <span style="font-weight: 600;">Deploy Drone</span>
                 `}
               </button>
             </div>
@@ -527,7 +575,7 @@ export default function MapComponent() {
       });
     } else {
       // Show safety heatmap
-      const gridSize = 0.001; // Size of each grid cell
+      const gridSize = 0.0003; // Even smaller grid size for more detailed heatmap
       const bounds = map.current.getBounds();
       const heatmapData: { lat: number; lng: number; color: string }[] = [];
 
@@ -546,7 +594,7 @@ export default function MapComponent() {
           {
             color: color,
             fillColor: color,
-            fillOpacity: 0.3,
+            fillOpacity: 0.5,
             weight: 0
           }
         ).addTo(heatmap);
@@ -562,26 +610,27 @@ export default function MapComponent() {
           const div = L.DomUtil.create('div', 'leaflet-control leaflet-bar');
           div.innerHTML = `
             <div style="
-              background-color: rgba(255, 255, 255, 0.9);
-              padding: 8px;
-              border-radius: 4px;
+              background-color: rgba(255, 255, 255, 0.98);
+              padding: 16px;
+              border-radius: 10px;
               color: #333;
               font-size: 12px;
-              box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+              box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+              backdrop-filter: blur(8px);
             ">
-              <h4 style="margin: 0 0 8px 0;">Safety Level</h4>
-              <div style="display: flex; flex-direction: column; gap: 4px;">
-                <div style="display: flex; align-items: center; gap: 8px;">
-                  <div style="width: 12px; height: 12px; background-color: ${safetyColors.safe}; border: 1px solid #666;"></div>
-                  <span>Safe</span>
+              <h4 style="margin: 0 0 12px 0; font-size: 14px; font-weight: 600; color: #1a1a1a;">Safety Level</h4>
+              <div style="display: flex; flex-direction: column; gap: 10px;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                  <div style="width: 18px; height: 18px; background-color: ${safetyColors.safe}; border: 1px solid rgba(0,0,0,0.1); border-radius: 4px;"></div>
+                  <span style="font-weight: 500;">Safe</span>
                 </div>
-                <div style="display: flex; align-items: center; gap: 8px;">
-                  <div style="width: 12px; height: 12px; background-color: ${safetyColors.warning}; border: 1px solid #666;"></div>
-                  <span>Warning</span>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                  <div style="width: 18px; height: 18px; background-color: ${safetyColors.warning}; border: 1px solid rgba(0,0,0,0.1); border-radius: 4px;"></div>
+                  <span style="font-weight: 500;">Warning</span>
                 </div>
-                <div style="display: flex; align-items: center; gap: 8px;">
-                  <div style="width: 12px; height: 12px; background-color: ${safetyColors.danger}; border: 1px solid #666;"></div>
-                  <span>Danger</span>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                  <div style="width: 18px; height: 18px; background-color: ${safetyColors.danger}; border: 1px solid rgba(0,0,0,0.1); border-radius: 4px;"></div>
+                  <span style="font-weight: 500;">Danger</span>
                 </div>
               </div>
             </div>
