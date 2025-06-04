@@ -4,6 +4,7 @@ import React, { useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import type { LatLngLiteral } from 'leaflet';
 import { Button } from "@/components/ui/button";
+import { useMapEvent } from 'react-leaflet';
 
 const MapContainer = dynamic(
   () => import('react-leaflet').then((mod) => mod.MapContainer),
@@ -32,6 +33,15 @@ interface MapWrapperProps {
   popupRef: React.RefObject<any>;
 }
 
+const MapClickHandler: React.FC<{ onMapClick: (latlng: LatLngLiteral) => void }> = ({ onMapClick }) => {
+  useMapEvent('click', (e) => {
+    if (e && e.latlng) {
+      onMapClick(e.latlng);
+    }
+  });
+  return null;
+};
+
 const MapWrapper: React.FC<MapWrapperProps> = ({
   selectedLocation,
   mapCenter,
@@ -41,26 +51,6 @@ const MapWrapper: React.FC<MapWrapperProps> = ({
   mapRef,
   popupRef
 }) => {
-  useEffect(() => {
-    if (mapRef.current) {
-      const map = mapRef.current;
-      
-      // Add click event listener
-      const handleClick = (e: any) => {
-        if (e && e.latlng) {
-          onMapClick(e.latlng);
-        }
-      };
-      
-      map.on('click', handleClick);
-      
-      // Cleanup
-      return () => {
-        map.off('click', handleClick);
-      };
-    }
-  }, [mapRef, onMapClick]);
-
   return (
     <div style={{ height: 'calc(100vh - 64px - 56px)', width: '100vw', position: 'relative' }}>
       <MapContainer
@@ -71,6 +61,7 @@ const MapWrapper: React.FC<MapWrapperProps> = ({
         attributionControl={false}
         ref={mapRef}
       >
+        <MapClickHandler onMapClick={onMapClick} />
         <TileLayer
           url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
           attribution='&copy; <a href="https://carto.com/attributions">CARTO</a>'

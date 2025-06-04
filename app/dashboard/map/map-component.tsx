@@ -66,9 +66,9 @@ L.Marker.prototype.options.icon = DefaultIcon;
 
 // Add safety heatmap colors
 const safetyColors = {
-  safe: "#E8E8E8",
-  warning: "#C0C0C0",
-  danger: "#A9A9A9"
+  safe: "#4CAF50",    // Green
+  warning: "#FFC107",  // Yellow
+  danger: "#F44336"    // Red
 };
 
 // Add this function to calculate safety score
@@ -146,8 +146,8 @@ export default function MapComponent() {
       structured_data: {
         incident: {
           location: {
-            lat: 38.8600,
-            lng: -77.0200
+            lat: 38.8580,
+            lng: -77.0220
           }
         }
       }
@@ -168,8 +168,8 @@ export default function MapComponent() {
       structured_data: {
         incident: {
           location: {
-            lat: 38.8550,
-            lng: -77.0250
+            lat: 38.8568,
+            lng: -77.0240
           }
         }
       }
@@ -190,8 +190,8 @@ export default function MapComponent() {
       structured_data: {
         incident: {
           location: {
-            lat: 38.8580,
-            lng: -77.0220
+            lat: 38.8578,
+            lng: -77.0245
           }
         }
       }
@@ -212,8 +212,8 @@ export default function MapComponent() {
       structured_data: {
         incident: {
           location: {
-            lat: 38.8560,
-            lng: -77.0240
+            lat: 38.8565,
+            lng: -77.0225
           }
         }
       }
@@ -222,6 +222,17 @@ export default function MapComponent() {
   const [loading, setLoading] = useState(false);
   const [viewMode, setViewMode] = useState<'cases' | 'safety'>('cases');
   const [mapError, setMapError] = useState<string | null>(null);
+  const [deployingDrone, setDeployingDrone] = useState<string | null>(null);
+
+  const handleDeployDrone = (caseId: string) => {
+    setDeployingDrone(caseId);
+    // Simulate drone deployment
+    setTimeout(() => {
+      setDeployingDrone(null);
+      // Here you would typically make an API call to deploy the drone
+      console.log(`Drone deployed to case ${caseId}`);
+    }, 2000);
+  };
 
   // Initialize map
   useEffect(() => {
@@ -233,8 +244,8 @@ export default function MapComponent() {
       
       // Initialize the map with explicit options
       map.current = L.map(mapContainer.current, {
-        center: [38.8574, -77.0234],
-        zoom: 14,
+        center: [38.8574, -77.0234], // Walter E. Washington Convention Center coordinates
+        zoom: 16, // Closer zoom to focus on the convention center area
         zoomControl: false,
         attributionControl: false,
         minZoom: 2,
@@ -382,15 +393,110 @@ export default function MapComponent() {
         });
 
         const popupContent = `
-          <div style="min-width: 250px; padding: 12px; background: white; color: #333; border-radius: 4px; box-shadow: 0 1px 4px rgba(0,0,0,0.1);">
-            <h3 style="margin: 0 0 12px 0; color: #333; font-size: 14px; border-bottom: 1px solid #eee; padding-bottom: 8px;">${case_.title}</h3>
-            <p style="margin: 6px 0; font-size: 12px;"><strong>Case ID:</strong> ${case_.case_number}</p>
-            <p style="margin: 6px 0; font-size: 12px;"><strong>Status:</strong> <span style="color: ${case_.status === 'resolved' ? '#808080' : case_.status === 'under_investigation' ? '#A9A9A9' : '#666'}">${case_.status.replace('_', ' ')}</span></p>
-            <p style="margin: 6px 0; font-size: 12px;"><strong>Priority:</strong> <span style="color: ${markerColor}">${case_.priority}</span></p>
-            <p style="margin: 6px 0; font-size: 12px;"><strong>Category:</strong> ${case_.category}</p>
-            <p style="margin: 6px 0; font-size: 12px;"><strong>Created:</strong> ${new Date(case_.created_at).toLocaleDateString()}</p>
-            ${case_.reward_amount ? `<p style="margin: 6px 0; font-size: 12px;"><strong>Reward:</strong> $${case_.reward_amount.toLocaleString()}</p>` : ''}
-            <p style="margin: 12px 0 0 0; font-size: 12px; color: #666;">${case_.description}</p>
+          <div style="
+            min-width: 300px;
+            background: white;
+            color: #333;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            overflow: hidden;
+          ">
+            <div style="
+              padding: 16px;
+              border-bottom: 1px solid #eee;
+              background: ${markerColor};
+              color: white;
+            ">
+              <h3 style="margin: 0; font-size: 16px; font-weight: 600;">${case_.title}</h3>
+              <p style="margin: 4px 0 0 0; font-size: 12px; opacity: 0.9;">Case ID: ${case_.case_number}</p>
+            </div>
+            
+            <div style="padding: 16px;">
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px;">
+                <div>
+                  <p style="margin: 0 0 4px 0; font-size: 11px; color: #666;">STATUS</p>
+                  <p style="margin: 0; font-size: 13px; font-weight: 500; color: ${case_.status === 'resolved' ? '#4CAF50' : case_.status === 'under_investigation' ? '#FFC107' : '#F44336'}">
+                    ${case_.status.replace('_', ' ').toUpperCase()}
+                  </p>
+                </div>
+                <div>
+                  <p style="margin: 0 0 4px 0; font-size: 11px; color: #666;">PRIORITY</p>
+                  <p style="margin: 0; font-size: 13px; font-weight: 500; color: ${markerColor}">
+                    ${case_.priority.toUpperCase()}
+                  </p>
+                </div>
+                <div>
+                  <p style="margin: 0 0 4px 0; font-size: 11px; color: #666;">CATEGORY</p>
+                  <p style="margin: 0; font-size: 13px; font-weight: 500;">
+                    ${case_.category.toUpperCase()}
+                  </p>
+                </div>
+                <div>
+                  <p style="margin: 0 0 4px 0; font-size: 11px; color: #666;">CREATED</p>
+                  <p style="margin: 0; font-size: 13px; font-weight: 500;">
+                    ${new Date(case_.created_at).toLocaleDateString()}
+                  </p>
+                </div>
+              </div>
+
+              <div style="margin-bottom: 16px;">
+                <p style="margin: 0 0 4px 0; font-size: 11px; color: #666;">DESCRIPTION</p>
+                <p style="margin: 0; font-size: 13px; line-height: 1.4;">${case_.description}</p>
+              </div>
+
+              ${case_.reward_amount ? `
+                <div style="
+                  background: #f8f9fa;
+                  padding: 12px;
+                  border-radius: 6px;
+                  margin-bottom: 16px;
+                ">
+                  <p style="margin: 0 0 4px 0; font-size: 11px; color: #666;">REWARD</p>
+                  <p style="margin: 0; font-size: 16px; font-weight: 600; color: #2c3e50;">
+                    $${case_.reward_amount.toLocaleString()}
+                  </p>
+                </div>
+              ` : ''}
+
+              <button 
+                onclick="document.dispatchEvent(new CustomEvent('deployDrone', { detail: '${case_.id}' }))"
+                style="
+                  width: 100%;
+                  padding: 12px;
+                  background: ${markerColor};
+                  color: white;
+                  border: none;
+                  border-radius: 6px;
+                  font-size: 14px;
+                  font-weight: 500;
+                  cursor: pointer;
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                  gap: 8px;
+                  transition: all 0.2s;
+                "
+                onmouseover="this.style.opacity='0.9'"
+                onmouseout="this.style.opacity='1'"
+              >
+                ${deployingDrone === case_.id ? `
+                  <div style="
+                    width: 16px;
+                    height: 16px;
+                    border: 2px solid white;
+                    border-top-color: transparent;
+                    border-radius: 50%;
+                    animation: spin 1s linear infinite;
+                  "></div>
+                  Deploying Drone...
+                ` : `
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                  </svg>
+                  Deploy Drone
+                `}
+              </button>
+            </div>
           </div>
         `;
 
@@ -409,6 +515,13 @@ export default function MapComponent() {
         const marker = L.marker([location.lat, location.lng], { icon: customIcon })
           .bindPopup(popupContent)
           .addTo(map.current!);
+
+        // Add event listener for drone deployment
+        document.addEventListener('deployDrone', ((e: CustomEvent) => {
+          if (e.detail === case_.id) {
+            handleDeployDrone(case_.id);
+          }
+        }) as EventListener);
 
         return marker;
       });
@@ -479,7 +592,7 @@ export default function MapComponent() {
 
       new LegendControl().addTo(map.current);
     }
-  }, [cases, viewMode]);
+  }, [cases, viewMode, deployingDrone]);
 
   if (loading) {
     return (
