@@ -60,10 +60,10 @@ const MapWrapper: React.FC<MapWrapperProps> = ({
   const [showInstructions, setShowInstructions] = useState(true);
 
   return (
-    <div style={{ height: 'calc(100vh - 64px - 56px)', width: '100vw', position: 'relative' }}>
+    <div style={{ height: 'calc(100vh - 64px - 56px)', width: '100vw', position: 'relative', zIndex: 1 }}>
       {/* Instructions Overlay */}
       {showInstructions && !selectedLocation && (
-        <div className="absolute inset-0 z-[9999] flex items-center justify-center pointer-events-none">
+        <div className="absolute inset-0 z-50 flex items-center justify-center pointer-events-none">
           <div className="bg-slate-900/90 backdrop-blur-sm p-6 rounded-2xl shadow-2xl max-w-md mx-4 transform transition-all duration-500 ease-in-out animate-fade-in">
             <div className="flex items-start gap-4">
               <div className="bg-blue-500/20 p-3 rounded-xl">
@@ -148,7 +148,7 @@ const MapWrapper: React.FC<MapWrapperProps> = ({
 
       {/* Map Controls Overlay */}
       {!selectedLocation && (
-        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-[9998] bg-white/90 backdrop-blur-sm px-4 py-2 rounded-full shadow-lg pointer-events-none">
+        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-40 bg-white/90 backdrop-blur-sm px-4 py-2 rounded-full shadow-lg pointer-events-none">
           <p className="text-sm text-slate-700 font-medium">
             Click on the map to select location
           </p>
