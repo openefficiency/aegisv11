@@ -330,20 +330,20 @@ export default function MapComponent() {
         onAdd: function() {
           const div = L.DomUtil.create('div', 'leaflet-control leaflet-bar custom-switcher-card');
           div.innerHTML = `
-            <div class="switcher-card compact">
-              <div class="switcher-header compact">
-                <span class="switcher-icon compact">${viewMode === 'cases'
-                  ? '<svg width="22" height="22" fill="none" stroke="#2196F3" stroke-width="2" viewBox="0 0 24 24"><path d="M3 6l9-4 9 4M4 10v6a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 012-2h0a2 2 0 012 2v2a2 2 0 002 2h2a2 2 0 002-2v-6"/></svg>'
-                  : '<svg width="22" height="22" fill="none" stroke="#FF5722" stroke-width="2" viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5A2.5 2.5 0 1 1 12 6a2.5 2.5 0 0 1 0 5.5z"/></svg>'}
+            <div class="switcher-card modern">
+              <div class="switcher-header modern">
+                <span class="switcher-icon modern">${viewMode === 'cases'
+                  ? '<svg width="20" height="20" fill="none" stroke="#2196F3" stroke-width="2" viewBox="0 0 24 24"><path d="M3 6l9-4 9 4M4 10v6a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 012-2h0a2 2 0 012 2v2a2 2 0 002 2h2a2 2 0 002-2v-6"/></svg>'
+                  : '<svg width="20" height="20" fill="none" stroke="#FF5722" stroke-width="2" viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5A2.5 2.5 0 1 1 12 6a2.5 2.5 0 0 1 0 5.5z"/></svg>'}
                 </span>
-                <span class="switcher-title compact">${viewMode === 'cases' ? 'Cases View' : 'Heatmap View'}</span>
+                <span class="switcher-title modern">${viewMode === 'cases' ? 'Cases View' : 'Heatmap View'}</span>
               </div>
-              <button id="viewModeToggle" class="switcher-btn compact ${viewMode === 'cases' ? 'cases' : 'heatmap'}">
-                <span class="switcher-btn-icon compact">${viewMode === 'cases'
-                  ? '<svg width="16" height="16" fill="none" stroke="#2196F3" stroke-width="2" viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5A2.5 2.5 0 1 1 12 6a2.5 2.5 0 0 1 0 5.5z"/></svg>'
-                  : '<svg width="16" height="16" fill="none" stroke="#2196F3" stroke-width="2" viewBox="0 0 24 24"><path d="M3 6l9-4 9 4M4 10v6a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 012-2h0a2 2 0 012 2v2a2 2 0 002 2h2a2 2 0 002-2v-6"/></svg>'}
+              <button id="viewModeToggle" class="modern-switch-btn ${viewMode === 'cases' ? 'cases' : 'heatmap'}">
+                <span class="modern-switch-btn-icon">${viewMode === 'cases'
+                  ? '<svg width="18" height="18" fill="none" stroke="#FF5722" stroke-width="2" viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5A2.5 2.5 0 1 1 12 6a2.5 2.5 0 0 1 0 5.5z"/></svg>'
+                  : '<svg width="18" height="18" fill="none" stroke="#2196F3" stroke-width="2" viewBox="0 0 24 24"><path d="M3 6l9-4 9 4M4 10v6a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 012-2h0a2 2 0 012 2v2a2 2 0 002 2h2a2 2 0 002-2v-6"/></svg>'}
                 </span>
-                <span class="switcher-btn-label compact">Switch to ${viewMode === 'cases' ? 'Heatmap View' : 'Cases View'}</span>
+                <span class="modern-switch-btn-label">Switch to ${viewMode === 'cases' ? 'Heatmap View' : 'Cases View'}</span>
               </button>
             </div>
           `;
@@ -741,119 +741,98 @@ style.textContent = `
     margin: 0 !important;
     padding: 0 !important;
   }
-  .switcher-card.compact {
-    background: rgba(255,255,255,0.85);
-    border-radius: 14px;
-    box-shadow: 0 2px 12px rgba(33, 150, 243, 0.08), 0 1px 3px rgba(0,0,0,0.04);
-    padding: 12px 14px 10px 14px;
-    min-width: 180px;
+  .switcher-card.modern {
+    background: rgba(255,255,255,0.92);
+    border-radius: 16px;
+    box-shadow: 0 4px 24px rgba(33, 150, 243, 0.10), 0 1.5px 6px rgba(0,0,0,0.06);
+    padding: 16px 18px 14px 18px;
+    min-width: 170px;
     max-width: 80vw;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 10px;
-    border: 1px solid rgba(33,150,243,0.07);
-    backdrop-filter: blur(6px);
+    gap: 12px;
+    border: 1px solid rgba(33,150,243,0.08);
+    backdrop-filter: blur(8px);
     transition: box-shadow 0.18s cubic-bezier(.4,0,.2,1), transform 0.14s cubic-bezier(.4,0,.2,1);
   }
-  .switcher-header.compact {
+  .switcher-header.modern {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 10px;
     margin-bottom: 0;
   }
-  .switcher-icon.compact {
+  .switcher-icon.modern {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 28px;
-    height: 28px;
-    border-radius: 50%;
+    width: 26px;
+    height: 26px;
+    border-radius: 8px;
     background: #f4f8fd;
     box-shadow: 0 1px 4px rgba(33,150,243,0.04);
   }
-  .switcher-title.compact {
-    font-size: 15px;
-    font-weight: 600;
+  .switcher-title.modern {
+    font-size: 16px;
+    font-weight: 700;
     color: #222;
     letter-spacing: -0.2px;
   }
-  .switcher-btn.compact {
+  .modern-switch-btn {
     width: 100%;
-    border: 1.5px solid #2196F3;
-    border-radius: 999px;
-    padding: 7px 0;
-    font-size: 14px;
-    font-weight: 500;
+    border: none;
+    border-radius: 10px;
+    padding: 10px 0;
+    font-size: 15px;
+    font-weight: 600;
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 7px;
+    gap: 8px;
     cursor: pointer;
-    box-shadow: 0 1px 4px rgba(33,150,243,0.07);
-    background: #f7fbff;
+    background: linear-gradient(90deg, #e3f0fc 0%, #f7fbff 100%);
     color: #2196F3;
-    transition: background 0.16s, color 0.16s, border 0.16s, transform 0.16s, box-shadow 0.16s;
+    box-shadow: 0 2px 8px rgba(33,150,243,0.07);
+    transition: background 0.18s, color 0.18s, transform 0.16s, box-shadow 0.16s;
     outline: none;
     position: relative;
     overflow: hidden;
   }
-  .switcher-btn.compact.heatmap {
-    border: 1.5px solid #FF5722;
+  .modern-switch-btn.heatmap {
+    background: linear-gradient(90deg, #ffe5d6 0%, #fff7f4 100%);
     color: #FF5722;
-    background: #fff7f4;
   }
-  .switcher-btn.compact:active {
+  .modern-switch-btn:active {
     transform: scale(0.97);
-    box-shadow: 0 1px 2px rgba(33,150,243,0.08);
+    box-shadow: 0 1px 2px rgba(33,150,243,0.10);
+    background: #e3f0fc;
   }
-  .switcher-btn-label.compact {
-    font-size: 14px;
-    font-weight: 500;
+  .modern-switch-btn.heatmap:active {
+    background: #ffe5d6;
+  }
+  .modern-switch-btn-label {
+    font-size: 15px;
+    font-weight: 600;
     letter-spacing: -0.1px;
   }
-  .switcher-btn-icon.compact {
+  .modern-switch-btn-icon {
     display: flex;
     align-items: center;
     justify-content: center;
   }
-  .switcher-btn.compact::after {
-    content: '';
-    position: absolute;
-    left: 50%;
-    top: 50%;
-    width: 0;
-    height: 0;
-    background: rgba(33,150,243,0.10);
-    border-radius: 50%;
-    transform: translate(-50%, -50%);
-    transition: width 0.4s cubic-bezier(.4,0,.2,1), height 0.4s cubic-bezier(.4,0,.2,1), opacity 0.4s;
-    opacity: 0;
-    pointer-events: none;
-    z-index: 1;
-  }
-  .switcher-btn.compact.heatmap::after {
-    background: rgba(255,87,34,0.10);
-  }
-  .switcher-btn.compact.clicked::after {
-    width: 180%;
-    height: 180%;
-    opacity: 1;
-    transition: width 0.4s cubic-bezier(.4,0,.2,1), height 0.4s cubic-bezier(.4,0,.2,1), opacity 0.4s;
-  }
   @media (max-width: 768px) {
-    .switcher-card.compact {
+    .switcher-card.modern {
       min-width: 0;
-      width: 94vw;
-      padding: 10px 3vw 8px 3vw;
+      width: 92vw;
+      padding: 10px 2vw 8px 2vw;
       box-sizing: border-box;
     }
-    .switcher-title.compact {
-      font-size: 13px;
+    .switcher-title.modern {
+      font-size: 14px;
     }
-    .switcher-btn.compact {
-      font-size: 13px;
-      padding: 6px 0;
+    .modern-switch-btn {
+      font-size: 14px;
+      padding: 8px 0;
     }
   }
 `;
