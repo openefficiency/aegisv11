@@ -146,6 +146,7 @@ export default function EthicsOfficerDashboard() {
         {
           id: "case-1",
           case_number: "WB-2025-0001",
+          tracking_code: "TRACK-1001",
           report_id: "RPT1234567890",
           title: "Financial irregularities in department",
           description:
@@ -167,6 +168,7 @@ export default function EthicsOfficerDashboard() {
         {
           id: "case-2",
           case_number: "WB-2025-0002",
+          tracking_code: "TRACK-1002",
           report_id: "RPT2345678901",
           title: "Workplace harassment by supervisor",
           description: "Ongoing harassment and inappropriate behavior",
@@ -185,6 +187,7 @@ export default function EthicsOfficerDashboard() {
         {
           id: "case-3",
           case_number: "WB-2025-0003",
+          tracking_code: "TRACK-1003",
           report_id: "RPT3456789012",
           title: "Safety violations in warehouse",
           description: "Critical safety violations with injury cover-ups",
@@ -383,7 +386,7 @@ export default function EthicsOfficerDashboard() {
               Math.floor(Math.random() * 10000)
             ).padStart(4, "0")}`,
             report_id: report.report_id,
-            tracking_code: match ? match[1] : undefined,
+            tracking_code: match ? match[1] : generateTrackingCode(),
             title: extractTitleFromSummary(report.summary),
             description: report.summary,
             category: categorizeReport(report.summary, report.transcript),
@@ -457,7 +460,7 @@ export default function EthicsOfficerDashboard() {
           Math.floor(Math.random() * 10000)
         ).padStart(4, "0")}`,
         report_id: report.report_id,
-        tracking_code: match ? match[1] : undefined,
+        tracking_code: match ? match[1] : generateTrackingCode(),
         title: extractTitleFromSummary(report.summary),
         description: report.summary,
         category: categorizeReport(report.summary, report.transcript),
@@ -589,6 +592,15 @@ export default function EthicsOfficerDashboard() {
     const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
     let result = "";
     for (let i = 0; i < 12; i++) {
+      result += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return result;
+  };
+
+  const generateTrackingCode = (): string => {
+    const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    let result = "";
+    for (let i = 0; i < 10; i++) {
       result += chars.charAt(Math.floor(Math.random() * chars.length));
     }
     return result;
@@ -762,7 +774,7 @@ export default function EthicsOfficerDashboard() {
       // Mock email notification
       console.log("Email notification sent:", {
         to: "legal@company.com",
-        subject: `Case Escalation Required: ${selectedCase?.case_number}`,
+        subject: `Case Escalation Required: ${selectedCase?.tracking_code}`,
         body: `Case has been escalated for review.\n\nDetails:\n${escalationNote}`,
       });
 
@@ -1377,7 +1389,7 @@ export default function EthicsOfficerDashboard() {
             <DialogContent className="bg-slate-800 border-slate-700 max-w-4xl max-h-[80vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle className="text-white">
-                  Case Details: {selectedCase.case_number}
+                  Case Details: {selectedCase.tracking_code}
                 </DialogTitle>
                 <DialogDescription className="text-slate-400">
                   Complete case information and evidence
@@ -1386,15 +1398,9 @@ export default function EthicsOfficerDashboard() {
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label className="text-slate-300">Case Number</Label>
+                    <Label className="text-slate-300">Case ID</Label>
                     <p className="text-white font-mono">
-                      {selectedCase.case_number}
-                    </p>
-                  </div>
-                  <div>
-                    <Label className="text-slate-300">Report ID</Label>
-                    <p className="text-white font-mono">
-                      {selectedCase.report_id}
+                      {selectedCase.tracking_code}
                     </p>
                   </div>
                 </div>
@@ -1481,7 +1487,7 @@ export default function EthicsOfficerDashboard() {
                   Assign Case to Investigator
                 </DialogTitle>
                 <DialogDescription className="text-slate-400">
-                  Select an investigator for case {selectedCase.case_number}
+                  Select an investigator for case {selectedCase.tracking_code}
                 </DialogDescription>
               </DialogHeader>
               <div className="space-y-4">
@@ -1525,7 +1531,7 @@ export default function EthicsOfficerDashboard() {
               <DialogHeader>
                 <DialogTitle className="text-white">Resolve Case</DialogTitle>
                 <DialogDescription className="text-slate-400">
-                  Complete the resolution for case {selectedCase.case_number}
+                  Complete the resolution for case {selectedCase.tracking_code}
                 </DialogDescription>
               </DialogHeader>
               <div className="space-y-4">
@@ -1642,7 +1648,7 @@ export default function EthicsOfficerDashboard() {
               <DialogHeader>
                 <DialogTitle className="text-white">Escalate Case</DialogTitle>
                 <DialogDescription className="text-slate-400">
-                  Escalate case {selectedCase.case_number} to legal/senior
+                  Escalate case {selectedCase.tracking_code} to legal/senior
                   management
                 </DialogDescription>
               </DialogHeader>

@@ -480,7 +480,7 @@ export default function InvestigatorDashboard() {
                           Query for Case:{" "}
                           {
                             cases.find((c) => c.id === query.case_id)
-                              ?.case_number
+                              ?.tracking_code
                           }
                         </h4>
                         <Badge
@@ -542,7 +542,7 @@ export default function InvestigatorDashboard() {
                 </DialogTitle>
                 <DialogDescription className="text-slate-400">
                   Send a delicate inquiry to the whistleblower for case{" "}
-                  {selectedCase.case_number}
+                  {selectedCase.tracking_code}
                 </DialogDescription>
               </DialogHeader>
               <div className="space-y-4">
@@ -589,7 +589,7 @@ export default function InvestigatorDashboard() {
                   Update Investigation
                 </DialogTitle>
                 <DialogDescription className="text-slate-400">
-                  Provide an update on case {selectedCase.case_number}
+                  Provide an update on case {selectedCase.tracking_code}
                 </DialogDescription>
               </DialogHeader>
               <div className="space-y-4">

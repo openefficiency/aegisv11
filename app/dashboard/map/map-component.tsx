@@ -111,6 +111,7 @@ export default function MapComponent() {
     {
       id: "1",
       case_number: "CASE-001",
+      tracking_code: "TRACK-001",
       title: "Suspicious Financial Activity",
       description: "Multiple large transactions detected in employee accounts",
       category: "fraud",
@@ -134,6 +135,7 @@ export default function MapComponent() {
     {
       id: "2",
       case_number: "CASE-002",
+      tracking_code: "TRACK-002",
       title: "Workplace Harassment Report",
       description: "Employee reported verbal harassment from supervisor",
       category: "harassment",
@@ -157,6 +159,7 @@ export default function MapComponent() {
     {
       id: "3",
       case_number: "CASE-003",
+      tracking_code: "TRACK-003",
       title: "Safety Violation in Construction",
       description: "Workers not wearing required safety equipment",
       category: "safety",
@@ -180,6 +183,7 @@ export default function MapComponent() {
     {
       id: "4",
       case_number: "CASE-004",
+      tracking_code: "TRACK-004",
       title: "Discrimination Complaint",
       description: "Allegations of age discrimination in hiring process",
       category: "discrimination",
@@ -203,6 +207,7 @@ export default function MapComponent() {
     {
       id: "5",
       case_number: "CASE-005",
+      tracking_code: "TRACK-005",
       title: "Corruption Investigation",
       description: "Suspicious contract awards to specific vendors",
       category: "corruption",
@@ -464,7 +469,7 @@ export default function MapComponent() {
               color: white;
             ">
               <h3 style="margin: 0; font-size: 16px; font-weight: 600; line-height: 1.3;">${case_.title}</h3>
-              <p style="margin: 4px 0 0 0; font-size: 12px; opacity: 0.9;">Case ID: ${case_.case_number}</p>
+              <p style="margin: 4px 0 0 0; font-size: 12px; opacity: 0.9;">Case ID: ${case_.tracking_code}</p>
             </div>
             
             <div style="padding: 16px;">
