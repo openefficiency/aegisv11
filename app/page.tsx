@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Shield, Mic, Lock, Coins, TrendingUp, CheckCircle, ArrowRight } from "lucide-react"
+import { Shield, Mic, Lock, Coins, TrendingUp, CheckCircle, ArrowRight, MapPin } from "lucide-react"
 import Link from "next/link"
 import { VapiVoiceWidget } from "@/components/vapi-voice-widget"
 import { VapiLauncher } from "@/components/vapi-launcher"
@@ -54,10 +54,18 @@ export default function HomePage() {
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
             <VapiLauncher>
-              <Button size="lg" className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 text-lg">
-                Start Your Secure Report
-                <ArrowRight className="ml-2 h-5 w-5" />
-              </Button>
+              <div className="flex gap-4">
+                <Button size="lg" className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 text-lg">
+                  Start Your Secure Report
+                  <ArrowRight className="ml-2 h-5 w-5" />
+                </Button>
+                <Link href="/reportOnMap">
+                  <Button size="lg" className="bg-green-600 hover:bg-green-700 text-white px-8 py-4 text-lg">
+                    Report On Map
+                    <MapPin className="ml-2 h-5 w-5" />
+                  </Button>
+                </Link>
+              </div>
             </VapiLauncher>
           </div>
 
