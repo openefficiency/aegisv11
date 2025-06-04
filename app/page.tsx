@@ -269,7 +269,7 @@ export default function HomePage() {
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid md:grid-cols-2 gap-8">
             {/* Shan Sankaran */}
             <Card className="bg-slate-900/50 border-slate-700 hover:border-blue-500/50 transition-colors">
               <CardContent className="p-6">
@@ -385,39 +385,6 @@ export default function HomePage() {
                     <p className="text-yellow-400 mb-3 font-semibold">AI Technologist • Engineer</p>
                     <p className="text-slate-300 text-sm">
                       Proud Dad of AI Ethics Whistleblower Hero Suchir Balaji. AI Technologist.
-                    </p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Ali Can Acar */}
-            <Card className="bg-slate-900/50 border-slate-700 hover:border-orange-500/50 transition-colors">
-              <CardContent className="p-6">
-                <div className="flex items-start gap-4">
-                  <div className="relative w-20 h-20 rounded-full overflow-hidden flex-shrink-0">
-                    <Image src="/images/team/ali.jpeg" alt="Ali Can Acar" fill className="object-cover" />
-                  </div>
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-2">
-                      <h3 className="text-xl font-semibold text-white">Ali Can Acar</h3>
-                      <a
-                        href="https://www.linkedin.com/in/ali-can-acar-25772b320/"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-blue-400 hover:text-blue-300"
-                      >
-                        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                          <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
-                        </svg>
-                      </a>
-                    </div>
-                    <p className="text-orange-400 mb-3 font-semibold">
-                      Product Designer • Full Stack Developer • AI dev
-                    </p>
-                    <p className="text-slate-300 text-sm">
-                      Product designer and full-stack developer specializing in AI-driven user experiences and
-                      innovative design solutions.
                     </p>
                   </div>
                 </div>
