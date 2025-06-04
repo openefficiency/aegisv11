@@ -15,7 +15,7 @@ L.Icon.Default.mergeOptions({
 
 // Category icons mapping
 const categoryIcons = {
-  fraud: "fa-solid fa-hand-holding-dollar",
+  fraud: "fa-solid fa-money-bill-wave",
   abuse: "fa-solid fa-triangle-exclamation",
   discrimination: "fa-solid fa-scale-balanced",
   harassment: "fa-solid fa-user-shield",
@@ -124,8 +124,8 @@ export default function MapComponent() {
       structured_data: {
         incident: {
           location: {
-            lat: 38.8574,  // Convention Center Main Entrance
-            lng: -77.0234
+            lat: 38.9082,  // North of center point
+            lng: -77.0280
           }
         }
       }
@@ -146,8 +146,8 @@ export default function MapComponent() {
       structured_data: {
         incident: {
           location: {
-            lat: 38.8582,  // North of Convention Center (Mount Vernon Square)
-            lng: -77.0225
+            lat: 38.9070,  // South of center point
+            lng: -77.0285
           }
         }
       }
@@ -168,8 +168,8 @@ export default function MapComponent() {
       structured_data: {
         incident: {
           location: {
-            lat: 38.8565,  // South of Convention Center (L Street)
-            lng: -77.0240
+            lat: 38.9075,  // East of center point
+            lng: -77.0275
           }
         }
       }
@@ -190,8 +190,8 @@ export default function MapComponent() {
       structured_data: {
         incident: {
           location: {
-            lat: 38.8578,  // East of Convention Center (7th Street)
-            lng: -77.0215
+            lat: 38.9078,  // West of center point
+            lng: -77.0295
           }
         }
       }
@@ -212,8 +212,8 @@ export default function MapComponent() {
       structured_data: {
         incident: {
           location: {
-            lat: 38.8570,  // West of Convention Center (9th Street)
-            lng: -77.0250
+            lat: 38.9073,  // Southeast of center point
+            lng: -77.0290
           }
         }
       }
@@ -244,8 +244,8 @@ export default function MapComponent() {
       
       // Initialize the map with explicit options
       map.current = L.map(mapContainer.current, {
-        center: [38.8574, -77.0234], // Walter E. Washington Convention Center coordinates
-        zoom: 17, // Increased zoom level for better focus on the convention center area
+        center: [38.90767, -77.02858], // New center coordinates
+        zoom: 17, // Increased zoom level for better focus on the area
         zoomControl: false,
         attributionControl: false,
         minZoom: 15, // Prevent zooming out too far
@@ -287,7 +287,7 @@ export default function MapComponent() {
         iconAnchor: [10, 10]
       });
 
-      L.marker([38.8574, -77.0234], { icon: conventionCenterIcon })
+      L.marker([38.90767, -77.02858], { icon: conventionCenterIcon })
         .bindPopup(`
           <div style="
             padding: 8px;
@@ -296,8 +296,8 @@ export default function MapComponent() {
             border-radius: 4px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
           ">
-            <h3 style="margin: 0 0 4px 0; font-size: 14px; font-weight: 600;">Walter E. Washington Convention Center</h3>
-            <p style="margin: 0; font-size: 12px; color: #666;">801 Mount Vernon Place NW</p>
+            <h3 style="margin: 0 0 4px 0; font-size: 14px; font-weight: 600;">Center Point</h3>
+            <p style="margin: 0; font-size: 12px; color: #666;">Lat: 38.90767, Lng: -77.02858</p>
           </div>
         `)
         .addTo(map.current);
@@ -426,15 +426,23 @@ export default function MapComponent() {
           className: `custom-marker ${markerColor}`,
           html: `<div style="
             background-color: ${markerColor};
-            width: 14px;
-            height: 14px;
+            width: 32px;
+            height: 32px;
             border-radius: 50%;
             border: 2px solid white;
             box-shadow: 0 0 8px rgba(0,0,0,0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
             animation: pulse 2s infinite;
-          "></div>`,
-          iconSize: [18, 18],
-          iconAnchor: [9, 9]
+          ">
+            <i class="${categoryIcons[case_.category]}" style="
+              color: white;
+              font-size: 14px;
+            "></i>
+          </div>`,
+          iconSize: [32, 32],
+          iconAnchor: [16, 16]
         });
 
         const popupContent = `
@@ -557,7 +565,7 @@ export default function MapComponent() {
           };
         } else {
           // Generate random location around convention center
-          location = generateRandomLocation(38.8574, -77.0234);
+          location = generateRandomLocation(38.90767, -77.02858);
         }
 
         const marker = L.marker([location.lat, location.lng], { icon: customIcon })
@@ -688,4 +696,23 @@ export default function MapComponent() {
       }}
     />
   );
-} 
+}
+
+// Add this in the head section of your HTML or in your global CSS
+const style = document.createElement('style');
+style.textContent = `
+  @import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css');
+  
+  @keyframes pulse {
+    0% {
+      box-shadow: 0 0 0 0 rgba(0,0,0,0.4);
+    }
+    70% {
+      box-shadow: 0 0 0 10px rgba(0,0,0,0);
+    }
+    100% {
+      box-shadow: 0 0 0 0 rgba(0,0,0,0);
+    }
+  }
+`;
+document.head.appendChild(style); 
