@@ -344,14 +344,16 @@ export default function MapComponent() {
                 </span>
                 <span class="switcher-title modern">${viewMode === 'cases' ? 'Cases View' : 'Heatmap View'}</span>
               </div>
-              <div style={{ display: 'flex', justifyContent: 'flex-end', paddingRight: 20 }}>
+              <div style="display: flex; justify-content: flex-end; padding-right: 20px;">
                 <button
                   id="viewModeToggle"
-                  className={`modern-switch-btn ${viewMode === 'cases' ? 'cases' : 'heatmap'}`}
-                  style={{ display: 'flex', alignItems: 'center', gap: 8 }}
+                  class="modern-switch-btn ${viewMode === 'cases' ? 'cases' : 'heatmap'}"
+                  style="display: flex; align-items: center; gap: 8px;"
                 >
-                  <FaFire size={24} color="#FF9800" style={{ marginRight: 8 }} />
-                  <span style={{ fontWeight: 600, fontSize: 16, color: "#1a1a1a" }}>Heatmap</span>
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FF9800" stroke-width="2" style="margin-right: 8px;">
+                    <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5A2.5 2.5 0 1 1 12 6a2.5 2.5 0 0 1 0 5.5z"/>
+                  </svg>
+                  ${viewMode === 'cases' ? 'Switch to Heatmap' : 'Switch to Cases'}
                 </button>
               </div>
             </div>
