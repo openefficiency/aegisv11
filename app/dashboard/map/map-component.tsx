@@ -29,7 +29,8 @@ const categoryIcons = {
   retaliation: "fa-solid fa-arrows-rotate",
   assaults: "fa-solid fa-fist-raised",
   nuisance: "fa-solid fa-bell-slash",
-  motor_vehicle_theft: "fa-solid fa-car-side"
+  motor_vehicle_theft: "fa-solid fa-car-side",
+  disorderly_conduct: "fa-solid fa-person-falling"
 };
 
 // Category colors mapping
