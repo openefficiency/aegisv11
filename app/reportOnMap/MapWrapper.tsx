@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
 import type { LatLngLiteral } from 'leaflet';
+import type { Map as LeafletMap, Popup as LeafletPopup } from 'leaflet';
 import { Button } from "@/components/ui/button";
 import { useMapEvent } from 'react-leaflet';
 import { MapPin, X } from "lucide-react";
@@ -30,12 +31,16 @@ interface MapWrapperProps {
   onMapClick: (latlng: LatLngLiteral) => void;
   onStartReport: () => void;
   address: string;
-  mapRef: React.RefObject<any>;
-  popupRef: React.RefObject<any>;
+  mapRef: React.RefObject<LeafletMap>;
+  popupRef: React.RefObject<LeafletPopup>;
+}
+
+interface MapClickEvent {
+  latlng: LatLngLiteral;
 }
 
 const MapClickHandler: React.FC<{ onMapClick: (latlng: LatLngLiteral) => void }> = ({ onMapClick }) => {
-  useMapEvent('click', (e) => {
+  useMapEvent('click', (e: MapClickEvent) => {
     if (e && e.latlng) {
       onMapClick(e.latlng);
     }
