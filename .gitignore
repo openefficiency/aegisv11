@@ -9,6 +9,8 @@
 # next.js
 /.next/
 /out/
+.next/
+next-env.d.ts
 
 # production
 /build
@@ -30,17 +32,19 @@ yarn-error.log*
 
 # typescript
 *.tsbuildinfo
-next-env.d.ts
 
 # IDE
 .idea/
 .vscode/
 
 # Build artifacts
-.next/
-out/
-build/
-dist/
+*.pack
+*.node
+*.so
+*.dylib
+*.dll
 
-# Cache
+# Cache directories
 .cache/
+.npm/
+.pnpm-store/
