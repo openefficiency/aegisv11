@@ -26,6 +26,7 @@ export interface Case {
   priority: "low" | "medium" | "high" | "critical";
   secret_code: string;
   report_id: string; // NEW: 10-digit alphanumeric ID
+  tracking_code?: string; // NEW optional tracking code from VAPI
   reward_amount?: number;
   recovery_amount?: number;
   reward_status: "pending" | "approved" | "paid";
