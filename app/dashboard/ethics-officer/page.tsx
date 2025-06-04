@@ -164,69 +164,7 @@ export default function EthicsOfficerDashboard() {
       console.log("Fetching dashboard data...");
 
       // Create some mock cases if database is empty
-      const mockCases: Case[] = [
-        {
-          id: "case-1",
-          case_number: "WB-2025-0001",
-          tracking_code: "TRACK-1001",
-          report_id: "RPT1234567890",
-          title: "Financial irregularities in department",
-          description:
-            "Serious financial fraud involving fake invoices and fund diversion",
-          category: "fraud",
-          status: "open",
-          priority: "high",
-          secret_code: "ABC123456789",
-          reward_status: "pending",
-          vapi_report_summary:
-            "Financial fraud report involving fake invoices and fund diversion by manager",
-          vapi_session_id: "session-1",
-          vapi_transcript:
-            "Hello, I need to report some serious financial irregularities...",
-          vapi_audio_url: "https://example.com/recording1.mp3",
-          created_at: new Date(Date.now() - 3600000).toISOString(),
-          updated_at: new Date().toISOString(),
-        },
-        {
-          id: "case-2",
-          case_number: "WB-2025-0002",
-          tracking_code: "TRACK-1002",
-          report_id: "RPT2345678901",
-          title: "Workplace harassment by supervisor",
-          description: "Ongoing harassment and inappropriate behavior",
-          category: "harassment",
-          status: "under_investigation",
-          priority: "high",
-          secret_code: "DEF456789012",
-          reward_status: "pending",
-          assigned_to: "investigator-1",
-          vapi_report_summary:
-            "Workplace harassment and inappropriate behavior by supervisor",
-          vapi_session_id: "session-2",
-          created_at: new Date(Date.now() - 7200000).toISOString(),
-          updated_at: new Date().toISOString(),
-        },
-        {
-          id: "case-3",
-          case_number: "WB-2025-0003",
-          tracking_code: "TRACK-1003",
-          report_id: "RPT3456789012",
-          title: "Safety violations in warehouse",
-          description: "Critical safety violations with injury cover-ups",
-          category: "safety",
-          status: "resolved",
-          priority: "critical",
-          secret_code: "GHI789012345",
-          reward_status: "paid",
-          reward_amount: 15000,
-          recovery_amount: 100000,
-          vapi_report_summary:
-            "Safety violations and incident cover-ups in warehouse operations",
-          vapi_session_id: "session-3",
-          created_at: new Date(Date.now() - 10800000).toISOString(),
-          updated_at: new Date().toISOString(),
-        },
-      ];
+      const mockCases: Case[] = [];
 
       // Mock investigators
       const mockInvestigators: Profile[] = [
@@ -871,6 +809,20 @@ export default function EthicsOfficerDashboard() {
               Manage cases, process rewards, and oversee investigations
             </p>
           </div>
+          <Button
+            onClick={() => {
+              setCases((prev) => {
+                // Keep only the most recent 30 cases
+                const recentCases = prev.slice(0, 29);
+                // Add new demo case at the beginning
+                return [normalizeCase(demoCasesData[0]), ...recentCases];
+              });
+            }}
+            className="bg-blue-600 hover:bg-blue-700 text-white"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Add Demo Case
+          </Button>
         </div>
 
         {/* Top Stats Cards */}
