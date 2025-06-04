@@ -93,24 +93,45 @@ const ReportForm: React.FC<ReportFormProps> = ({ open, onClose, onSuccess, addre
         throw new Error(data.details || data.error || "Failed to submit report")
       }
 
-      // Show success toast
-      toast({
-        title: "Report Submitted Successfully! 🎉",
-        description: `Your case ID is: ${caseId}. Keep this for your records.`,
-        duration: 5000,
-      })
+      if (data.success) {
+        // Show success message with case ID and info
+        toast({
+          title: "Report Submitted Successfully! 🎉",
+          description: (
+            <div className="mt-2 space-y-2">
+              <p>Your case ID is: <strong>{caseId}</strong></p>
+              <p>Please keep this ID for future reference.</p>
+              <p>Our team will review your report and take appropriate action.</p>
+            </div>
+          ) as React.ReactNode,
+          duration: 8000,
+        })
 
-      // Reset form and close
-      setFormData({
-        category: "",
-        title: "",
-        description: "",
-        dateOccurred: "",
-        anonymous: true,
-        contactInfo: "",
-      })
+        // Reset form and close
+        setFormData({
+          category: "",
+          title: "",
+          description: "",
+          dateOccurred: "",
+          anonymous: true,
+          contactInfo: "",
+        })
 
-      onSuccess()
+        onSuccess()
+      } else {
+        // Show failure message with email
+        toast({
+          variant: "destructive",
+          title: "Failed to Submit Report",
+          description: (
+            <div className="mt-2 space-y-2">
+              <p>We apologize, but we couldn't process your report at this time.</p>
+              <p>Please contact us at: <a href="mailto:fail@aegiswhistle.com" className="text-blue-500 hover:underline">fail@aegiswhistle.com</a></p>
+            </div>
+          ) as React.ReactNode,
+          duration: 8000,
+        })
+      }
     } catch (error) {
       console.error("Error submitting report:", error)
 
