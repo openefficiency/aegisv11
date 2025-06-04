@@ -26,7 +26,10 @@ const categoryIcons = {
   environmental: "fa-solid fa-leaf",
   misconduct: "fa-solid fa-user-slash",
   health: "fa-solid fa-heart-pulse",
-  retaliation: "fa-solid fa-arrows-rotate"
+  retaliation: "fa-solid fa-arrows-rotate",
+  assaults: "fa-solid fa-fist-raised",
+  nuisance: "fa-solid fa-bell-slash",
+  motor_vehicle_theft: "fa-solid fa-car-side"
 };
 
 // Category colors mapping
