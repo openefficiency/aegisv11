@@ -141,6 +141,7 @@ export default function EthicsOfficerDashboard() {
         setCases((prev) => {
           // Keep only the most recent 30 cases
           const recentCases = prev.slice(0, 29);
+          // Always add new case at the beginning of the array
           return [normalizeCase(demoCasesData[demoIndex]), ...recentCases];
         });
         demoIndex++;
