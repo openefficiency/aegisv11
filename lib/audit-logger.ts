@@ -1,58 +1,49 @@
-// lib/audit-logger.ts
-
 import { supabase } from "./supabase"
 
-interface AuditLogEntry {
+export interface AuditLogEntry {
   user_id: string
   action: string
-  entity_type: string
+  entity_type: "case" | "reward" | "assignment" | "query"
   entity_id: string
-  details?: any
+  details: any
 }
 
-class AuditLogger {
+export class AuditLogger {
   async log(entry: AuditLogEntry): Promise<void> {
     try {
-      const { user_id, action, entity_type, entity_id, details } = entry
-
       // Try to insert into database
-      const { error } = await supabase.from("audit_logs").insert({
-        user_id,
-        action,
-        entity_type,
-        entity_id,
-        details,
+      await supabase.from("audit_trail").insert({
+        ...entry,
         timestamp: new Date().toISOString(),
       })
 
-      if (error) {
-        console.warn("Failed to write audit log to database:", error)
-      }
-
-      // Always log to console as backup
-      console.log(`AUDIT: ${action} on ${entity_type}:${entity_id} by ${user_id}`, details)
+      // Also log to console for debugging
+      console.log(
+        `AUDIT: ${entry.action} on ${entry.entity_type}:${entry.entity_id} by ${entry.user_id}`,
+        entry.details,
+      )
     } catch (error) {
-      // Ensure audit logging never breaks the application
-      console.warn("Audit logging failed:", error)
+      // Don't let audit logging failures break the application
+      console.error("Failed to log audit entry:", error)
     }
   }
 
-  async logCaseAction(user_id: string, case_id: string, action: string, details?: any): Promise<void> {
-    return this.log({
-      user_id,
+  async logCaseAction(userId: string, caseId: string, action: string, details: any = {}): Promise<void> {
+    await this.log({
+      user_id: userId,
       action,
       entity_type: "case",
-      entity_id: case_id,
+      entity_id: caseId,
       details,
     })
   }
 
-  async logRewardTransaction(user_id: string, case_id: string, details: any): Promise<void> {
-    return this.log({
-      user_id,
+  async logRewardTransaction(userId: string, transactionId: string, details: any = {}): Promise<void> {
+    await this.log({
+      user_id: userId,
       action: "reward_processed",
       entity_type: "reward",
-      entity_id: case_id,
+      entity_id: transactionId,
       details,
     })
   }

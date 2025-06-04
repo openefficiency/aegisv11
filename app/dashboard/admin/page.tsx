@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useEffect, useState } from "react"
+import { useEffect, useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -9,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Users, FileText, DollarSign, TrendingUp, Settings, Plus, MoreHorizontal, Shield } from "lucide-react"
 import { DashboardLayout } from "@/components/dashboard-layout"
 import { supabase, type Case, type Profile } from "@/lib/supabase"
-import { formatCaseText, formatCaseTitle } from "@/lib/utils"
+import { formatCaseTitle } from "@/lib/utils"
 import demoCases from "../demo.json"
 
 export default function AdminDashboard() {
@@ -52,7 +52,7 @@ export default function AdminDashboard() {
           vapi_session_id: demoCase.vapi_session_id,
           vapi_audio_url: demoCase.vapi_audio_url,
           created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
+          updated_at: new Date().toISOString(),
         })
 
         if (error) {
@@ -259,8 +259,12 @@ export default function AdminDashboard() {
                   <TableBody>
                     {cases.slice(0, 5).map((case_) => (
                       <TableRow key={case_.id} className="border-slate-700">
-                        <TableCell className="text-slate-300 font-mono">{case_.tracking_code || case_.report_id || case_.case_number}</TableCell>
-                        <TableCell className="text-white">{formatCaseTitle(case_.title, case_.description, case_.created_at)}</TableCell>
+                        <TableCell className="text-slate-300 font-mono">
+                          {case_.tracking_code || case_.report_id || case_.case_number}
+                        </TableCell>
+                        <TableCell className="text-white">
+                          {formatCaseTitle(case_.title, case_.description, case_.created_at)}
+                        </TableCell>
                         <TableCell>
                           <Badge variant="outline" className="border-orange-500 text-orange-400 capitalize">
                             {case_.category}
@@ -305,6 +309,7 @@ export default function AdminDashboard() {
                       <TableHead className="text-slate-300">Name</TableHead>
                       <TableHead className="text-slate-300">Email</TableHead>
                       <TableHead className="text-slate-300">Role</TableHead>
+                      <TableHead className="text-slate-300">Department</TableHead>
                       <TableHead className="text-slate-300">Status</TableHead>
                       <TableHead className="text-slate-300">Actions</TableHead>
                     </TableRow>
@@ -317,6 +322,7 @@ export default function AdminDashboard() {
                         </TableCell>
                         <TableCell className="text-slate-300">{profile.email}</TableCell>
                         <TableCell className="text-slate-300 capitalize">{profile.role.replace("_", " ")}</TableCell>
+                        <TableCell className="text-slate-400">{profile.department || "No Department"}</TableCell>
                         <TableCell>
                           <Badge
                             variant="outline"
