@@ -371,18 +371,18 @@ const ReportOnMap = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 overflow-x-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 overflow-x-hidden page-container">
       {/* Navigation */}
-      <nav className="aegis-nav border-b border-slate-800 bg-slate-900/50 backdrop-blur-sm sticky top-0 z-50">
+      <nav className="aegis-nav border-b border-slate-800 bg-slate-900/50 backdrop-blur-sm sticky top-0 z-50" style={{zIndex: 99999}}>
         <div className="aegis-nav__container max-w-7xl mx-auto px-2 sm:px-4 md:px-6 lg:px-8">
-          <div className="flex flex-wrap sm:flex-nowrap justify-between items-center h-16 gap-2">
+          <div className="flex flex-wrap sm:flex-nowrap justify-between items-center h-16 gap-2 nav-content">
             <div className="aegis-nav__brand flex items-center space-x-2">
-              <div className="relative w-6 h-6 sm:w-8 sm:h-8">
+              <div className="relative w-6 h-6 sm:w-8 sm:h-8 logo-container">
                 <Image src="/images/aegis-logo.webp" alt="Aegis Logo" fill className="object-contain" />
               </div>
               <span className="text-lg sm:text-xl font-bold text-white">AegisWhistle</span>
             </div>
-            <div className="aegis-nav__links flex flex-wrap sm:flex-nowrap items-center gap-2 sm:gap-4">
+            <div className="aegis-nav__links flex flex-wrap sm:flex-nowrap items-center gap-2 sm:gap-4 nav-links">
               <Link href="/" className="w-full sm:w-auto">
                 <Button variant="ghost" className="w-full sm:w-auto text-slate-300 hover:text-white transition-colors text-sm sm:text-base">
                   Home
@@ -403,10 +403,10 @@ const ReportOnMap = () => {
         </div>
       </nav>
       {/* Search Bar */}
-      <div className="aegis-searchbar flex justify-center items-center py-4 sm:py-6 bg-transparent sticky top-16 z-40" style={{zIndex: 45}}>
-        <form onSubmit={handleSearch} className="relative w-full max-w-[calc(100%-2rem)] sm:max-w-xl mx-2 sm:mx-4">
-          <div className="relative">
-            <span className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 text-gray-400">
+      <div className="aegis-searchbar flex justify-center items-center py-4 sm:py-6 bg-transparent sticky top-16 z-40 search-container" style={{zIndex: 45}}>
+        <form onSubmit={handleSearch} className="relative w-full max-w-[calc(100%-2rem)] sm:max-w-xl mx-2 sm:mx-4 search-form">
+          <div className="relative search-input-container">
+            <span className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 text-gray-400 search-icon">
               <FaSearch className="w-4 h-4 sm:w-5 sm:h-5" />
             </span>
             <input
@@ -420,11 +420,11 @@ const ReportOnMap = () => {
             />
             <button
               type="submit"
-              className="aegis-searchbar__button absolute right-2 top-1/2 -translate-y-1/2 px-3 sm:px-4 py-1 sm:py-1.5 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 transition-colors shadow text-sm sm:text-base"
+              className="aegis-searchbar__button absolute right-2 top-1/2 -translate-y-1/2 px-3 sm:px-4 py-1 sm:py-1.5 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 transition-colors shadow text-sm sm:text-base search-button"
               disabled={searching}
             >
               {searching ? (
-                <span className="flex items-center">
+                <span className="flex items-center loading-spinner">
                   <svg className="animate-spin -ml-1 mr-2 h-3 w-3 sm:h-4 sm:w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
@@ -435,14 +435,14 @@ const ReportOnMap = () => {
             </button>
           </div>
           {showSuggestions && suggestions.length > 0 && (
-            <div className="aegis-searchbar__suggestions absolute top-full left-0 w-full mt-2 bg-white rounded-2xl shadow-2xl z-[9999] border border-gray-200 max-h-[300px] overflow-y-auto">
+            <div className="aegis-searchbar__suggestions absolute top-full left-0 w-full mt-2 bg-white rounded-2xl shadow-2xl z-[9999] border border-gray-200 max-h-[300px] overflow-y-auto suggestions-container">
               {suggestions.map((suggestion, index) => (
                 <div
                   key={index}
-                  className="px-3 sm:px-4 py-2 sm:py-3 hover:bg-gray-50 cursor-pointer transition-colors border-b last:border-b-0 border-gray-100"
+                  className="px-3 sm:px-4 py-2 sm:py-3 hover:bg-gray-50 cursor-pointer transition-colors border-b last:border-b-0 border-gray-100 suggestion-item"
                   onClick={() => handleSuggestionClick(suggestion)}
                 >
-                  <span className="truncate text-gray-900 text-sm sm:text-base">
+                  <span className="truncate text-gray-900 text-sm sm:text-base suggestion-text">
                     {highlightMatch(suggestion.display_name, searchQuery)}
                   </span>
                 </div>
@@ -452,7 +452,7 @@ const ReportOnMap = () => {
         </form>
       </div>
       {/* Map */}
-      <div className="aegis-map-wrapper h-[calc(100vh-8rem)] sm:h-[calc(100vh-9rem)] md:h-[calc(100vh-10rem)]" style={{zIndex: 99999, width: '100%'}}>
+      <div className="aegis-map-wrapper h-[calc(100vh-8rem)] sm:h-[calc(100vh-9rem)] md:h-[calc(100vh-10rem)] map-container" style={{zIndex: 99999, width: '100%'}}>
         <MapWrapper
           selectedLocation={selectedLocation}
           mapCenter={mapCenter}

@@ -20,11 +20,9 @@ interface ReportFormProps {
   onSuccess: () => void
   address: string
   location: LatLngLiteral | null
-  showSuccessMessage: boolean
-  successCaseId: string
 }
 
-const ReportForm: React.FC<ReportFormProps> = ({ open, onClose, onSuccess, address, location, showSuccessMessage, successCaseId }) => {
+const ReportForm: React.FC<ReportFormProps> = ({ open, onClose, onSuccess, address, location }) => {
   const { toast } = useToast()
   const [isLoading, setIsLoading] = useState(false)
   const [showContactInfo, setShowContactInfo] = useState(false)
@@ -152,27 +150,9 @@ const ReportForm: React.FC<ReportFormProps> = ({ open, onClose, onSuccess, addre
           </DialogDescription>
         </DialogHeader>
 
-        {showSuccessMessage && (
-          <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
-            <div className="flex items-center gap-3">
-              <div className="flex-shrink-0">
-                <svg className="h-5 w-5 text-green-400" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                </svg>
-              </div>
-              <div>
-                <h3 className="text-sm font-medium text-green-800">Report Submitted Successfully</h3>
-                <p className="mt-1 text-sm text-green-700">
-                  Your report has been submitted. Case ID: <span className="font-semibold">{successCaseId}</span>
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
-
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Category Selection */}
-          <div className="space-y-2">
+          <div className="space-y-2 form-category-section">
             <Label htmlFor="category">Category *</Label>
             <Select value={formData.category} onValueChange={(value) => handleInputChange("category", value)}>
               <SelectTrigger>
@@ -190,7 +170,7 @@ const ReportForm: React.FC<ReportFormProps> = ({ open, onClose, onSuccess, addre
           </div>
 
           {/* Title */}
-          <div className="space-y-2">
+          <div className="space-y-2 form-title-section">
             <Label htmlFor="title">Title *</Label>
             <Input
               id="title"
@@ -203,7 +183,7 @@ const ReportForm: React.FC<ReportFormProps> = ({ open, onClose, onSuccess, addre
           </div>
 
           {/* Description */}
-          <div className="space-y-2">
+          <div className="space-y-2 form-description-section">
             <Label htmlFor="description">Description *</Label>
             <Textarea
               id="description"
@@ -214,11 +194,11 @@ const ReportForm: React.FC<ReportFormProps> = ({ open, onClose, onSuccess, addre
               maxLength={2000}
               required
             />
-            <div className="text-sm text-gray-500">{formData.description.length}/2000 characters</div>
+            <div className="text-sm text-gray-500 character-count">{formData.description.length}/2000 characters</div>
           </div>
 
           {/* Date Occurred */}
-          <div className="space-y-2">
+          <div className="space-y-2 form-date-section">
             <Label htmlFor="dateOccurred">Date Occurred</Label>
             <Input
               id="dateOccurred"
@@ -230,7 +210,7 @@ const ReportForm: React.FC<ReportFormProps> = ({ open, onClose, onSuccess, addre
           </div>
 
           {/* Anonymous Reporting */}
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-2 form-anonymous-section">
             <Checkbox
               id="anonymous"
               checked={formData.anonymous}
@@ -244,8 +224,8 @@ const ReportForm: React.FC<ReportFormProps> = ({ open, onClose, onSuccess, addre
 
           {/* Contact Information (conditional) */}
           {!formData.anonymous && (
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
+            <div className="space-y-2 form-contact-section">
+              <div className="flex items-center justify-between contact-header">
                 <Label htmlFor="contactInfo">Contact Information</Label>
                 <Button type="button" variant="ghost" size="sm" onClick={() => setShowContactInfo(!showContactInfo)}>
                   {showContactInfo ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -264,7 +244,7 @@ const ReportForm: React.FC<ReportFormProps> = ({ open, onClose, onSuccess, addre
           )}
 
           {/* Submit Button */}
-          <div className="flex gap-4">
+          <div className="flex gap-4 form-actions">
             <Button type="button" variant="outline" onClick={onClose} className="flex-1">
               Cancel
             </Button>
