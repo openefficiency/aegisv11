@@ -403,7 +403,7 @@ const ReportOnMap = () => {
         </div>
       </nav>
       {/* Search Bar */}
-      <div className="aegis-searchbar flex justify-center items-center py-4 sm:py-6 bg-transparent sticky top-16 z-40" style={{zIndex: 99999}}>
+      <div className="aegis-searchbar flex justify-center items-center py-4 sm:py-6 bg-transparent sticky top-16 z-40" style={{zIndex: 45}}>
         <form onSubmit={handleSearch} className="relative w-full max-w-[calc(100%-2rem)] sm:max-w-xl mx-2 sm:mx-4">
           <div className="relative">
             <span className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 text-gray-400">
