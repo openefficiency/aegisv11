@@ -93,6 +93,7 @@ const ReportOnMap = () => {
       console.error('Invalid coordinates received:', latlng);
       return;
     }
+    setShowSuggestions(false);
     setSelectedLocation(latlng);
     setMapCenter(latlng);
     await getAddressFromCoordinates(latlng);
@@ -405,6 +406,7 @@ const ReportOnMap = () => {
               placeholder="Search for a location..."
               className="aegis-searchbar__input w-full pl-12 pr-4 py-3 bg-white text-gray-900 border border-gray-200 rounded-2xl shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all placeholder-gray-400 text-base"
               autoComplete="off"
+              onBlur={() => setShowSuggestions(false)}
             />
             <button
               type="submit"

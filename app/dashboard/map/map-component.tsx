@@ -25,12 +25,12 @@ const categoryIcons = {
 
 // Category colors mapping
 const categoryColors = {
-  fraud: "#FF6B6B",
-  abuse: "#FF9F43",
-  discrimination: "#4ECDC4",
-  harassment: "#45B7D1",
-  safety: "#96CEB4",
-  corruption: "#D4A5A5",
+  fraud: "#808080",
+  abuse: "#A9A9A9",
+  discrimination: "#D3D3D3",
+  harassment: "#C0C0C0",
+  safety: "#E8E8E8",
+  corruption: "#B8B8B8",
 };
 
 // Add this function after the categoryColors mapping
@@ -66,9 +66,9 @@ L.Marker.prototype.options.icon = DefaultIcon;
 
 // Add safety heatmap colors
 const safetyColors = {
-  safe: "#00C851",
-  warning: "#ffbb33",
-  danger: "#ff4444"
+  safe: "#E8E8E8",
+  warning: "#C0C0C0",
+  danger: "#A9A9A9"
 };
 
 // Add this function to calculate safety score
@@ -251,9 +251,9 @@ export default function MapComponent() {
       console.log("Map initialized, adding tile layer...");
 
       // Add OpenStreetMap tiles with explicit options
-      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", {
         maxZoom: 19,
-        attribution: '© OpenStreetMap contributors',
+        attribution: '© OpenStreetMap contributors, © CARTO',
         tileSize: 256,
         zoomOffset: 0,
         updateWhenIdle: true,
@@ -370,27 +370,27 @@ export default function MapComponent() {
           className: `custom-marker ${markerColor}`,
           html: `<div style="
             background-color: ${markerColor};
-            width: 16px;
-            height: 16px;
+            width: 12px;
+            height: 12px;
             border-radius: 50%;
-            border: 2px solid white;
-            box-shadow: 0 0 8px rgba(0,0,0,0.3);
+            border: 1px solid #666;
+            box-shadow: 0 0 4px rgba(0,0,0,0.2);
             animation: pulse 2s infinite;
           "></div>`,
-          iconSize: [20, 20],
-          iconAnchor: [10, 10]
+          iconSize: [16, 16],
+          iconAnchor: [8, 8]
         });
 
         const popupContent = `
-          <div style="min-width: 250px; padding: 12px; background: white; color: #333; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
-            <h3 style="margin: 0 0 12px 0; color: #333; font-size: 16px; border-bottom: 1px solid #eee; padding-bottom: 8px;">${case_.title}</h3>
-            <p style="margin: 6px 0; font-size: 13px;"><strong>Case ID:</strong> ${case_.case_number}</p>
-            <p style="margin: 6px 0; font-size: 13px;"><strong>Status:</strong> <span style="color: ${case_.status === 'resolved' ? '#00C851' : case_.status === 'under_investigation' ? '#ffbb33' : '#666'}">${case_.status.replace('_', ' ')}</span></p>
-            <p style="margin: 6px 0; font-size: 13px;"><strong>Priority:</strong> <span style="color: ${markerColor}">${case_.priority}</span></p>
-            <p style="margin: 6px 0; font-size: 13px;"><strong>Category:</strong> ${case_.category}</p>
-            <p style="margin: 6px 0; font-size: 13px;"><strong>Created:</strong> ${new Date(case_.created_at).toLocaleDateString()}</p>
-            ${case_.reward_amount ? `<p style="margin: 6px 0; font-size: 13px;"><strong>Reward:</strong> $${case_.reward_amount.toLocaleString()}</p>` : ''}
-            <p style="margin: 12px 0 0 0; font-size: 13px; color: #666;">${case_.description}</p>
+          <div style="min-width: 250px; padding: 12px; background: white; color: #333; border-radius: 4px; box-shadow: 0 1px 4px rgba(0,0,0,0.1);">
+            <h3 style="margin: 0 0 12px 0; color: #333; font-size: 14px; border-bottom: 1px solid #eee; padding-bottom: 8px;">${case_.title}</h3>
+            <p style="margin: 6px 0; font-size: 12px;"><strong>Case ID:</strong> ${case_.case_number}</p>
+            <p style="margin: 6px 0; font-size: 12px;"><strong>Status:</strong> <span style="color: ${case_.status === 'resolved' ? '#808080' : case_.status === 'under_investigation' ? '#A9A9A9' : '#666'}">${case_.status.replace('_', ' ')}</span></p>
+            <p style="margin: 6px 0; font-size: 12px;"><strong>Priority:</strong> <span style="color: ${markerColor}">${case_.priority}</span></p>
+            <p style="margin: 6px 0; font-size: 12px;"><strong>Category:</strong> ${case_.category}</p>
+            <p style="margin: 6px 0; font-size: 12px;"><strong>Created:</strong> ${new Date(case_.created_at).toLocaleDateString()}</p>
+            ${case_.reward_amount ? `<p style="margin: 6px 0; font-size: 12px;"><strong>Reward:</strong> $${case_.reward_amount.toLocaleString()}</p>` : ''}
+            <p style="margin: 12px 0 0 0; font-size: 12px; color: #666;">${case_.description}</p>
           </div>
         `;
 
@@ -449,24 +449,25 @@ export default function MapComponent() {
           const div = L.DomUtil.create('div', 'leaflet-control leaflet-bar');
           div.innerHTML = `
             <div style="
-              background-color: rgba(0, 0, 0, 0.8);
+              background-color: rgba(255, 255, 255, 0.9);
               padding: 8px;
               border-radius: 4px;
-              color: white;
+              color: #333;
               font-size: 12px;
+              box-shadow: 0 1px 4px rgba(0,0,0,0.1);
             ">
               <h4 style="margin: 0 0 8px 0;">Safety Level</h4>
               <div style="display: flex; flex-direction: column; gap: 4px;">
                 <div style="display: flex; align-items: center; gap: 8px;">
-                  <div style="width: 16px; height: 16px; background-color: ${safetyColors.safe};"></div>
+                  <div style="width: 12px; height: 12px; background-color: ${safetyColors.safe}; border: 1px solid #666;"></div>
                   <span>Safe</span>
                 </div>
                 <div style="display: flex; align-items: center; gap: 8px;">
-                  <div style="width: 16px; height: 16px; background-color: ${safetyColors.warning};"></div>
+                  <div style="width: 12px; height: 12px; background-color: ${safetyColors.warning}; border: 1px solid #666;"></div>
                   <span>Warning</span>
                 </div>
                 <div style="display: flex; align-items: center; gap: 8px;">
-                  <div style="width: 16px; height: 16px; background-color: ${safetyColors.danger};"></div>
+                  <div style="width: 12px; height: 12px; background-color: ${safetyColors.danger}; border: 1px solid #666;"></div>
                   <span>Danger</span>
                 </div>
               </div>
@@ -520,7 +521,7 @@ export default function MapComponent() {
         minHeight: "500px",
         width: "100%",
         height: "100%",
-        backgroundColor: "#f5f5f5",
+        backgroundColor: "#fafafa",
         zIndex: 1,
       }}
     />
