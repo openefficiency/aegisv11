@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import React, { useEffect, useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -10,7 +10,7 @@ import { Users, FileText, DollarSign, TrendingUp, Settings, Plus, MoreHorizontal
 import { DashboardLayout } from "@/components/dashboard-layout"
 import { supabase, type Case, type Profile } from "@/lib/supabase"
 import { formatCaseText, formatCaseTitle } from "@/lib/utils"
-
+import demoCases from "@/data/demo.json"
 
 export default function AdminDashboard() {
   const [cases, setCases] = useState<Case[]>([])
@@ -22,10 +22,44 @@ export default function AdminDashboard() {
     totalBounty: 0,
   })
   const [loading, setLoading] = useState(true)
+  const [demoCaseIndex, setDemoCaseIndex] = useState(0)
 
   useEffect(() => {
     fetchData()
   }, [])
+
+  useEffect(() => {
+    const addDemoCases = async () => {
+      if (demoCaseIndex >= demoCases.length) return
+
+      const batchSize = 3
+      const endIndex = Math.min(demoCaseIndex + batchSize, demoCases.length)
+      const batch = demoCases.slice(demoCaseIndex, endIndex)
+
+      for (const demoCase of batch) {
+        const { error } = await supabase.from("cases").insert({
+          title: demoCase.title,
+          description: demoCase.description,
+          category: demoCase.category,
+          status: demoCase.status,
+          priority: demoCase.priority,
+          reward_amount: demoCase.reward_amount,
+          recovery_amount: demoCase.recovery_amount,
+          created_at: new Date().toISOString(),
+        })
+
+        if (error) {
+          console.error("Error adding demo case:", error)
+        }
+      }
+
+      setDemoCaseIndex(endIndex)
+      fetchData()
+    }
+
+    const interval = setInterval(addDemoCases, 10000)
+    return () => clearInterval(interval)
+  }, [demoCaseIndex])
 
   const fetchData = async () => {
     try {
@@ -34,6 +68,7 @@ export default function AdminDashboard() {
         .from("cases")
         .select("*")
         .order("created_at", { ascending: false })
+        .limit(30)
 
       if (casesError) throw casesError
 
@@ -218,13 +253,7 @@ export default function AdminDashboard() {
                     {cases.slice(0, 5).map((case_) => (
                       <TableRow key={case_.id} className="border-slate-700">
                         <TableCell className="text-slate-300 font-mono">{case_.tracking_code || case_.report_id || case_.case_number}</TableCell>
-
-
-
                         <TableCell className="text-white">{formatCaseTitle(case_.title, case_.description, case_.created_at)}</TableCell>
-
-
-
                         <TableCell>
                           <Badge variant="outline" className="border-orange-500 text-orange-400 capitalize">
                             {case_.category}
