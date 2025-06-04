@@ -328,56 +328,22 @@ export default function MapComponent() {
           position: 'topright'
         },
         onAdd: function() {
-          const div = L.DomUtil.create('div', 'leaflet-control leaflet-bar');
+          const div = L.DomUtil.create('div', 'leaflet-control leaflet-bar custom-switcher-card');
           div.innerHTML = `
-            <div style="
-              background-color: white;
-              padding: 12px;
-              border-radius: 12px;
-              box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-              margin: 12px;
-              min-width: 200px;
-            ">
-              <div style="
-                display: flex;
-                align-items: center;
-                gap: 12px;
-                margin-bottom: 8px;
-              ">
-                <i class="fa-solid ${viewMode === 'cases' ? 'fa-map-location-dot' : 'fa-fire'}" 
-                   style="color: ${viewMode === 'cases' ? '#2196F3' : '#FF5722'}; font-size: 18px;">
-                </i>
-                <span style="
-                  font-size: 14px;
-                  font-weight: 600;
-                  color: #333;
-                ">${viewMode === 'cases' ? 'Cases View' : 'Heatmap View'}</span>
+            <div class="switcher-card">
+              <div class="switcher-header">
+                <span class="switcher-icon">${viewMode === 'cases'
+                  ? '<svg width="28" height="28" fill="none" stroke="#2196F3" stroke-width="2" viewBox="0 0 24 24"><path d="M3 6l9-4 9 4M4 10v6a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 012-2h0a2 2 0 012 2v2a2 2 0 002 2h2a2 2 0 002-2v-6"/></svg>'
+                  : '<svg width="28" height="28" fill="none" stroke="#FF5722" stroke-width="2" viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5A2.5 2.5 0 1 1 12 6a2.5 2.5 0 0 1 0 5.5z"/></svg>'}
+                </span>
+                <span class="switcher-title">${viewMode === 'cases' ? 'Cases View' : 'Heatmap View'}</span>
               </div>
-              
-              <button id="viewModeToggle" style="
-                width: 100%;
-                padding: 10px;
-                background: ${viewMode === 'cases' ? '#2196F3' : '#FF5722'};
-                color: white;
-                border: none;
-                border-radius: 8px;
-                font-size: 13px;
-                font-weight: 500;
-                cursor: pointer;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                gap: 8px;
-                transition: all 0.3s ease;
-                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-              "
-              onmouseover="this.style.transform='translateY(-1px)';this.style.boxShadow='0 4px 8px rgba(0,0,0,0.15)'"
-              onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='0 2px 4px rgba(0,0,0,0.1)'"
-              >
-                <i class="fa-solid ${viewMode === 'cases' ? 'fa-fire' : 'fa-map-location-dot'}" 
-                   style="font-size: 14px;">
-                </i>
-                Switch to ${viewMode === 'cases' ? 'Heatmap View' : 'Cases View'}
+              <button id="viewModeToggle" class="switcher-btn ${viewMode === 'cases' ? 'cases' : 'heatmap'}">
+                <span class="switcher-btn-icon">${viewMode === 'cases'
+                  ? '<svg width="20" height="20" fill="none" stroke="#fff" stroke-width="2" viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5A2.5 2.5 0 1 1 12 6a2.5 2.5 0 0 1 0 5.5z"/></svg>'
+                  : '<svg width="20" height="20" fill="none" stroke="#2196F3" stroke-width="2" viewBox="0 0 24 24"><path d="M3 6l9-4 9 4M4 10v6a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 012-2h0a2 2 0 012 2v2a2 2 0 002 2h2a2 2 0 002-2v-6"/></svg>'}
+                </span>
+                <span class="switcher-btn-label">Switch to ${viewMode === 'cases' ? 'Heatmap View' : 'Cases View'}</span>
               </button>
             </div>
           `;
@@ -768,28 +734,135 @@ style.textContent = `
     }
   }
 
+  .custom-switcher-card {
+    background: none !important;
+    border: none !important;
+    box-shadow: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+  .switcher-card {
+    background: #fff;
+    border-radius: 18px;
+    box-shadow: 0 6px 32px rgba(33, 150, 243, 0.10), 0 1.5px 6px rgba(0,0,0,0.06);
+    padding: 22px 20px 18px 20px;
+    min-width: 260px;
+    max-width: 90vw;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    transition: box-shadow 0.25s cubic-bezier(.4,0,.2,1), transform 0.18s cubic-bezier(.4,0,.2,1);
+  }
+  .switcher-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 0;
+  }
+  .switcher-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: #f4f8fd;
+    box-shadow: 0 2px 8px rgba(33,150,243,0.07);
+  }
+  .switcher-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: #222;
+    letter-spacing: -0.5px;
+  }
+  .switcher-btn {
+    width: 100%;
+    border: none;
+    border-radius: 999px;
+    padding: 14px 0;
+    font-size: 16px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(33,150,243,0.10);
+    background: #2196F3;
+    color: #fff;
+    transition: background 0.18s, transform 0.18s, box-shadow 0.18s;
+    outline: none;
+    position: relative;
+    overflow: hidden;
+  }
+  .switcher-btn.heatmap {
+    background: #FF5722;
+    color: #fff;
+  }
+  .switcher-btn:active {
+    transform: scale(0.97);
+    box-shadow: 0 1px 2px rgba(33,150,243,0.10);
+  }
+  .switcher-btn-label {
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: -0.2px;
+  }
+  .switcher-btn-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .switcher-btn::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 0;
+    height: 0;
+    background: rgba(255,255,255,0.25);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    transition: width 0.4s cubic-bezier(.4,0,.2,1), height 0.4s cubic-bezier(.4,0,.2,1), opacity 0.4s;
+    opacity: 0;
+    pointer-events: none;
+    z-index: 1;
+  }
+  .switcher-btn.clicked::after {
+    width: 200%;
+    height: 200%;
+    opacity: 1;
+    transition: width 0.4s cubic-bezier(.4,0,.2,1), height 0.4s cubic-bezier(.4,0,.2,1), opacity 0.4s;
+  }
+
   @media (max-width: 768px) {
-    .leaflet-popup-content {
-      margin: 0;
-      width: 100% !important;
+    .switcher-card {
+      min-width: 0;
+      width: 98vw;
+      padding: 16px 6vw 12px 6vw;
+      box-sizing: border-box;
     }
-    
-    .leaflet-popup-content-wrapper {
-      padding: 0;
-      border-radius: 12px;
+    .switcher-title {
+      font-size: 17px;
     }
-
-    .leaflet-control-zoom {
-      margin: 20px !important;
-    }
-
-    .leaflet-control-attribution {
-      font-size: 10px !important;
-    }
-
-    .leaflet-control {
-      margin: 12px !important;
+    .switcher-btn {
+      font-size: 15px;
+      padding: 12px 0;
     }
   }
 `;
-document.head.appendChild(style); 
+document.head.appendChild(style);
+
+// Add animation for button click
+setTimeout(() => {
+  const btn = document.getElementById('viewModeToggle');
+  if (btn) {
+    btn.addEventListener('click', function() {
+      btn.classList.remove('clicked');
+      void btn.offsetWidth; // trigger reflow
+      btn.classList.add('clicked');
+      setTimeout(() => btn.classList.remove('clicked'), 400);
+    });
+  }
+}, 200); 
