@@ -66,7 +66,7 @@ import { cryptoRewardSystem, supportedCurrencies } from "@/lib/crypto-utils";
 
 import { auditLogger } from "@/lib/audit-logger";
 import { formatCaseText, formatCaseTitle, extractCaseLocation, getCaseDateReceived } from "@/lib/utils";
-import demoCasesData from "./demo.json";
+import demoCasesData from "../demo.json";
 
 export default function EthicsOfficerDashboard() {
   const [cases, setCases] = useState<Case[]>([]);
