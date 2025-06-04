@@ -273,4 +273,4 @@ const ReportForm: React.FC<ReportFormProps> = ({ open, onClose, onSuccess, addre
   );
 };
 
-export default ReportForm; 
+export default ReportForm;

@@ -1,165 +1,84 @@
-import { clsx, type ClassValue } from "clsx"
+import { type ClassValue, clsx } from "clsx"
 import { twMerge } from "tailwind-merge"
 
+/**
+ * Combines class names using clsx and tailwind-merge
+ */
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
-export function formatCaseText(field: any): string {
-  if (field === null || field === undefined) return ""
+/**
+ * Formats case text by trimming and limiting length
+ * @param text The case description or text to format
+ * @param maxLength Maximum length before truncating
+ * @returns Formatted text string
+ */
+export function formatCaseText(text: string | null | undefined, maxLength = 150): string {
+  if (!text) return "No description provided"
 
-  let value: any = field
+  const trimmed = text.trim()
+  if (trimmed.length <= maxLength) return trimmed
 
-  if (typeof value === "string") {
-    const trimmed = value.trim()
-    if (trimmed.startsWith("{") && trimmed.endsWith("}")) {
-      try {
-        value = JSON.parse(trimmed)
-      } catch {
-        return trimmed
-      }
-    } else {
-      return trimmed
-    }
-  }
-
-  const extractString = (v: any): string => {
-    if (v === null || v === undefined) return ""
-    if (typeof v === "string") return v
-    if (typeof v === "number" || typeof v === "boolean") return String(v)
-    if (Array.isArray(v)) {
-      for (const item of v) {
-        const res = extractString(item)
-        if (res) return res
-      }
-      return ""
-    }
-    if (typeof v === "object") {
-      const keys = [
-        "title",
-        "detailed_description",
-        "description",
-        "summary",
-        "name",
-        "area",
-      ]
-      for (const key of keys) {
-        if (key in v) {
-          const res = extractString(v[key])
-          if (res) return res
-        }
-      }
-      for (const key of Object.keys(v)) {
-        const res = extractString(v[key])
-        if (res) return res
-      }
-    }
-    return ""
-  }
-
-  return extractString(value)
+  return `${trimmed.substring(0, maxLength)}...`
 }
 
-export function parseCaseData(field: any): any | null {
-  if (field === null || field === undefined) return null
+/**
+ * Formats a case title for display
+ * @param title The case title to format
+ * @param defaultTitle Default title if none provided
+ * @returns Formatted title string
+ */
+export function formatCaseTitle(title: string | null | undefined, defaultTitle = "Untitled Report"): string {
+  if (!title) return defaultTitle
 
-  let value: any = field
-
-  if (typeof value === "string") {
-    const trimmed = value.trim()
-    if (trimmed.startsWith("{") && trimmed.endsWith("}")) {
-      try {
-        value = JSON.parse(trimmed)
-      } catch {
-        return null
-      }
-    } else {
-      return null
-    }
-  }
-
-  if (typeof value === "object" && value !== null) {
-    return value
-  }
-
-  return null
+  const trimmed = title.trim()
+  return trimmed || defaultTitle
 }
 
-export function extractCaseLocation(field: any): string {
-  const data = parseCaseData(field)
-  if (!data) return ""
+/**
+ * Extracts and formats the date a case was received
+ * @param caseData The case data object
+ * @returns Formatted date string
+ */
+export function getCaseDateReceived(caseData: any): string {
+  // Try different date fields that might exist in the case data
+  const dateField = caseData.date_occurred || caseData.created_at || caseData.dateOccurred
 
-  const candidates = [
-    data.location,
-    data.location_of_incident,
-    data.incident?.location,
-    data.incident?.location_of_incident,
-    data.structuredData?.location,
-    data.structuredData?.location_of_incident,
-  ]
+  if (!dateField) return "Unknown date"
 
-  for (const cand of candidates) {
-    const res = formatCaseText(cand)
-    if (res) return res
+  try {
+    const date = new Date(dateField)
+    return date.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    })
+  } catch (error) {
+    console.error("Error formatting case date:", error)
+    return "Invalid date"
   }
-
-  return ""
 }
 
-export function extractCaseDate(field: any): string {
-  const data = parseCaseData(field)
-  if (!data) return ""
-
-  const candidates = [
-    data.date_received,
-    data.date,
-    data.date_of_incident,
-    data.incident?.date,
-    data.incident?.date_received,
-    data.incident?.date_of_incident,
-    data.structuredData?.date,
-    data.structuredData?.date_received,
-    data.structuredData?.date_of_incident,
-  ]
-
-  for (const cand of candidates) {
-    const res = formatCaseText(cand)
-    if (res) return res
-  }
-
-  return ""
-}
-
-export function getCaseDateReceived(
-  titleField: any,
-  descriptionField?: any,
-  createdAt?: string,
-): string {
-  const rawDate =
-    extractCaseDate(titleField) ||
-    extractCaseDate(descriptionField) ||
-    createdAt ||
-    ""
-
-  if (!rawDate) return ""
-
-  const dateObj = new Date(rawDate)
-  if (isNaN(dateObj.getTime())) return String(rawDate)
-  return dateObj.toLocaleDateString()
-}
-
-export function formatCaseTitle(
-  titleField: any,
-  descriptionField?: any,
-  createdAt?: string,
-): string {
+/**
+ * Extracts location information from case data
+ * @param caseData The case data object
+ * @returns Location string or default message
+ */
+export function extractCaseLocation(caseData: any): string {
+  // Try different location fields that might exist in the case data
   const location =
-    extractCaseLocation(titleField) || extractCaseLocation(descriptionField)
-  const date = getCaseDateReceived(titleField, descriptionField, createdAt)
+    caseData.location ||
+    (caseData.coordinates
+      ? `Lat: ${caseData.coordinates.lat.toFixed(4)}, Lng: ${caseData.coordinates.lng.toFixed(4)}`
+      : null)
 
-  if (location && date) return `${location} - ${date}`
-  if (location) return location
-  if (date) return date
+  if (!location) return "Location not specified"
 
-  return formatCaseText(titleField)
+  // If location is very long, truncate it
+  if (typeof location === "string" && location.length > 60) {
+    return `${location.substring(0, 60)}...`
+  }
+
+  return location
 }

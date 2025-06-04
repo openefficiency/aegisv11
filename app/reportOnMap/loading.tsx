@@ -5,4 +5,4 @@ export default function Loading() {
       <span className="ml-3 text-lg">Loading map...</span>
     </div>
   );
-} 
+}

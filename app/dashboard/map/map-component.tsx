@@ -854,4 +854,4 @@ setTimeout(() => {
       setTimeout(() => btn.classList.remove('clicked'), 400);
     });
   }
-}, 200); 
+}, 200);

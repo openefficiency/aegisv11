@@ -34,9 +34,9 @@ Continue building your app on:
 
 1. Copy `.env.example` to `.env` and fill in your credentials:
 
-   ```bash
+   \`\`\`bash
    cp .env.example .env
-   ```
+   \`\`\`
 
 2. Set the following environment variables locally or in Vercel:
 

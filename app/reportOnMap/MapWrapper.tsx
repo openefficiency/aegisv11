@@ -153,4 +153,4 @@ const MapWrapper: React.FC<MapWrapperProps> = ({
   );
 };
 
-export default MapWrapper; 
+export default MapWrapper;
