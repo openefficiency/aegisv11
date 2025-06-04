@@ -426,8 +426,8 @@ export default function MapComponent() {
           className: `custom-marker ${markerColor}`,
           html: `<div style="
             background-color: ${markerColor};
-            width: 32px;
-            height: 32px;
+            width: 52px;
+            height: 52px;
             border-radius: 50%;
             border: 2px solid white;
             box-shadow: 0 0 8px rgba(0,0,0,0.3);
@@ -438,7 +438,7 @@ export default function MapComponent() {
           ">
             <i class="${categoryIcons[case_.category]}" style="
               color: white;
-              font-size: 14px;
+              font-size: 24px;
             "></i>
           </div>`,
           iconSize: [32, 32],
