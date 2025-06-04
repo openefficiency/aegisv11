@@ -365,37 +365,6 @@ const ReportOnMap = () => {
     }
   };
 
-  // Add handler for geolocation
-  const handleReportOnMyLocation = () => {
-    if (!navigator.geolocation) {
-      toast({
-        variant: "destructive",
-        title: "Geolocation Not Supported",
-        description: "Your browser does not support geolocation.",
-      });
-      return;
-    }
-    navigator.geolocation.getCurrentPosition(
-      async (position) => {
-        const latlng = {
-          lat: position.coords.latitude,
-          lng: position.coords.longitude,
-        };
-        setSelectedLocation(latlng);
-        setMapCenter(latlng);
-        await getAddressFromCoordinates(latlng);
-        setShowReportForm(true);
-      },
-      (error) => {
-        toast({
-          variant: "destructive",
-          title: "Location Permission Denied",
-          description: "We couldn't access your location. Please allow location access in your browser settings.",
-        });
-      }
-    );
-  };
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900">
       {/* Navigation */}
@@ -473,24 +442,16 @@ const ReportOnMap = () => {
         </form>
       </div>
       {/* Map */}
-      <div className="flex flex-col items-center gap-4">
-        <Button
-          className="mb-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg shadow"
-          onClick={handleReportOnMyLocation}
-        >
-          Report On My Location
-        </Button>
-        <div className="aegis-map-wrapper" style={{zIndex: 99999, width: '100%'}}> 
-          <MapWrapper
-            selectedLocation={selectedLocation}
-            mapCenter={mapCenter}
-            onMapClick={handleMapClick}
-            onStartReport={() => setShowReportForm(true)}
-            address={address}
-            mapRef={mapRef}
-            popupRef={popupRef}
-          />
-        </div>
+      <div className="aegis-map-wrapper" style={{zIndex: 99999, width: '100%'}}>
+        <MapWrapper
+          selectedLocation={selectedLocation}
+          mapCenter={mapCenter}
+          onMapClick={handleMapClick}
+          onStartReport={() => setShowReportForm(true)}
+          address={address}
+          mapRef={mapRef}
+          popupRef={popupRef}
+        />
       </div>
       {/* Report Form Modal */}
       <ReportForm
