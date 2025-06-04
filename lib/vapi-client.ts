@@ -200,10 +200,10 @@ export class VAPIClient {
 export const vapiClient = new VAPIClient({
   apiKey:
     process.env.NEXT_PUBLIC_VAPI_API_KEY ||
-    "0a4b2b25-ecba-4a82-864c-1b7f057260f5",
+    "2ca2e718-80b2-454a-a78b-e0560a06f1c4",
   baseUrl: "https://api.vapi.ai",
-  assistantId: "bb8029bb-dde6-485a-9c32-d41b684568ff",
-  shareKey: "89effcf9-d6c0-4a75-9470-51e6f0114e4b",
+  assistantId: "265d793f-8179-4d20-a6cc-eb337577c512",
+  shareKey: "6a029118-46e8-4cda-87f3-0ac2f287af8f",
 });
 
 export const testVAPICredentials = async () => {
@@ -212,10 +212,10 @@ export const testVAPICredentials = async () => {
 
     // Test basic API connection
     const response = await fetch(
-      "https://api.vapi.ai/assistant/bb8029bb-dde6-485a-9c32-d41b684568ff",
+      "https://api.vapi.ai/assistant/265d793f-8179-4d20-a6cc-eb337577c512",
       {
         headers: {
-          Authorization: "Bearer 0a4b2b25-ecba-4a82-864c-1b7f057260f5",
+          Authorization: "Bearer 2ca2e718-80b2-454a-a78b-e0560a06f1c4",
           "Content-Type": "application/json",
         },
       }

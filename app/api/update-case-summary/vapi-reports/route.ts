@@ -11,7 +11,7 @@ export async function GET() {
     const hasValidConfig =
       process.env.NEXT_PUBLIC_VAPI_API_KEY &&
       process.env.NEXT_PUBLIC_VAPI_API_KEY !==
-        "0a4b2b25-ecba-4a82-864c-1b7f057260f5";
+        "2ca2e718-80b2-454a-a78b-e0560a06f1c4";
 
     console.log("VAPI Config Status:", {
       hasApiKey: !!process.env.NEXT_PUBLIC_VAPI_API_KEY,
