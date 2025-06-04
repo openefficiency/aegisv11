@@ -384,17 +384,17 @@ const ReportOnMap = () => {
             </div>
             <div className="aegis-nav__links flex flex-wrap sm:flex-nowrap items-center gap-2 sm:gap-4">
               <Link href="/" className="w-full sm:w-auto">
-                <Button className="w-full sm:w-auto text-slate-300 hover:text-white transition-colors text-sm sm:text-base">
+                <Button variant="ghost" className="w-full sm:w-auto text-slate-300 hover:text-white transition-colors text-sm sm:text-base">
                   Home
                 </Button>
               </Link>
               <Link href="/follow-up" className="w-full sm:w-auto">
-                <Button className="w-full sm:w-auto text-slate-300 hover:text-white transition-colors text-sm sm:text-base">
+                <Button variant="ghost" className="w-full sm:w-auto text-slate-300 hover:text-white transition-colors text-sm sm:text-base">
                   Follow-up
                 </Button>
               </Link>
               <Link href="/login" className="w-full sm:w-auto">
-                <Button className="w-full sm:w-auto border-blue-400 text-blue-400 hover:bg-blue-400 hover:text-white transition-colors text-sm sm:text-base">
+                <Button variant="outline" className="w-full sm:w-auto border-blue-400 text-blue-400 hover:bg-blue-400 hover:text-white transition-colors text-sm sm:text-base">
                   Team Aegis
                 </Button>
               </Link>

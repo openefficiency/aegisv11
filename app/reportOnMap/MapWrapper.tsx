@@ -6,7 +6,6 @@ import type { LatLngLiteral } from 'leaflet';
 import { Button } from "@/components/ui/button";
 import { useMapEvent } from 'react-leaflet';
 import { MapPin, X } from "lucide-react";
-import type { Map, Popup as LeafletPopup } from 'leaflet';
 
 const MapContainer = dynamic(
   () => import('react-leaflet').then((mod) => mod.MapContainer),
@@ -31,12 +30,12 @@ interface MapWrapperProps {
   onMapClick: (latlng: LatLngLiteral) => void;
   onStartReport: () => void;
   address: string;
-  mapRef: React.RefObject<Map>;
-  popupRef: React.RefObject<LeafletPopup>;
+  mapRef: React.RefObject<any>;
+  popupRef: React.RefObject<any>;
 }
 
 const MapClickHandler: React.FC<{ onMapClick: (latlng: LatLngLiteral) => void }> = ({ onMapClick }) => {
-  useMapEvent('click', (e: { latlng: LatLngLiteral }) => {
+  useMapEvent('click', (e) => {
     if (e && e.latlng) {
       onMapClick(e.latlng);
     }
