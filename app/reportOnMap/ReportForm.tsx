@@ -166,11 +166,12 @@ const ReportForm: React.FC<ReportFormProps> = ({ open, onClose, onSuccess, addre
             <Select 
               value={formData.category} 
               onValueChange={(value: string) => handleInputChange("category", value)}
+              defaultValue=""
             >
-              <SelectTrigger id="category">
+              <SelectTrigger id="category" className="w-full">
                 <SelectValue placeholder="Select incident category" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent position="popper" className="w-full">
                 <SelectItem value="fraud">Fraud</SelectItem>
                 <SelectItem value="abuse">Abuse</SelectItem>
                 <SelectItem value="discrimination">Discrimination</SelectItem>
