@@ -59,14 +59,16 @@ export default function HomePage() {
                   Start Your Secure Report
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
-                <Link href="/reportOnMap">
-                  <Button size="lg" className="bg-green-600 hover:bg-green-700 text-white px-8 py-4 text-lg">
-                    Report On Map
-                    <MapPin className="ml-2 h-5 w-5" />
-                  </Button>
-                </Link>
               </div>
             </VapiLauncher>
+          </div>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
+            <Link href="/reportOnMap">
+              <Button size="lg" className="bg-green-600 hover:bg-green-700 text-white px-8 py-4 text-lg">
+                Report On Map
+                <MapPin className="ml-2 h-5 w-5" />
+              </Button>
+            </Link>
           </div>
 
           {/* Voice AI Demo */}
