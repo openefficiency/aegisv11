@@ -306,7 +306,7 @@ const ReportOnMap = () => {
       };
 
       // Send to API
-      const response = await fetch('/api/repostOnMap', {
+      const response = await fetch('/api/reportOnMap', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
