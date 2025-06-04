@@ -49,10 +49,16 @@ export class VAPIClient {
   private shareKey: string
 
   constructor(config: VAPIConfig) {
-    this.apiKey = config.apiKey
+    // Clean the API key and assistant ID of any quotes
+    this.apiKey = config.apiKey.replace(/['"]/g, "").trim()
+    this.assistantId = config.assistantId.replace(/['"]/g, "").trim()
     this.baseUrl = config.baseUrl || "https://api.vapi.ai"
-    this.assistantId = config.assistantId
-    this.shareKey = config.shareKey
+    this.shareKey = config.shareKey.replace(/['"]/g, "").trim()
+
+    console.log("VAPI Client initialized with:")
+    console.log("- API Key:", this.apiKey.substring(0, 8) + "...")
+    console.log("- Assistant ID:", this.assistantId.substring(0, 8) + "...")
+    console.log("- Base URL:", this.baseUrl)
   }
 
   private async makeRequest(endpoint: string, options: RequestInit = {}) {
@@ -61,18 +67,27 @@ export class VAPIClient {
     try {
       console.log(`Making VAPI request to: ${url}`)
       console.log(`Using API Key: ${this.apiKey.substring(0, 8)}...`)
+      console.log(`Full API Key length: ${this.apiKey.length}`)
+
+      const headers = {
+        Authorization: `Bearer ${this.apiKey}`,
+        "Content-Type": "application/json",
+        Accept: "application/json",
+        ...options.headers,
+      }
+
+      console.log("Request headers:", {
+        ...headers,
+        Authorization: `Bearer ${this.apiKey.substring(0, 8)}...`,
+      })
 
       const response = await fetch(url, {
         ...options,
-        headers: {
-          Authorization: `Bearer ${this.apiKey}`,
-          "Content-Type": "application/json",
-          Accept: "application/json",
-          ...options.headers,
-        },
+        headers,
       })
 
       console.log(`VAPI Response Status: ${response.status}`)
+      console.log(`VAPI Response Headers:`, Object.fromEntries(response.headers.entries()))
 
       if (!response.ok) {
         const errorText = await response.text()
@@ -81,11 +96,14 @@ export class VAPIClient {
           statusText: response.statusText,
           url,
           errorText,
-          headers: Object.fromEntries(response.headers.entries()),
+          requestHeaders: headers,
+          responseHeaders: Object.fromEntries(response.headers.entries()),
         })
 
         if (response.status === 401) {
-          throw new Error(`VAPI Authentication failed. Please check your API key. Status: ${response.status}`)
+          throw new Error(
+            `VAPI Authentication failed. Please check your API key. Status: ${response.status}\nError: ${errorText}`,
+          )
         }
 
         throw new Error(`VAPI API error: ${response.status} ${response.statusText} - ${errorText}`)
@@ -103,6 +121,8 @@ export class VAPIClient {
   async testConnection(): Promise<{ success: boolean; error?: string; data?: any }> {
     try {
       console.log("Testing VAPI connection...")
+      console.log("Using cleaned API key:", this.apiKey.substring(0, 8) + "...")
+      console.log("Using cleaned Assistant ID:", this.assistantId.substring(0, 8) + "...")
 
       // Try to fetch assistant info first (simpler endpoint)
       const assistant = await this.makeRequest(`/assistant/${this.assistantId}`)
@@ -238,17 +258,28 @@ export class VAPIClient {
   }
 }
 
-// Initialize with your actual VAPI credentials
+// Clean environment variables of quotes and whitespace
+const cleanEnvVar = (value: string | undefined): string => {
+  if (!value) return ""
+  return value.replace(/['"]/g, "").trim()
+}
+
+// Initialize with cleaned environment variables
 export const vapiClient = new VAPIClient({
-  apiKey: process.env.NEXT_PUBLIC_VAPI_API_KEY || "6a029118-46e8-4cda-87f3-0ac2f287af8f",
+  apiKey: cleanEnvVar(process.env.NEXT_PUBLIC_VAPI_API_KEY) || "6a029118-46e8-4cda-87f3-0ac2f287af8f",
   baseUrl: "https://api.vapi.ai",
-  assistantId: process.env.NEXT_PUBLIC_VAPI_ASSISTANT_ID || "265d793f-8179-4d20-a6cc-eb337577c512",
-  shareKey: "6a029118-46e8-4cda-87f3-0ac2f287af8f",
+  assistantId: cleanEnvVar(process.env.NEXT_PUBLIC_VAPI_ASSISTANT_ID) || "265d793f-8179-4d20-a6cc-eb337577c512",
+  shareKey: cleanEnvVar(process.env.NEXT_PUBLIC_VAPI_API_KEY) || "6a029118-46e8-4cda-87f3-0ac2f287af8f",
 })
 
 export const testVAPICredentials = async () => {
   try {
-    console.log("Testing VAPI connection with your credentials...")
+    console.log("Testing VAPI connection with cleaned credentials...")
+    console.log("Raw API Key from env:", process.env.NEXT_PUBLIC_VAPI_API_KEY)
+    console.log("Cleaned API Key:", cleanEnvVar(process.env.NEXT_PUBLIC_VAPI_API_KEY))
+    console.log("Raw Assistant ID from env:", process.env.NEXT_PUBLIC_VAPI_ASSISTANT_ID)
+    console.log("Cleaned Assistant ID:", cleanEnvVar(process.env.NEXT_PUBLIC_VAPI_ASSISTANT_ID))
+
     return await vapiClient.testConnection()
   } catch (error) {
     console.error("VAPI Connection Error:", error)
