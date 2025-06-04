@@ -366,25 +366,30 @@ const ReportOnMap = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 overflow-x-hidden">
       {/* Navigation */}
       <nav className="aegis-nav border-b border-slate-800 bg-slate-900/50 backdrop-blur-sm sticky top-0 z-50">
-        <div className="aegis-nav__container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
+        <div className="aegis-nav__container max-w-7xl mx-auto px-2 sm:px-4 md:px-6 lg:px-8">
+          <div className="flex flex-wrap sm:flex-nowrap justify-between items-center h-16 gap-2">
             <div className="aegis-nav__brand flex items-center space-x-2">
-              <div className="relative w-8 h-8">
+              <div className="relative w-6 h-6 sm:w-8 sm:h-8">
                 <Image src="/images/aegis-logo.webp" alt="Aegis Logo" fill className="object-contain" />
               </div>
-              <span className="text-xl font-bold text-white">AegisWhistle</span>
+              <span className="text-lg sm:text-xl font-bold text-white">AegisWhistle</span>
             </div>
-            <div className="aegis-nav__links flex items-center space-x-4">
-              <Link href="/follow-up">
-                <Button variant="ghost" className="text-slate-300 hover:text-white transition-colors">
+            <div className="aegis-nav__links flex flex-wrap sm:flex-nowrap items-center gap-2 sm:gap-4">
+              <Link href="/" className="w-full sm:w-auto">
+                <Button variant="ghost" className="w-full sm:w-auto text-slate-300 hover:text-white transition-colors text-sm sm:text-base">
+                  Home
+                </Button>
+              </Link>
+              <Link href="/follow-up" className="w-full sm:w-auto">
+                <Button variant="ghost" className="w-full sm:w-auto text-slate-300 hover:text-white transition-colors text-sm sm:text-base">
                   Follow-up
                 </Button>
               </Link>
-              <Link href="/login">
-                <Button variant="outline" className="border-blue-400 text-blue-400 hover:bg-blue-400 hover:text-white transition-colors">
+              <Link href="/login" className="w-full sm:w-auto">
+                <Button variant="outline" className="w-full sm:w-auto border-blue-400 text-blue-400 hover:bg-blue-400 hover:text-white transition-colors text-sm sm:text-base">
                   Team Aegis
                 </Button>
               </Link>
@@ -393,29 +398,29 @@ const ReportOnMap = () => {
         </div>
       </nav>
       {/* Search Bar */}
-      <div className="aegis-searchbar flex justify-center items-center py-6 bg-transparent sticky top-16 z-40" style={{zIndex: 99999}}>
-        <form onSubmit={handleSearch} className="relative w-full max-w-xl mx-4">
+      <div className="aegis-searchbar flex justify-center items-center py-4 sm:py-6 bg-transparent sticky top-16 z-40" style={{zIndex: 99999}}>
+        <form onSubmit={handleSearch} className="relative w-full max-w-[calc(100%-2rem)] sm:max-w-xl mx-2 sm:mx-4">
           <div className="relative">
-            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
-              <FaSearch className="w-5 h-5" />
+            <span className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 text-gray-400">
+              <FaSearch className="w-4 h-4 sm:w-5 sm:h-5" />
             </span>
             <input
               type="text"
               value={searchQuery}
               onChange={handleSearchInputChange}
               placeholder="Search for a location..."
-              className="aegis-searchbar__input w-full pl-12 pr-4 py-3 bg-white text-gray-900 border border-gray-200 rounded-2xl shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all placeholder-gray-400 text-base"
+              className="aegis-searchbar__input w-full pl-10 sm:pl-12 pr-4 py-2 sm:py-3 bg-white text-gray-900 border border-gray-200 rounded-2xl shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all placeholder-gray-400 text-sm sm:text-base"
               autoComplete="off"
               onBlur={() => setShowSuggestions(false)}
             />
             <button
               type="submit"
-              className="aegis-searchbar__button absolute right-2 top-1/2 -translate-y-1/2 px-4 py-1.5 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 transition-colors shadow"
+              className="aegis-searchbar__button absolute right-2 top-1/2 -translate-y-1/2 px-3 sm:px-4 py-1 sm:py-1.5 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 transition-colors shadow text-sm sm:text-base"
               disabled={searching}
             >
               {searching ? (
                 <span className="flex items-center">
-                  <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <svg className="animate-spin -ml-1 mr-2 h-3 w-3 sm:h-4 sm:w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                   </svg>
@@ -429,10 +434,10 @@ const ReportOnMap = () => {
               {suggestions.map((suggestion, index) => (
                 <div
                   key={index}
-                  className="px-4 py-3 hover:bg-gray-50 cursor-pointer transition-colors border-b last:border-b-0 border-gray-100"
+                  className="px-3 sm:px-4 py-2 sm:py-3 hover:bg-gray-50 cursor-pointer transition-colors border-b last:border-b-0 border-gray-100"
                   onClick={() => handleSuggestionClick(suggestion)}
                 >
-                  <span className="truncate text-gray-900 text-base">
+                  <span className="truncate text-gray-900 text-sm sm:text-base">
                     {highlightMatch(suggestion.display_name, searchQuery)}
                   </span>
                 </div>
@@ -442,7 +447,7 @@ const ReportOnMap = () => {
         </form>
       </div>
       {/* Map */}
-      <div className="aegis-map-wrapper" style={{zIndex: 99999, width: '100%'}}>
+      <div className="aegis-map-wrapper h-[calc(100vh-8rem)] sm:h-[calc(100vh-9rem)] md:h-[calc(100vh-10rem)]" style={{zIndex: 99999, width: '100%'}}>
         <MapWrapper
           selectedLocation={selectedLocation}
           mapCenter={mapCenter}
