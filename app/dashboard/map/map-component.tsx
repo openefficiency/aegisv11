@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { type Case } from "@/lib/supabase";
@@ -21,6 +21,12 @@ const categoryIcons = {
   harassment: "fa-solid fa-user-shield",
   safety: "fa-solid fa-hard-hat",
   corruption: "fa-solid fa-user-tie",
+  data_breach: "fa-solid fa-database",
+  theft: "fa-solid fa-hand-holding",
+  environmental: "fa-solid fa-leaf",
+  misconduct: "fa-solid fa-user-slash",
+  health: "fa-solid fa-heart-pulse",
+  retaliation: "fa-solid fa-arrows-rotate"
 };
 
 // Category colors mapping
@@ -31,6 +37,12 @@ const categoryColors = {
   harassment: "#F44336",    // Red
   safety: "#FFC107",    // Yellow
   corruption: "#F44336",    // Red
+  data_breach: "#9C27B0",   // Purple
+  theft: "#FF9800",    // Orange
+  environmental: "#4CAF50",  // Green
+  misconduct: "#795548",    // Brown
+  health: "#00BCD4",    // Cyan
+  retaliation: "#E91E63"    // Pink
 };
 
 // Add this function after the categoryColors mapping
@@ -125,7 +137,7 @@ export default function MapComponent() {
       structured_data: {
         incident: {
           location: {
-            lat: 38.9082,  // North of center point
+            lat: 38.9082,
             lng: -77.0280,
             address: "1400 L St NW, Washington, DC 20005"
           }
@@ -227,7 +239,609 @@ export default function MapComponent() {
           }
         }
       }
+    },
+    
+  {
+    "id": "6",
+    "case_number": "CASE-006",
+    "tracking_code": "TRACK-006",
+    "title": "Unauthorized Data Access",
+    "description": "Employee accessed sensitive client data without permission",
+    "category": "data_breach",
+    "priority": "critical",
+    "status": "under_investigation",
+    "created_at": "2025-06-04T03:17:00.000Z",
+    "updated_at": "2025-06-04T03:17:00.000Z",
+    "secret_code": "DATA006",
+    "report_id": "R006",
+    "reward_status": "pending",
+    "structured_data": {
+      "incident": {
+        "location": {
+          "lat": 38.9120,
+          "lng": -77.0300,
+          "address": "1500 L St NW, Washington, DC 20005"
+        }
+      }
     }
+  },
+  {
+    "id": "7",
+    "case_number": "CASE-007",
+    "tracking_code": "TRACK-007",
+    "title": "Workplace Theft",
+    "description": "Office equipment reported missing from storage",
+    "category": "theft",
+    "priority": "medium",
+    "status": "open",
+    "created_at": "2025-06-04T03:17:00.000Z",
+    "updated_at": "2025-06-04T03:17:00.000Z",
+    "secret_code": "THEFT007",
+    "report_id": "R007",
+    "reward_status": "pending",
+    "structured_data": {
+      "incident": {
+        "location": {
+          "lat": 38.9050,
+          "lng": -77.0260,
+          "address": "1200 I St NW, Washington, DC 20005"
+        }
+      }
+    }
+  },
+  {
+    "id": "8",
+    "case_number": "CASE-008",
+    "tracking_code": "TRACK-008",
+    "title": "Environmental Violation",
+    "description": "Improper disposal of hazardous materials detected",
+    "category": "environmental",
+    "priority": "high",
+    "status": "under_investigation",
+    "created_at": "2025-06-04T03:17:00.000Z",
+    "updated_at": "2025-06-04T03:17:00.000Z",
+    "secret_code": "ENV008",
+    "report_id": "R008",
+    "reward_status": "pending",
+    "structured_data": {
+      "incident": {
+        "location": {
+          "lat": 38.9100,
+          "lng": -77.0320,
+          "address": "1600 M St NW, Washington, DC 20005"
+        }
+      }
+    }
+  },
+  {
+    "id": "9",
+    "case_number": "CASE-009",
+    "tracking_code": "TRACK-009",
+    "title": "Insider Trading Allegation",
+    "description": "Suspicious stock transactions by senior management",
+    "category": "fraud",
+    "priority": "critical",
+    "status": "open",
+    "created_at": "2025-06-04T03:17:00.000Z",
+    "updated_at": "2025-06-04T03:17:00.000Z",
+    "secret_code": "FRAUD009",
+    "report_id": "R009",
+    "reward_status": "pending",
+    "structured_data": {
+      "incident": {
+        "location": {
+          "lat": 38.9040,
+          "lng": -77.0310,
+          "address": "1100 K St NW, Washington, DC 20005"
+        }
+      }
+    }
+  },
+  {
+    "id": "10",
+    "case_number": "CASE-010",
+    "tracking_code": "TRACK-010",
+    "title": "Workplace Safety Concern",
+    "description": "Faulty machinery reported in production area",
+    "category": "safety",
+    "priority": "high",
+    "status": "resolved",
+    "created_at": "2025-06-04T03:17:00.000Z",
+    "updated_at": "2025-06-04T03:17:00.000Z",
+    "secret_code": "SAFETY010",
+    "report_id": "R010",
+    "reward_status": "paid",
+    "structured_data": {
+      "incident": {
+        "location": {
+          "lat": 38.9130,
+          "lng": -77.0250,
+          "address": "1550 I St NW, Washington, DC 20005"
+        }
+      }
+    }
+  },
+  {
+    "id": "11",
+    "case_number": "CASE-011",
+    "tracking_code": "TRACK-011",
+    "title": "Gender Discrimination Complaint",
+    "description": "Unequal treatment reported in promotions",
+    "category": "discrimination",
+    "priority": "high",
+    "status": "under_investigation",
+    "created_at": "2025-06-04T03:17:00.000Z",
+    "updated_at": "2025-06-04T03:17:00.000Z",
+    "secret_code": "DISC011",
+    "report_id": "R011",
+    "reward_status": "pending",
+    "structured_data": {
+      "incident": {
+        "location": {
+          "lat": 38.9060,
+          "lng": -77.0330,
+          "address": "1250 M St NW, Washington, DC 20005"
+        }
+      }
+    }
+  },
+  {
+    "id": "12",
+    "case_number": "CASE-012",
+    "tracking_code": "TRACK-012",
+    "title": "Bribery Allegation",
+    "description": "Suspected payments to secure government contracts",
+    "category": "corruption",
+    "priority": "critical",
+    "status": "open",
+    "created_at": "2025-06-04T03:17:00.000Z",
+    "updated_at": "2025-06-04T03:17:00.000Z",
+    "secret_code": "CORR012",
+    "report_id": "R012",
+    "reward_status": "pending",
+    "structured_data": {
+      "incident": {
+        "location": {
+          "lat": 38.9115,
+          "lng": -77.0340,
+          "address": "1650 L St NW, Washington, DC 20005"
+        }
+      }
+    }
+  },
+  {
+    "id": "13",
+    "case_number": "CASE-013",
+    "tracking_code": "TRACK-013",
+    "title": "Employee Misconduct",
+    "description": "Inappropriate behavior reported during team meeting",
+    "category": "misconduct",
+    "priority": "medium",
+    "status": "under_investigation",
+    "created_at": "2025-06-04T03:17:00.000Z",
+    "updated_at": "2025-06-04T03:17:00.000Z",
+    "secret_code": "MIS013",
+    "report_id": "R013",
+    "reward_status": "pending",
+    "structured_data": {
+      "incident": {
+        "location": {
+          "lat": 38.9030,
+          "lng": -77.0270,
+          "address": "1150 I St NW, Washington, DC 20005"
+        }
+      }
+    }
+  },
+  {
+    "id": "14",
+    "case_number": "CASE-014",
+    "tracking_code": "TRACK-014",
+    "title": "Fraudulent Expense Claims",
+    "description": "Unverified expense reports submitted by employee",
+    "category": "fraud",
+    "priority": "high",
+    "status": "open",
+    "created_at": "2025-06-04T03:17:00.000Z",
+    "updated_at": "2025-06-04T03:17:00.000Z",
+    "secret_code": "FRAUD014",
+    "report_id": "R014",
+    "reward_status": "pending",
+    "structured_data": {
+      "incident": {
+        "location": {
+          "lat": 38.9140,
+          "lng": -77.0295,
+          "address": "1700 K St NW, Washington, DC 20005"
+        }
+      }
+    }
+  },
+  {
+    "id": "15",
+    "case_number": "CASE-015",
+    "tracking_code": "TRACK-015",
+    "title": "Workplace Bullying",
+    "description": "Ongoing intimidation reported by junior staff",
+    "category": "harassment",
+    "priority": "high",
+    "status": "under_investigation",
+    "created_at": "2025-06-04T03:17:00.000Z",
+    "updated_at": "2025-06-04T03:17:00.000Z",
+    "secret_code": "HARASS015",
+    "report_id": "R015",
+    "reward_status": "pending",
+    "structured_data": {
+      "incident": {
+        "location": {
+          "lat": 38.9020,
+          "lng": -77.0325,
+          "address": "1050 M St NW, Washington, DC 20005"
+        }
+      }
+    }
+  },
+  {
+    "id": "16",
+    "case_number": "CASE-016",
+    "tracking_code": "TRACK-016",
+    "title": "Health Code Violation",
+    "description": "Unsanitary conditions reported in cafeteria",
+    "category": "health",
+    "priority": "medium",
+    "status": "resolved",
+    "created_at": "2025-06-04T03:17:00.000Z",
+    "updated_at": "2025-06-04T03:17:00.000Z",
+    "secret_code": "HEALTH016",
+    "report_id": "R016",
+    "reward_status": "paid",
+    "structured_data": {
+      "incident": {
+        "location": {
+          "lat": 38.9095,
+          "lng": -77.0240,
+          "address": "1450 I St NW, Washington, DC 20005"
+        }
+      }
+    }
+  },
+  {
+    "id": "17",
+    "case_number": "CASE-017",
+    "tracking_code": "TRACK-017",
+    "title": "Racial Discrimination Complaint",
+    "description": "Alleged bias in team assignments",
+    "category": "discrimination",
+    "priority": "high",
+    "status": "open",
+    "created_at": "2025-06-04T03:17:00.000Z",
+    "updated_at": "2025-06-04T03:17:00.000Z",
+    "secret_code": "DISC017",
+    "report_id": "R017",
+    "reward_status": "pending",
+    "structured_data": {
+      "incident": {
+        "location": {
+          "lat": 38.9150,
+          "lng": -77.0315,
+          "address": "1750 L St NW, Washington, DC 20005"
+        }
+      }
+    }
+  },
+  {
+    "id": "18",
+    "case_number": "CASE-018",
+    "tracking_code": "TRACK-018",
+    "title": "Vendor Kickback Scheme",
+    "description": "Suspected payments for favorable vendor selection",
+    "category": "corruption",
+    "priority": "critical",
+    "status": "under_investigation",
+    "created_at": "2025-06-04T03:17:00.000Z",
+    "updated_at": "2025-06-04T03:17:00.000Z",
+    "secret_code": "CORR018",
+    "report_id": "R018",
+    "reward_status": "pending",
+    "structured_data": {
+      "incident": {
+        "location": {
+          "lat": 38.9015,
+          "lng": -77.0280,
+          "address": "1000 K St NW, Washington, DC 20005"
+        }
+      }
+    }
+  },
+  {
+    "id": "19",
+    "case_number": "CASE-019",
+    "tracking_code": "TRACK-019",
+    "title": "Fire Safety Noncompliance",
+    "description": "Blocked fire exits reported in office building",
+    "category": "safety",
+    "priority": "high",
+    "status": "open",
+    "created_at": "2025-06-04T03:17:00.000Z",
+    "updated_at": "2025-06-04T03:17:00.000Z",
+    "secret_code": "SAFETY019",
+    "report_id": "R019",
+    "reward_status": "pending",
+    "structured_data": {
+      "incident": {
+        "location": {
+          "lat": 38.9085,
+          "lng": -77.0350,
+          "address": "1625 M St NW, Washington, DC 20005"
+        }
+      }
+    }
+  },
+  {
+    "id": "20",
+    "case_number": "CASE-020",
+    "tracking_code": "TRACK-020",
+    "title": "Embezzlement Suspected",
+    "description": "Discrepancies found in financial records",
+    "category": "fraud",
+    "priority": "critical",
+    "status": "under_investigation",
+    "created_at": "2025-06-04T03:17:00.000Z",
+    "updated_at": "2025-06-04T03:17:00.000Z",
+    "secret_code": "FRAUD020",
+    "report_id": "R020",
+    "reward_status": "pending",
+    "structured_data": {
+      "incident": {
+        "location": {
+          "lat": 38.9160,
+          "lng": -77.0265,
+          "address": "1800 I St NW, Washington, DC 20005"
+        }
+      }
+    }
+  },
+  {
+    "id": "21",
+    "case_number": "CASE-021",
+    "tracking_code": "TRACK-021",
+    "title": "Sexual Harassment Allegation",
+    "description": "Inappropriate comments reported in workplace",
+    "category": "harassment",
+    "priority": "high",
+    "status": "open",
+    "created_at": "2025-06-04T03:17:00.000Z",
+    "updated_at": "2025-06-04T03:17:00.000Z",
+    "secret_code": "HARASS021",
+    "report_id": "R021",
+    "reward_status": "pending",
+    "structured_data": {
+      "incident": {
+        "location": {
+          "lat": 38.9045,
+          "lng": -77.0345,
+          "address": "1225 M St NW, Washington, DC 20005"
+        }
+      }
+    }
+  },
+  {
+    "id": "22",
+    "case_number": "CASE-022",
+    "tracking_code": "TRACK-022",
+    "title": "Non-Compliant Hiring Practices",
+    "description": "Failure to follow diversity hiring guidelines",
+    "category": "discrimination",
+    "priority": "medium",
+    "status": "under_investigation",
+    "created_at": "2025-06-04T03:17:00.000Z",
+    "updated_at": "2025-06-04T03:17:00.000Z",
+    "secret_code": "DISC022",
+    "report_id": "R022",
+    "reward_status": "pending",
+    "structured_data": {
+      "incident": {
+        "location": {
+          "lat": 38.9125,
+          "lng": -77.0235,
+          "address": "1525 I St NW, Washington, DC 20005"
+        }
+      }
+    }
+  },
+  {
+    "id": "23",
+    "case_number": "CASE-023",
+    "tracking_code": "TRACK-023",
+    "title": "Conflict of Interest",
+    "description": "Employee involved in vendor selection has personal ties",
+    "category": "corruption",
+    "priority": "high",
+    "status": "open",
+    "created_at": "2025-06-04T03:17:00.000Z",
+    "updated_at": "2025-06-04T03:17:00.000ZV",
+    "secret_code": "CORR023",
+    "report_id": "R023",
+    "reward_status": "pending",
+    "structured_data": {
+      "incident": {
+        "location": {
+          "lat": 38.9035,
+          "lng": -77.0305,
+          "address": "1125 K St NW, Washington, DC 20005"
+        }
+      }
+    }
+  },
+  {
+    "id": "24",
+    "case_number": "CASE-024",
+    "tracking_code": "TRACK-024",
+    "title": "Equipment Safety Issue",
+    "description": "Malfunctioning safety guards on machinery",
+    "category": "safety",
+    "priority": "high",
+    "status": "resolved",
+    "created_at": "2025-06-04T03:17:00.000Z",
+    "updated_at": "2025-06-04T03:17:00.000Z",
+    "secret_code": "SAFETY024",
+    "report_id": "R024",
+    "reward_status": "paid",
+    "structured_data": {
+      "incident": {
+        "location": {
+          "lat": 38.9105,
+          "lng": -77.0220,
+          "address": "1475 I St NW, Washington, DC 20005"
+        }
+      }
+    }
+  },
+  {
+    "id": "25",
+    "case_number": "CASE-025",
+    "tracking_code": "TRACK-025",
+    "title": "Falsified Time Records",
+    "description": "Employee reported inflating work hours",
+    "category": "fraud",
+    "priority": "medium",
+    "status": "under_investigation",
+    "created_at": "2025-06-04T03:17:00.000Z",
+    "updated_at": "2025-06-04T03:17:00.000Z",
+    "secret_code": "FRAUD025",
+    "report_id": "R025",
+    "reward_status": "pending",
+    "structured_data": {
+      "incident": {
+        "location": {
+          "lat": 38.9165,
+          "lng": -77.0335,
+          "address": "1825 M St NW, Washington, DC 20005"
+        }
+      }
+    }
+  },
+  {
+    "id": "26",
+    "case_number": "CASE-026",
+    "tracking_code": "TRACK-026",
+    "title": "Retaliation Complaint",
+    "description": "Employee faced demotion after reporting misconduct",
+    "category": "retaliation",
+    "priority": "high",
+    "status": "open",
+    "created_at": "2025-06-04T03:17:00.000Z",
+    "updated_at": "2025-06-04T03:17:00.000Z",
+    "secret_code": "RETAL026",
+    "report_id": "R026",
+    "reward_status": "pending",
+    "structured_data": {
+      "incident": {
+        "location": {
+          "lat": 38.9025,
+          "lng": -77.0255,
+          "address": "1075 I St NW, Washington, DC 20005"
+        }
+      }
+    }
+  },
+  {
+    "id": "27",
+    "case_number": "CASE-027",
+    "tracking_code": "TRACK-027",
+    "title": "Improper Waste Disposal",
+    "description": "Chemical waste dumped without proper permits",
+    "category": "environmental",
+    "priority": "critical",
+    "status": "under_investigation",
+    "created_at": "2025-06-04T03:17:00.000Z",
+    "updated_at": "2025-06-04T03:17:00.000Z",
+    "secret_code": "ENV027",
+    "report_id": "R027",
+    "reward_status": "pending",
+    "structured_data": {
+      "incident": {
+        "location": {
+          "lat": 38.9145,
+          "lng": -77.0355,
+          "address": "1775 M St NW, Washington, DC 20005"
+        }
+      }
+    }
+  },
+  {
+    "id": "28",
+    "case_number": "CASE-028",
+    "tracking_code": "TRACK-028",
+    "title": "Unreported Workplace Injury",
+    "description": "Employee injury not documented properly",
+    "category": "safety",
+    "priority": "medium",
+    "status": "open",
+    "created_at": "2025-06-04T03:17:00.000Z",
+    "updated_at": "2025-06-04T03:17:00.000Z",
+    "secret_code": "SAFETY028",
+    "report_id": "R028",
+    "reward_status": "pending",
+    "structured_data": {
+      "incident": {
+        "location": {
+          "lat": 38.9070,
+          "lng": -77.0225,
+          "address": "1300 I St NW, Washington, DC 20005"
+        }
+      }
+    }
+  },
+  {
+    "id": "29",
+    "case_number": "CASE-029",
+    "tracking_code": "TRACK-029",
+    "title": "Misuse of Company Resources",
+    "description": "Employee using company vehicles for personal use",
+    "category": "misconduct",
+    "priority": "medium",
+    "status": "under_investigation",
+    "created_at": "2025-06-04T03:17:00.000Z",
+    "updated_at": "2025-06-04T03:17:00.000Z",
+    "secret_code": "MIS029",
+    "report_id": "R029",
+    "reward_status": "pending",
+    "structured_data": {
+      "incident": {
+        "location": {
+          "lat": 38.9110,
+          "lng": -77.0360,
+          "address": "1675 M St NW, Washington, DC 20005"
+        }
+      }
+    }
+  },
+  {
+    "id": "30",
+    "case_number": "CASE-030",
+    "tracking_code": "TRACK-030",
+    "title": "Payroll Fraud",
+    "description": "Ghost employees detected on payroll system",
+    "category": "fraud",
+    "priority": "critical",
+    "status": "open",
+    "created_at": "2025-06-04T03:17:00.000Z",
+    "updated_at": "2025-06-04T03:17:00.000Z",
+    "secret_code": "FRAUD030",
+    "report_id": "R030",
+    "reward_status": "pending",
+    "structured_data": {
+      "incident": {
+        "location": {
+          "lat": 38.9155,
+          "lng": -77.0245,
+          "address": "1725 I St NW, Washington, DC 20005"
+        }
+      }
+    }
+  }
+
   ]);
   const [loading, setLoading] = useState(false);
   const [viewMode, setViewMode] = useState<'cases' | 'safety'>('cases');
