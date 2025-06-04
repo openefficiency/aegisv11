@@ -1,6 +1,7 @@
 "use client"
 
-import React, { useState } from "react"
+import type React from "react"
+import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -34,56 +35,68 @@ export default function UnifiedLoginPage() {
     setError("")
 
     try {
-      // Authenticate user
+      console.log(`Attempting login for ${email} as ${selectedRole}`)
+
+      // For demo purposes, use mock authentication
+      const creds = demoCredentials[selectedRole as keyof typeof demoCredentials]
+      if (email === creds.email && password === creds.password) {
+        // Mock successful authentication
+        console.log("Demo credentials matched, proceeding with login")
+
+        try {
+          await auditLogger.log({
+            user_id: selectedRole + "_demo_user",
+            action: "user_login",
+            entity_type: "case",
+            entity_id: "system",
+            details: { role: selectedRole, email },
+          })
+        } catch (logError) {
+          console.warn("Failed to log login attempt:", logError)
+        }
+
+        // Store role in localStorage for persistence
+        localStorage.setItem("userRole", selectedRole)
+        localStorage.setItem("userEmail", email)
+
+        // Route based on role
+        setTimeout(() => {
+          setIsLoading(false)
+          switch (selectedRole) {
+            case "admin":
+              router.push("/dashboard/admin")
+              break
+            case "ethics_officer":
+              router.push("/dashboard/ethics-officer")
+              break
+            case "investigator":
+              router.push("/dashboard/investigator")
+              break
+            default:
+              router.push("/dashboard/ethics-officer")
+          }
+        }, 1000)
+        return
+      }
+
+      // Try real authentication with Supabase if demo credentials don't match
       const { data, error: authError } = await supabase.auth.signInWithPassword({
         email,
         password,
       })
 
       if (authError) {
-        // For demo purposes, use mock authentication
-        const creds = demoCredentials[selectedRole as keyof typeof demoCredentials]
-        if (email === creds.email && password === creds.password) {
-          // Mock successful authentication
-          await auditLogger.log({
-            user_id: selectedRole + "_demo_user",
-            action: "user_login",
-            entity_type: "case",
-            entity_id: "system",
-            details: { role: selectedRole, email }
-          })
-
-          // Route based on role
-          setTimeout(() => {
-            setIsLoading(false)
-            switch (selectedRole) {
-              case "admin":
-                router.push("/dashboard/admin")
-                break
-              case "ethics_officer":
-                router.push("/dashboard/ethics-officer")
-                break
-              case "investigator":
-                router.push("/dashboard/investigator")
-                break
-              default:
-                router.push("/dashboard/ethics-officer")
-            }
-          }, 1000)
-          return
-        } else {
-          throw new Error("Invalid credentials")
-        }
+        throw new Error(authError.message || "Invalid credentials")
       }
 
       // Real authentication successful
-      const { data: profile } = await supabase
+      const { data: profile, error: profileError } = await supabase
         .from("profiles")
         .select("*")
         .eq("email", email)
         .single()
 
-      if (!profile) {
+      if (profileError || !profile) {
         throw new Error("User profile not found")
       }
 
@@ -100,8 +113,12 @@ export default function UnifiedLoginPage() {
         action: "user_login",
         entity_type: "case",
         entity_id: "system",
-        details: { role: profile.role, email }
+        details: { role: profile.role, email },
       })
+
+      // Store role in localStorage for persistence
+      localStorage.setItem("userRole", profile.role)
+      localStorage.setItem("userEmail", email)
 
       // Route based on actual role
       setIsLoading(false)
@@ -119,6 +136,7 @@ export default function UnifiedLoginPage() {
           router.push("/dashboard/ethics-officer")
       }
     } catch (error: any) {
+      console.error("Login error:", error)
       setError(error.message || "Login failed")
       setIsLoading(false)
     }
@@ -178,9 +196,7 @@ export default function UnifiedLoginPage() {
 
             {error && (
               <Alert className="bg-red-900/20 border-red-700">
-                <AlertDescription className="text-red-300">
-                  {error}
-                </AlertDescription>
+                <AlertDescription className="text-red-300">{error}</AlertDescription>
               </Alert>
             )}
 
@@ -231,12 +247,8 @@ export default function UnifiedLoginPage() {
                 />
               </div>
 
-              <Button 
-                type="submit" 
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white" 
-                disabled={isLoading}
-              >
-                {isLoading ? "Authenticating..." : `Sign In as ${selectedRole.replace('_', ' ')}`}
+              <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white" disabled={isLoading}>
+                {isLoading ? "Authenticating..." : `Sign In as ${selectedRole.replace("_", " ")}`}
               </Button>
             </form>
 

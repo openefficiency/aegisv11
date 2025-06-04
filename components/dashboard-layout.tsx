@@ -1,6 +1,7 @@
-"use client";
+"use client"
 
-import React from "react";
+import type React from "react"
+import { useEffect, useState } from "react"
 import {
   Sidebar,
   SidebarContent,
@@ -15,7 +16,7 @@ import {
   SidebarMenuItem,
   SidebarProvider,
   SidebarTrigger,
-} from "@/components/ui/sidebar";
+} from "@/components/ui/sidebar"
 import {
   Shield,
   Home,
@@ -30,13 +31,13 @@ import {
   MessageSquare,
   UserCheck,
   Map,
-} from "lucide-react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
+} from "lucide-react"
+import Link from "next/link"
+import { useRouter } from "next/navigation"
 
 interface DashboardLayoutProps {
-  children: React.ReactNode;
-  role: "admin" | "ethics-officer" | "investigator";
+  children: React.ReactNode
+  role: "admin" | "ethics-officer" | "investigator"
 }
 
 const menuItems = {
@@ -99,31 +100,77 @@ const menuItems = {
       icon: UserCheck,
     },
   ],
-};
+}
 
 const roleLabels = {
   admin: "Administrator",
   "ethics-officer": "Ethics Officer",
   investigator: "Investigator",
-};
+}
 
 const roleColors = {
   admin: "text-purple-400",
   "ethics-officer": "text-blue-400",
   investigator: "text-green-400",
-};
+}
 
 export function DashboardLayout({ children, role }: DashboardLayoutProps) {
-  const router = useRouter();
+  const router = useRouter()
+  const [userName, setUserName] = useState<string>("")
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false)
+
+  useEffect(() => {
+    // Check if user is authenticated
+    const storedRole = localStorage.getItem("userRole")
+    const storedEmail = localStorage.getItem("userEmail")
+
+    // Convert stored role to match our expected format
+    const normalizedStoredRole = storedRole === "ethics_officer" ? "ethics-officer" : storedRole
+
+    if (!storedRole || !storedEmail) {
+      console.log("No authentication found, redirecting to login")
+      router.push("/login")
+      return
+    }
+
+    // Check if the stored role matches the current page role
+    if (normalizedStoredRole !== role) {
+      console.log(`Role mismatch: stored ${normalizedStoredRole}, current ${role}`)
+      // If roles don't match, redirect to the correct dashboard
+      if (normalizedStoredRole === "admin") {
+        router.push("/dashboard/admin")
+      } else if (normalizedStoredRole === "ethics-officer") {
+        router.push("/dashboard/ethics-officer")
+      } else if (normalizedStoredRole === "investigator") {
+        router.push("/dashboard/investigator")
+      } else {
+        // If role is invalid, redirect to login
+        router.push("/login")
+      }
+      return
+    }
+
+    // If we get here, user is authenticated for this role
+    setIsAuthenticated(true)
+    setUserName(storedEmail.split("@")[0])
+  }, [role, router])
 
   const handleLogout = () => {
-    // Clear any stored auth tokens
-    localStorage.removeItem("auth_token");
-    sessionStorage.clear();
+    // Clear stored auth data
+    localStorage.removeItem("userRole")
+    localStorage.removeItem("userEmail")
 
     // Redirect to login
-    router.push("/login");
-  };
+    router.push("/login")
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 flex items-center justify-center">
+        <div className="text-white">Checking authentication...</div>
+      </div>
+    )
+  }
 
   return (
     <SidebarProvider>
@@ -133,29 +180,20 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
             <div className="flex items-center space-x-2 px-4 py-2">
               <Shield className="h-8 w-8 text-blue-400" />
               <div>
-                <span className="text-lg font-bold text-white">
-                  AegisWhistle
-                </span>
-                <p className={`text-xs ${roleColors[role]}`}>
-                  {roleLabels[role]}
-                </p>
+                <span className="text-lg font-bold text-white">AegisWhistle</span>
+                <p className={`text-xs ${roleColors[role]}`}>{roleLabels[role]}</p>
               </div>
             </div>
           </SidebarHeader>
 
           <SidebarContent>
             <SidebarGroup>
-              <SidebarGroupLabel className="text-slate-400">
-                Navigation
-              </SidebarGroupLabel>
+              <SidebarGroupLabel className="text-slate-400">Navigation</SidebarGroupLabel>
               <SidebarGroupContent>
                 <SidebarMenu>
                   {menuItems[role].map((item) => (
                     <SidebarMenuItem key={item.title}>
-                      <SidebarMenuButton
-                        asChild
-                        className="text-slate-300 hover:text-white hover:bg-slate-800/50"
-                      >
+                      <SidebarMenuButton asChild className="text-slate-300 hover:text-white hover:bg-slate-800/50">
                         <Link href={item.url}>
                           <item.icon className="h-4 w-4" />
                           <span>{item.title}</span>
@@ -169,9 +207,7 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
 
             {/* Role-specific quick actions */}
             <SidebarGroup>
-              <SidebarGroupLabel className="text-slate-400">
-                Quick Actions
-              </SidebarGroupLabel>
+              <SidebarGroupLabel className="text-slate-400">Quick Actions</SidebarGroupLabel>
               <SidebarGroupContent>
                 <SidebarMenu>
                   {role === "ethics-officer" && (
@@ -248,18 +284,12 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
               <SidebarTrigger className="text-slate-300 hover:text-white" />
               <div className="ml-auto flex items-center space-x-4">
                 <div className="text-right">
-                  <p className="text-sm text-white">Welcome back</p>
-                  <p className={`text-xs ${roleColors[role]}`}>
-                    {roleLabels[role]}
-                  </p>
+                  <p className="text-sm text-white">Welcome back, {userName}</p>
+                  <p className={`text-xs ${roleColors[role]}`}>{roleLabels[role]}</p>
                 </div>
                 <div
                   className={`w-3 h-3 rounded-full ${
-                    role === "admin"
-                      ? "bg-purple-400"
-                      : role === "ethics-officer"
-                      ? "bg-blue-400"
-                      : "bg-green-400"
+                    role === "admin" ? "bg-purple-400" : role === "ethics-officer" ? "bg-blue-400" : "bg-green-400"
                   }`}
                 />
               </div>
@@ -270,5 +300,5 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
         </SidebarInset>
       </div>
     </SidebarProvider>
-  );
+  )
 }

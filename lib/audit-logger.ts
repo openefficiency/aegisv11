@@ -1,53 +1,61 @@
-import { supabase } from "./supabase";
+// lib/audit-logger.ts
 
-export interface AuditLogEntry {
-  user_id: string;
-  action: string;
-  entity_type: "case" | "reward" | "assignment" | "query";
-  entity_id: string;
-  details: any;
+import { supabase } from "./supabase"
+
+interface AuditLogEntry {
+  user_id: string
+  action: string
+  entity_type: string
+  entity_id: string
+  details?: any
 }
 
-export class AuditLogger {
+class AuditLogger {
   async log(entry: AuditLogEntry): Promise<void> {
     try {
-      await supabase.from("audit_trail").insert({
-        ...entry,
+      const { user_id, action, entity_type, entity_id, details } = entry
+
+      // Try to insert into database
+      const { error } = await supabase.from("audit_logs").insert({
+        user_id,
+        action,
+        entity_type,
+        entity_id,
+        details,
         timestamp: new Date().toISOString(),
-      });
+      })
+
+      if (error) {
+        console.warn("Failed to write audit log to database:", error)
+      }
+
+      // Always log to console as backup
+      console.log(`AUDIT: ${action} on ${entity_type}:${entity_id} by ${user_id}`, details)
     } catch (error) {
-      console.error("Failed to log audit entry:", error);
+      // Ensure audit logging never breaks the application
+      console.warn("Audit logging failed:", error)
     }
   }
 
-  async logCaseAction(
-    userId: string,
-    caseId: string,
-    action: string,
-    details: any = {}
-  ): Promise<void> {
-    await this.log({
-      user_id: userId,
+  async logCaseAction(user_id: string, case_id: string, action: string, details?: any): Promise<void> {
+    return this.log({
+      user_id,
       action,
       entity_type: "case",
-      entity_id: caseId,
+      entity_id: case_id,
       details,
-    });
+    })
   }
 
-  async logRewardTransaction(
-    userId: string,
-    transactionId: string,
-    details: any = {}
-  ): Promise<void> {
-    await this.log({
-      user_id: userId,
+  async logRewardTransaction(user_id: string, case_id: string, details: any): Promise<void> {
+    return this.log({
+      user_id,
       action: "reward_processed",
       entity_type: "reward",
-      entity_id: transactionId,
+      entity_id: case_id,
       details,
-    });
+    })
   }
 }
 
-export const auditLogger = new AuditLogger();
+export const auditLogger = new AuditLogger()
