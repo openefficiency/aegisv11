@@ -154,7 +154,7 @@ const ReportForm: React.FC<ReportFormProps> = ({ open, onClose, onSuccess, addre
           {/* Category Selection */}
           <div className="space-y-2">
             <Label htmlFor="category">Category *</Label>
-            <Select value={formData.category} onValueChange={(value) => handleInputChange("category", value)}>
+            <Select value={formData.category} onValueChange={(value: string) => handleInputChange("category", value)}>
               <SelectTrigger>
                 <SelectValue placeholder="Select incident category" />
               </SelectTrigger>
@@ -214,7 +214,7 @@ const ReportForm: React.FC<ReportFormProps> = ({ open, onClose, onSuccess, addre
             <Checkbox
               id="anonymous"
               checked={formData.anonymous}
-              onCheckedChange={(checked) => handleInputChange("anonymous", checked as boolean)}
+              onCheckedChange={(checked: boolean) => handleInputChange("anonymous", checked)}
             />
             <Label htmlFor="anonymous" className="flex items-center gap-2">
               <Lock className="h-4 w-4" />
@@ -227,13 +227,17 @@ const ReportForm: React.FC<ReportFormProps> = ({ open, onClose, onSuccess, addre
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <Label htmlFor="contactInfo">Contact Information</Label>
-                <Button type="button" variant="ghost" size="sm" onClick={() => setShowContactInfo(!showContactInfo)}>
+                <Button 
+                  type="button" 
+                  className="ghost" 
+                  size="sm" 
+                  onClick={() => setShowContactInfo(!showContactInfo)}
+                >
                   {showContactInfo ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </Button>
               </div>
               <Textarea
                 id="contactInfo"
-                type={showContactInfo ? "text" : "password"}
                 value={formData.contactInfo}
                 onChange={(e) => handleInputChange("contactInfo", e.target.value)}
                 placeholder="Email or phone number (optional)"
@@ -245,7 +249,7 @@ const ReportForm: React.FC<ReportFormProps> = ({ open, onClose, onSuccess, addre
 
           {/* Submit Button */}
           <div className="flex gap-4">
-            <Button type="button" variant="outline" onClick={onClose} className="flex-1">
+            <Button type="button" className="outline" onClick={onClose} style={{ flex: 1 }}>
               Cancel
             </Button>
             <Button type="submit" className="flex-1 bg-blue-600 hover:bg-blue-700" disabled={isLoading}>

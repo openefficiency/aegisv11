@@ -384,17 +384,17 @@ const ReportOnMap = () => {
             </div>
             <div className="aegis-nav__links flex flex-wrap sm:flex-nowrap items-center gap-2 sm:gap-4">
               <Link href="/" className="w-full sm:w-auto">
-                <Button variant="ghost" className="w-full sm:w-auto text-slate-300 hover:text-white transition-colors text-sm sm:text-base">
+                <Button className="w-full sm:w-auto text-slate-300 hover:text-white transition-colors text-sm sm:text-base">
                   Home
                 </Button>
               </Link>
               <Link href="/follow-up" className="w-full sm:w-auto">
-                <Button variant="ghost" className="w-full sm:w-auto text-slate-300 hover:text-white transition-colors text-sm sm:text-base">
+                <Button className="w-full sm:w-auto text-slate-300 hover:text-white transition-colors text-sm sm:text-base">
                   Follow-up
                 </Button>
               </Link>
               <Link href="/login" className="w-full sm:w-auto">
-                <Button variant="outline" className="w-full sm:w-auto border-blue-400 text-blue-400 hover:bg-blue-400 hover:text-white transition-colors text-sm sm:text-base">
+                <Button className="w-full sm:w-auto border-blue-400 text-blue-400 hover:bg-blue-400 hover:text-white transition-colors text-sm sm:text-base">
                   Team Aegis
                 </Button>
               </Link>
@@ -403,7 +403,7 @@ const ReportOnMap = () => {
         </div>
       </nav>
       {/* Search Bar */}
-      <div className="aegis-searchbar flex justify-center items-center py-4 sm:py-6 bg-transparent sticky top-16 z-40" style={{zIndex: 888}}>
+      <div className="aegis-searchbar flex justify-center items-center py-4 sm:py-6 bg-transparent sticky top-16 z-40" style={{zIndex: 99999}}>
         <form onSubmit={handleSearch} className="relative w-full max-w-[calc(100%-2rem)] sm:max-w-xl mx-2 sm:mx-4">
           <div className="relative">
             <span className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 text-gray-400">
