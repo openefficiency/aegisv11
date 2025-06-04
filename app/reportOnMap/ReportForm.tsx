@@ -163,23 +163,21 @@ const ReportForm: React.FC<ReportFormProps> = ({ open, onClose, onSuccess, addre
           {/* Category Selection */}
           <div className="space-y-2 form-category-section">
             <Label htmlFor="category">Category *</Label>
-            <Select 
-              value={formData.category} 
-              onValueChange={(value: string) => handleInputChange("category", value)}
-              defaultValue=""
+            <select
+              id="category"
+              value={formData.category}
+              onChange={(e) => handleInputChange("category", e.target.value)}
+              className="w-full border rounded-md p-2"
+              required
             >
-              <SelectTrigger id="category" className="w-full">
-                <SelectValue placeholder="Select incident category" />
-              </SelectTrigger>
-              <SelectContent position="popper" sideOffset={5} className="w-full">
-                <SelectItem value="fraud">Fraud</SelectItem>
-                <SelectItem value="abuse">Abuse</SelectItem>
-                <SelectItem value="discrimination">Discrimination</SelectItem>
-                <SelectItem value="harassment">Harassment</SelectItem>
-                <SelectItem value="safety">Safety Violation</SelectItem>
-                <SelectItem value="corruption">Corruption</SelectItem>
-              </SelectContent>
-            </Select>
+              <option value="" disabled>Select incident category</option>
+              <option value="fraud">Fraud</option>
+              <option value="abuse">Abuse</option>
+              <option value="discrimination">Discrimination</option>
+              <option value="harassment">Harassment</option>
+              <option value="safety">Safety Violation</option>
+              <option value="corruption">Corruption</option>
+            </select>
           </div>
 
           {/* Title */}
