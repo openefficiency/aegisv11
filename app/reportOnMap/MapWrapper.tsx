@@ -71,7 +71,7 @@ const MapWrapper: React.FC<MapWrapperProps> = ({
     <div className="map-wrapper" style={{ height: 'calc(100vh - 64px - 56px)', width: '100vw', position: 'relative', zIndex: 1 }}>
       {/* Instructions Overlay */}
       {shouldShowInstructions && (
-        <div className="instructions-overlay absolute inset-0 z-[100] flex items-center justify-center pointer-events-none">
+        <div className="instructions-overlay absolute inset-0 z-[100] flex items-start justify-center pt-8 pointer-events-none">
           <div className="instructions-container bg-slate-900/90 backdrop-blur-sm p-6 rounded-2xl shadow-2xl max-w-md mx-4 transform transition-all duration-500 ease-in-out animate-fade-in">
             <div className="instructions-content flex items-start gap-4">
               <div className="icon-container bg-blue-500/20 p-3 rounded-xl">

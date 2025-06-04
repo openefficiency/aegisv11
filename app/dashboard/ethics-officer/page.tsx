@@ -63,6 +63,7 @@ import {
 import { DashboardLayout } from "@/components/dashboard-layout";
 import { supabase, type Case, type Profile } from "@/lib/supabase";
 import { cryptoRewardSystem, supportedCurrencies } from "@/lib/crypto-utils";
+import { DemoControl } from "@/components/demo";
 
 import { auditLogger } from "@/lib/audit-logger";
 import { formatCaseText, formatCaseTitle, extractCaseLocation, getCaseDateReceived } from "@/lib/utils";
@@ -838,6 +839,9 @@ export default function EthicsOfficerDashboard() {
             </div>
           </div>
         )}
+
+        {/* Demo Control Panel */}
+        <DemoControl />
 
         {/* Header */}
         <div className="flex justify-between items-center">
