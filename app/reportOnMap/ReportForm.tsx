@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { useState } from "react"
+import { useState, ChangeEvent } from "react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select"
@@ -22,11 +22,20 @@ interface ReportFormProps {
   location: LatLngLiteral | null
 }
 
+interface FormData {
+  category: string
+  title: string
+  description: string
+  dateOccurred: string
+  anonymous: boolean
+  contactInfo: string
+}
+
 const ReportForm: React.FC<ReportFormProps> = ({ open, onClose, onSuccess, address, location }) => {
   const { toast } = useToast()
   const [isLoading, setIsLoading] = useState(false)
   const [showContactInfo, setShowContactInfo] = useState(false)
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<FormData>({
     category: "",
     title: "",
     description: "",
@@ -103,7 +112,7 @@ const ReportForm: React.FC<ReportFormProps> = ({ open, onClose, onSuccess, addre
               <p>Please keep this ID for future reference.</p>
               <p>Our team will review your report and take appropriate action.</p>
             </div>
-          ) as React.ReactNode,
+          ),
           duration: 8000,
         })
 
@@ -128,7 +137,7 @@ const ReportForm: React.FC<ReportFormProps> = ({ open, onClose, onSuccess, addre
               <p>We apologize, but we couldn't process your report at this time.</p>
               <p>Please contact us at: <a href="mailto:fail@aegiswhistle.com" className="text-blue-500 hover:underline">fail@aegiswhistle.com</a></p>
             </div>
-          ) as React.ReactNode,
+          ),
           duration: 8000,
         })
       }
@@ -151,15 +160,15 @@ const ReportForm: React.FC<ReportFormProps> = ({ open, onClose, onSuccess, addre
     }
   }
 
-  const handleInputChange = (field: string, value: string | boolean) => {
-    setFormData((prev) => ({
+  const handleInputChange = (field: keyof FormData, value: string | boolean) => {
+    setFormData((prev: FormData) => ({
       ...prev,
       [field]: value,
     }))
   }
 
   return (
-    <Dialog open={open} onOpenChange={onClose}>
+    <Dialog open={open} onOpenChange={onClose} zIndex={1000}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
@@ -175,7 +184,7 @@ const ReportForm: React.FC<ReportFormProps> = ({ open, onClose, onSuccess, addre
           {/* Category Selection */}
           <div className="space-y-2">
             <Label htmlFor="category">Category *</Label>
-            <Select value={formData.category} onValueChange={(value) => handleInputChange("category", value)}>
+            <Select value={formData.category} onValueChange={(value: string) => handleInputChange("category", value)}>
               <SelectTrigger>
                 <SelectValue placeholder="Select incident category" />
               </SelectTrigger>
@@ -196,7 +205,7 @@ const ReportForm: React.FC<ReportFormProps> = ({ open, onClose, onSuccess, addre
             <Input
               id="title"
               value={formData.title}
-              onChange={(e) => handleInputChange("title", e.target.value)}
+              onChange={(e: ChangeEvent<HTMLInputElement>) => handleInputChange("title", e.target.value)}
               placeholder="Brief title for your report"
               maxLength={200}
               required
@@ -209,7 +218,7 @@ const ReportForm: React.FC<ReportFormProps> = ({ open, onClose, onSuccess, addre
             <Textarea
               id="description"
               value={formData.description}
-              onChange={(e) => handleInputChange("description", e.target.value)}
+              onChange={(e: ChangeEvent<HTMLTextAreaElement>) => handleInputChange("description", e.target.value)}
               placeholder="Detailed description of the incident"
               rows={4}
               maxLength={2000}
@@ -225,7 +234,7 @@ const ReportForm: React.FC<ReportFormProps> = ({ open, onClose, onSuccess, addre
               id="dateOccurred"
               type="date"
               value={formData.dateOccurred}
-              onChange={(e) => handleInputChange("dateOccurred", e.target.value)}
+              onChange={(e: ChangeEvent<HTMLInputElement>) => handleInputChange("dateOccurred", e.target.value)}
               max={new Date().toISOString().split("T")[0]}
             />
           </div>
@@ -235,7 +244,7 @@ const ReportForm: React.FC<ReportFormProps> = ({ open, onClose, onSuccess, addre
             <Checkbox
               id="anonymous"
               checked={formData.anonymous}
-              onCheckedChange={(checked) => handleInputChange("anonymous", checked as boolean)}
+              onCheckedChange={(checked: boolean) => handleInputChange("anonymous", checked)}
             />
             <Label htmlFor="anonymous" className="flex items-center gap-2">
               <Lock className="h-4 w-4" />
@@ -256,7 +265,7 @@ const ReportForm: React.FC<ReportFormProps> = ({ open, onClose, onSuccess, addre
                 id="contactInfo"
                 type={showContactInfo ? "text" : "password"}
                 value={formData.contactInfo}
-                onChange={(e) => handleInputChange("contactInfo", e.target.value)}
+                onChange={(e: ChangeEvent<HTMLTextAreaElement>) => handleInputChange("contactInfo", e.target.value)}
                 placeholder="Email or phone number (optional)"
                 rows={2}
                 maxLength={500}
