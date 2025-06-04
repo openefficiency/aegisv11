@@ -2,30 +2,19 @@ import { createClient } from "@supabase/supabase-js"
 import { NextResponse } from "next/server"
 import { headers } from "next/headers"
 
-// Check for required environment variables
+// Initialize Supabase client
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
-// Initialize Supabase client with better error handling
-let supabase: ReturnType<typeof createClient> | null = null
-
-if (supabaseUrl && supabaseServiceKey) {
-  try {
-    supabase = createClient(supabaseUrl, supabaseServiceKey, {
-      auth: { persistSession: false },
-    })
-    console.log("Supabase client initialized successfully")
-  } catch (error) {
-    console.error("Error initializing Supabase client:", error)
-  }
-} else {
-  console.warn("Supabase environment variables not found:", {
-    hasUrl: !!supabaseUrl,
-    hasKey: !!supabaseServiceKey,
-  })
+if (!supabaseUrl || !supabaseServiceKey) {
+  console.error("Missing Supabase environment variables")
 }
 
-// Define valid categories and their priorities
+const supabase = createClient(supabaseUrl!, supabaseServiceKey!, {
+  auth: { persistSession: false },
+})
+
+// Define valid categories based on the database schema
 const VALID_CATEGORIES = {
   fraud: { priority: "high" },
   abuse: { priority: "high" },
@@ -35,15 +24,9 @@ const VALID_CATEGORIES = {
   corruption: { priority: "high" },
 } as const
 
-// Define input limits
-const INPUT_LIMITS = {
-  title: { maxLength: 200 },
-  description: { maxLength: 2000 },
-  location: { maxLength: 500 },
-  contactInfo: { maxLength: 500 },
-} as const
-
 type Category = keyof typeof VALID_CATEGORIES
+type Priority = "low" | "medium" | "high" | "critical"
+type Status = "open" | "under_investigation" | "resolved" | "escalated" | "closed"
 
 interface ReportData {
   category: Category
@@ -58,26 +41,29 @@ interface ReportData {
   dateOccurred?: string
   anonymous?: boolean
   contactInfo?: string
+  // VAPI fields (optional)
+  vapi_session_id?: string
+  vapi_transcript?: string
+  vapi_audio_url?: string
+  vapi_report_summary?: string
 }
 
 // Simple rate limiting
-const RATE_LIMIT = {
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  maxRequests: 100, // maximum 100 requests per window
-}
-
 const requestCounts = new Map<string, { count: number; resetTime: number }>()
 
 function isRateLimited(ip: string): boolean {
   const now = Date.now()
+  const windowMs = 15 * 60 * 1000 // 15 minutes
+  const maxRequests = 10 // Reduced to 10 requests per window for map reports
+
   const requestData = requestCounts.get(ip)
 
   if (!requestData || now > requestData.resetTime) {
-    requestCounts.set(ip, { count: 1, resetTime: now + RATE_LIMIT.windowMs })
+    requestCounts.set(ip, { count: 1, resetTime: now + windowMs })
     return false
   }
 
-  if (requestData.count >= RATE_LIMIT.maxRequests) {
+  if (requestData.count >= maxRequests) {
     return true
   }
 
@@ -91,70 +77,36 @@ function sanitizeInput(input: string): string {
     .trim()
 }
 
-// Create the reports table if it doesn't exist
-async function ensureReportsTableExists() {
-  if (!supabase) return false
-
-  try {
-    // Check if the table exists
-    const { error: checkError } = await supabase.from("reports").select("id").limit(1)
-
-    // If we get a specific error about the relation not existing, create the table
-    if (checkError && checkError.message && checkError.message.includes('relation "reports" does not exist')) {
-      console.log("Reports table does not exist, creating it now...")
-
-      // Use raw SQL to create the table
-      const { error: createError } = await supabase.rpc("create_reports_table", {})
-
-      if (createError) {
-        console.error("Error creating reports table:", createError)
-        return false
-      }
-
-      console.log("Reports table created successfully")
-      return true
-    }
-
-    // If no error, table exists
-    if (!checkError) {
-      console.log("Reports table exists")
-      return true
-    }
-
-    console.error("Error checking if reports table exists:", checkError)
-    return false
-  } catch (error) {
-    console.error("Exception checking/creating reports table:", error)
-    return false
+function generateTrackingCode(): string {
+  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+  let result = ""
+  for (let i = 0; i < 10; i++) {
+    result += chars.charAt(Math.floor(Math.random() * chars.length))
   }
+  return result
+}
+
+function generateSecretCode(): string {
+  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+  let result = ""
+  for (let i = 0; i < 12; i++) {
+    result += chars.charAt(Math.floor(Math.random() * chars.length))
+  }
+  return result
 }
 
 export async function POST(request: Request) {
   try {
-    // Check request size
-    const contentLength = request.headers.get("content-length")
-    if (contentLength && Number.parseInt(contentLength) > 1024 * 1024) {
-      // 1MB limit
-      return NextResponse.json(
-        {
-          success: false,
-          error: "Request too large",
-          details: "Request body must be less than 1MB",
-          code: "REQUEST_TOO_LARGE",
-        },
-        { status: 413 },
-      )
-    }
-
     // Check rate limit
     const headersList = headers()
-    const ip = headersList.get("x-forwarded-for") || "unknown"
+    const ip = headersList.get("x-forwarded-for") || headersList.get("x-real-ip") || "unknown"
+
     if (isRateLimited(ip)) {
       return NextResponse.json(
         {
           success: false,
           error: "Too many requests",
-          details: "Please try again later",
+          details: "Please wait before submitting another report",
           code: "RATE_LIMIT_EXCEEDED",
         },
         { status: 429 },
@@ -162,14 +114,17 @@ export async function POST(request: Request) {
     }
 
     const body = (await request.json()) as ReportData
-    console.log("Received report data:", { ...body, contactInfo: body.contactInfo ? "[REDACTED]" : undefined })
+    console.log("Received report data:", {
+      ...body,
+      contactInfo: body.contactInfo ? "[REDACTED]" : undefined,
+      vapi_transcript: body.vapi_transcript ? "[TRANSCRIPT_PRESENT]" : undefined,
+    })
 
     // Validate required fields
     const requiredFields = ["category", "title", "description", "case_id", "location", "coordinates"] as const
     const missingFields = requiredFields.filter((field) => !body[field as keyof ReportData])
 
     if (missingFields.length > 0) {
-      console.error("Missing required fields:", missingFields)
       return NextResponse.json(
         {
           success: false,
@@ -179,30 +134,6 @@ export async function POST(request: Request) {
         },
         { status: 400 },
       )
-    }
-
-    // Validate input lengths
-    for (const [field, limit] of Object.entries(INPUT_LIMITS)) {
-      const value = body[field as keyof ReportData]
-      if (typeof value === "string" && value.length > limit.maxLength) {
-        return NextResponse.json(
-          {
-            success: false,
-            error: "Validation failed",
-            details: `${field} must be less than ${limit.maxLength} characters`,
-            code: "FIELD_TOO_LONG",
-          },
-          { status: 400 },
-        )
-      }
-    }
-
-    // Sanitize text inputs
-    body.title = sanitizeInput(body.title)
-    body.description = sanitizeInput(body.description)
-    body.location = sanitizeInput(body.location)
-    if (body.contactInfo) {
-      body.contactInfo = sanitizeInput(body.contactInfo)
     }
 
     // Validate coordinates
@@ -215,12 +146,11 @@ export async function POST(request: Request) {
       body.coordinates.lng < -180 ||
       body.coordinates.lng > 180
     ) {
-      console.error("Invalid coordinates:", body.coordinates)
       return NextResponse.json(
         {
           success: false,
-          error: "Validation failed",
-          details: "Invalid coordinates provided. Latitude must be between -90 and 90, longitude between -180 and 180.",
+          error: "Invalid coordinates",
+          details: "Latitude must be between -90 and 90, longitude between -180 and 180",
           code: "INVALID_COORDINATES",
         },
         { status: 400 },
@@ -229,149 +159,114 @@ export async function POST(request: Request) {
 
     // Validate category
     if (!Object.keys(VALID_CATEGORIES).includes(body.category)) {
-      console.error("Invalid category:", body.category)
       return NextResponse.json(
         {
           success: false,
-          error: "Validation failed",
-          details: `Invalid category. Must be one of: ${Object.keys(VALID_CATEGORIES).join(", ")}`,
+          error: "Invalid category",
+          details: `Category must be one of: ${Object.keys(VALID_CATEGORIES).join(", ")}`,
           code: "INVALID_CATEGORY",
         },
         { status: 400 },
       )
     }
 
-    // If Supabase is not configured
-    if (!supabase) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: "Database connection error",
-          details: "Supabase client is not properly initialized",
-          code: "DB_CONNECTION_ERROR",
-        },
-        { status: 500 },
-      )
-    }
-
-    // Ensure the reports table exists
-    await ensureReportsTableExists()
-
-    // Prepare the report data
-    const reportData = {
+    // Sanitize inputs
+    const sanitizedData = {
       case_id: body.case_id,
+      tracking_code: generateTrackingCode(),
+      report_id: body.case_id,
+      secret_code: generateSecretCode(),
       category: body.category,
-      title: body.title,
-      description: body.description,
-      location: body.location,
+      title: sanitizeInput(body.title),
+      description: sanitizeInput(body.description),
+      location: sanitizeInput(body.location),
       latitude: body.coordinates.lat,
       longitude: body.coordinates.lng,
-      date_occurred: body.dateOccurred,
-      is_anonymous: body.anonymous ?? false,
-      contact_info: body.contactInfo,
-      status: "open",
-      priority: VALID_CATEGORIES[body.category].priority,
+      date_occurred: body.dateOccurred || null,
+      is_anonymous: body.anonymous ?? true,
+      contact_info: body.contactInfo ? sanitizeInput(body.contactInfo) : null,
+      status: "open" as Status,
+      priority: VALID_CATEGORIES[body.category].priority as Priority,
+      // VAPI fields
+      vapi_session_id: body.vapi_session_id || null,
+      vapi_transcript: body.vapi_transcript || null,
+      vapi_audio_url: body.vapi_audio_url || null,
+      vapi_report_summary: body.vapi_report_summary || null,
+      reward_amount: 0,
+      recovery_amount: 0,
+      reward_status: "pending",
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     }
 
-    console.log("Attempting to insert report:", {
-      ...reportData,
-      contact_info: reportData.contact_info ? "[REDACTED]" : undefined,
-    })
+    console.log("Attempting to insert report into reports table...")
 
-    // Insert the report into the database with retry logic
-    let retries = 3
-    let lastError = null
+    // Insert into reports table
+    const { data: reportData, error: reportError } = await supabase.from("reports").insert([sanitizedData]).select()
 
-    while (retries > 0) {
-      try {
-        // First try to insert into the reports table
-        const { data, error } = await supabase.from("reports").insert([reportData]).select()
+    if (reportError) {
+      console.error("Error inserting into reports table:", reportError)
 
-        if (error) {
-          console.error("Error inserting into reports table:", error)
+      // Fallback: Try to insert into cases table
+      console.log("Falling back to cases table...")
 
-          // If the table doesn't exist, try to insert into cases table as fallback
-          if (error.message && error.message.includes('relation "reports" does not exist')) {
-            console.log("Falling back to cases table...")
-
-            // Adapt the data structure for the cases table
-            const caseDataInsert = {
-              case_number: body.case_id,
-              title: body.title,
-              description: body.description,
-              category: body.category,
-              status: "open",
-              priority: VALID_CATEGORIES[body.category].priority,
-              secret_code: Math.random().toString(36).substring(2, 10).toUpperCase(),
-              report_id: body.case_id,
-              tracking_code: body.case_id,
-              created_at: new Date().toISOString(),
-              updated_at: new Date().toISOString(),
-            }
-
-            const { data: caseInsertData, error: caseError } = await supabase
-              .from("cases")
-              .insert([caseDataInsert])
-              .select()
-
-            if (caseError) {
-              throw caseError
-            }
-
-            console.log("Report submitted to cases table successfully")
-            return NextResponse.json({
-              success: true,
-              caseId: body.case_id,
-              message: "Report submitted successfully (via cases table)",
-              priority: VALID_CATEGORIES[body.category].priority,
-            })
-          }
-
-          throw error
-        }
-
-        console.log("Report submitted successfully:", {
-          caseId: body.case_id,
-          category: body.category,
-          priority: VALID_CATEGORIES[body.category].priority,
-        })
-
-        return NextResponse.json({
-          success: true,
-          caseId: body.case_id,
-          message: "Report submitted successfully",
-          priority: VALID_CATEGORIES[body.category].priority,
-        })
-      } catch (error: any) {
-        lastError = error
-        console.error(`Database error (attempt ${4 - retries}/3):`, error)
-        retries--
-        if (retries > 0) {
-          await new Promise((resolve) => setTimeout(resolve, 1000)) // Wait 1 second before retry
-        }
+      const caseData = {
+        case_number: body.case_id,
+        title: sanitizedData.title,
+        description: sanitizedData.description,
+        category: sanitizedData.category,
+        status: sanitizedData.status,
+        priority: sanitizedData.priority,
+        location: sanitizedData.location,
+        date_occurred: sanitizedData.date_occurred,
+        is_anonymous: sanitizedData.is_anonymous,
+        contact_info: sanitizedData.contact_info,
+        secret_code: sanitizedData.secret_code,
+        report_id: sanitizedData.report_id,
+        tracking_code: sanitizedData.tracking_code,
+        vapi_session_id: sanitizedData.vapi_session_id,
+        vapi_transcript: sanitizedData.vapi_transcript,
+        vapi_audio_url: sanitizedData.vapi_audio_url,
+        vapi_report_summary: sanitizedData.vapi_report_summary,
+        created_at: sanitizedData.created_at,
+        updated_at: sanitizedData.updated_at,
       }
+
+      const { data: caseInsertData, error: caseError } = await supabase.from("cases").insert([caseData]).select()
+
+      if (caseError) {
+        console.error("Error inserting into cases table:", caseError)
+        return NextResponse.json(
+          {
+            success: false,
+            error: "Database operation failed",
+            details: caseError.message,
+            code: "DB_ERROR",
+          },
+          { status: 500 },
+        )
+      }
+
+      console.log("Report successfully inserted into cases table")
+      return NextResponse.json({
+        success: true,
+        caseId: body.case_id,
+        trackingCode: sanitizedData.tracking_code,
+        message: "Report submitted successfully",
+        priority: sanitizedData.priority,
+        table: "cases",
+      })
     }
 
-    // If all retries failed
-    console.error("Database error after retries:", {
-      message: lastError instanceof Error ? lastError.message : "Unknown error",
-      details: lastError instanceof Error ? lastError.message : undefined,
-      hint: lastError instanceof Error ? lastError.stack : undefined,
-      code: "DB_ERROR",
+    console.log("Report successfully inserted into reports table")
+    return NextResponse.json({
+      success: true,
+      caseId: body.case_id,
+      trackingCode: sanitizedData.tracking_code,
+      message: "Report submitted successfully",
+      priority: sanitizedData.priority,
+      table: "reports",
     })
-
-    return NextResponse.json(
-      {
-        success: false,
-        error: "Database operation failed",
-        details: lastError instanceof Error ? lastError.message : "Unknown error",
-        hint: lastError instanceof Error ? lastError.stack : undefined,
-        code: "DB_ERROR",
-      },
-      { status: 500 },
-    )
   } catch (error) {
     console.error("Error processing report:", error)
     return NextResponse.json(
@@ -379,7 +274,7 @@ export async function POST(request: Request) {
         success: false,
         error: "Internal server error",
         details: error instanceof Error ? error.message : "Unknown error",
-        stack: process.env.NODE_ENV === "development" ? (error instanceof Error ? error.stack : undefined) : undefined,
+        code: "INTERNAL_ERROR",
       },
       { status: 500 },
     )
