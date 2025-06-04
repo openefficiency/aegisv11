@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { type Case } from "@/lib/supabase";
@@ -120,729 +120,7 @@ export default function MapComponent() {
   const map = useRef<L.Map | null>(null);
   const markersRef = useRef<L.Marker[]>([]);
   const heatmapLayer = useRef<L.Layer | null>(null);
-  const [cases, setCases] = useState<Case[]>([
-    {
-      id: "1",
-      case_number: "CASE-001",
-      tracking_code: "TRACK-001",
-      title: "Suspicious Financial Activity",
-      description: "Multiple large transactions detected in employee accounts",
-      category: "fraud",
-      priority: "critical",
-      status: "under_investigation",
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-      secret_code: "FRAUD001",
-      report_id: "R001",
-      reward_status: "pending",
-      structured_data: {
-        incident: {
-          location: {
-            lat: 38.9082,  // North of center point
-            lng: -77.0280,
-            address: "1400 L St NW, Washington, DC 20005"
-          }
-        }
-      }
-    },
-    {
-      id: "2",
-      case_number: "CASE-002",
-      tracking_code: "TRACK-002",
-      title: "Workplace Harassment Report",
-      description: "Employee reported verbal harassment from supervisor",
-      category: "harassment",
-      priority: "high",
-      status: "open",
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-      secret_code: "HARASS002",
-      report_id: "R002",
-      reward_status: "pending",
-      structured_data: {
-        incident: {
-          location: {
-            lat: 38.9070,  // South of center point
-            lng: -77.0285,
-            address: "1300 K St NW, Washington, DC 20005"
-          }
-        }
-      }
-    },
-    {
-      id: "3",
-      case_number: "CASE-003",
-      tracking_code: "TRACK-003",
-      title: "Safety Violation in Construction",
-      description: "Workers not wearing required safety equipment",
-      category: "safety",
-      priority: "medium",
-      status: "resolved",
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-      secret_code: "SAFETY003",
-      report_id: "R003",
-      reward_status: "paid",
-      structured_data: {
-        incident: {
-          location: {
-            lat: 38.9075,  // East of center point
-            lng: -77.0275,
-            address: "1350 I St NW, Washington, DC 20005"
-          }
-        }
-      }
-    },
-    {
-      id: "4",
-      case_number: "CASE-004",
-      tracking_code: "TRACK-004",
-      title: "Discrimination Complaint",
-      description: "Allegations of age discrimination in hiring process",
-      category: "discrimination",
-      priority: "high",
-      status: "under_investigation",
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-      secret_code: "DISC004",
-      report_id: "R004",
-      reward_status: "pending",
-      structured_data: {
-        incident: {
-          location: {
-            lat: 38.9078,  // West of center point
-            lng: -77.0295,
-            address: "1450 M St NW, Washington, DC 20005"
-          }
-        }
-      }
-    },
-    {
-      id: "5",
-      case_number: "CASE-005",
-      tracking_code: "TRACK-005",
-      title: "Corruption Investigation",
-      description: "Suspicious contract awards to specific vendors",
-      category: "corruption",
-      priority: "critical",
-      status: "open",
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-      secret_code: "CORR005",
-      report_id: "R005",
-      reward_status: "pending",
-      structured_data: {
-        incident: {
-          location: {
-            lat: 38.9073,  // Southeast of center point
-            lng: -77.0290,
-            address: "1325 K St NW, Washington, DC 20005"
-          }
-        }
-      }
-    },
-      {
-        "id": "6",
-        "case_number": "CASE-006",
-        "tracking_code": "TRACK-006",
-        "title": "Unauthorized Data Access",
-        "description": "Employee accessed sensitive client data without permission",
-        "category": "data_breach",
-        "priority": "critical",
-        "status": "under_investigation",
-        "created_at": "2025-06-04T03:17:00.000Z",
-        "updated_at": "2025-06-04T03:17:00.000Z",
-        "secret_code": "DATA006",
-        "report_id": "R006",
-        "reward_status": "pending",
-        "structured_data": {
-          "incident": {
-            "location": {
-              "lat": 38.9120,
-              "lng": -77.0300,
-              "address": "1500 L St NW, Washington, DC 20005"
-            }
-          }
-        }
-      },
-      {
-        "id": "7",
-        "case_number": "CASE-007",
-        "tracking_code": "TRACK-007",
-        "title": "Workplace Theft",
-        "description": "Office equipment reported missing from storage",
-        "category": "theft",
-        "priority": "medium",
-        "status": "open",
-        "created_at": "2025-06-04T03:17:00.000Z",
-        "updated_at": "2025-06-04T03:17:00.000Z",
-        "secret_code": "THEFT007",
-        "report_id": "R007",
-        "reward_status": "pending",
-        "structured_data": {
-          "incident": {
-            "location": {
-              "lat": 38.9050,
-              "lng": -77.0260,
-              "address": "1200 I St NW, Washington, DC 20005"
-            }
-          }
-        }
-      },
-      {
-        "id": "8",
-        "case_number": "CASE-008",
-        "tracking_code": "TRACK-008",
-        "title": "Environmental Violation",
-        "description": "Improper disposal of hazardous materials detected",
-        "category": "environmental",
-        "priority": "high",
-        "status": "under_investigation",
-        "created_at": "2025-06-04T03:17:00.000Z",
-        "updated_at": "2025-06-04T03:17:00.000Z",
-        "secret_code": "ENV008",
-        "report_id": "R008",
-        "reward_status": "pending",
-        "structured_data": {
-          "incident": {
-            "location": {
-              "lat": 38.9100,
-              "lng": -77.0320,
-              "address": "1600 M St NW, Washington, DC 20005"
-            }
-          }
-        }
-      },
-      {
-        "id": "9",
-        "case_number": "CASE-009",
-        "tracking_code": "TRACK-009",
-        "title": "Insider Trading Allegation",
-        "description": "Suspicious stock transactions by senior management",
-        "category": "fraud",
-        "priority": "critical",
-        "status": "open",
-        "created_at": "2025-06-04T03:17:00.000Z",
-        "updated_at": "2025-06-04T03:17:00.000Z",
-        "secret_code": "FRAUD009",
-        "report_id": "R009",
-        "reward_status": "pending",
-        "structured_data": {
-          "incident": {
-            "location": {
-              "lat": 38.9040,
-              "lng": -77.0310,
-              "address": "1100 K St NW, Washington, DC 20005"
-            }
-          }
-        }
-      },
-      {
-        "id": "10",
-        "case_number": "CASE-010",
-        "tracking_code": "TRACK-010",
-        "title": "Workplace Safety Concern",
-        "description": "Faulty machinery reported in production area",
-        "category": "safety",
-        "priority": "high",
-        "status": "resolved",
-        "created_at": "2025-06-04T03:17:00.000Z",
-        "updated_at": "2025-06-04T03:17:00.000Z",
-        "secret_code": "SAFETY010",
-        "report_id": "R010",
-        "reward_status": "paid",
-        "structured_data": {
-          "incident": {
-            "location": {
-              "lat": 38.9130,
-              "lng": -77.0250,
-              "address": "1550 I St NW, Washington, DC 20005"
-            }
-          }
-        }
-      },
-      {
-        "id": "11",
-        "case_number": "CASE-011",
-        "tracking_code": "TRACK-011",
-        "title": "Gender Discrimination Complaint",
-        "description": "Unequal treatment reported in promotions",
-        "category": "discrimination",
-        "priority": "high",
-        "status": "under_investigation",
-        "created_at": "2025-06-04T03:17:00.000Z",
-        "updated_at": "2025-06-04T03:17:00.000Z",
-        "secret_code": "DISC011",
-        "report_id": "R011",
-        "reward_status": "pending",
-        "structured_data": {
-          "incident": {
-            "location": {
-              "lat": 38.9060,
-              "lng": -77.0330,
-              "address": "1250 M St NW, Washington, DC 20005"
-            }
-          }
-        }
-      },
-      {
-        "id": "12",
-        "case_number": "CASE-012",
-        "tracking_code": "TRACK-012",
-        "title": "Bribery Allegation",
-        "description": "Suspected payments to secure government contracts",
-        "category": "corruption",
-        "priority": "critical",
-        "status": "open",
-        "created_at": "2025-06-04T03:17:00.000Z",
-        "updated_at": "2025-06-04T03:17:00.000Z",
-        "secret_code": "CORR012",
-        "report_id": "R012",
-        "reward_status": "pending",
-        "structured_data": {
-          "incident": {
-            "location": {
-              "lat": 38.9115,
-              "lng": -77.0340,
-              "address": "1650 L St NW, Washington, DC 20005"
-            }
-          }
-        }
-      },
-      {
-        "id": "13",
-        "case_number": "CASE-013",
-        "tracking_code": "TRACK-013",
-        "title": "Employee Misconduct",
-        "description": "Inappropriate behavior reported during team meeting",
-        "category": "misconduct",
-        "priority": "medium",
-        "status": "under_investigation",
-        "created_at": "2025-06-04T03:17:00.000Z",
-        "updated_at": "2025-06-04T03:17:00.000Z",
-        "secret_code": "MIS013",
-        "report_id": "R013",
-        "reward_status": "pending",
-        "structured_data": {
-          "incident": {
-            "location": {
-              "lat": 38.9030,
-              "lng": -77.0270,
-              "address": "1150 I St NW, Washington, DC 20005"
-            }
-          }
-        }
-      },
-      {
-        "id": "14",
-        "case_number": "CASE-014",
-        "tracking_code": "TRACK-014",
-        "title": "Fraudulent Expense Claims",
-        "description": "Unverified expense reports submitted by employee",
-        "category": "fraud",
-        "priority": "high",
-        "status": "open",
-        "created_at": "2025-06-04T03:17:00.000Z",
-        "updated_at": "2025-06-04T03:17:00.000Z",
-        "secret_code": "FRAUD014",
-        "report_id": "R014",
-        "reward_status": "pending",
-        "structured_data": {
-          "incident": {
-            "location": {
-              "lat": 38.9140,
-              "lng": -77.0295,
-              "address": "1700 K St NW, Washington, DC 20005"
-            }
-          }
-        }
-      },
-      {
-        "id": "15",
-        "case_number": "CASE-015",
-        "tracking_code": "TRACK-015",
-        "title": "Workplace Bullying",
-        "description": "Ongoing intimidation reported by junior staff",
-        "category": "harassment",
-        "priority": "high",
-        "status": "under_investigation",
-        "created_at": "2025-06-04T03:17:00.000Z",
-        "updated_at": "2025-06-04T03:17:00.000Z",
-        "secret_code": "HARASS015",
-        "report_id": "R015",
-        "reward_status": "pending",
-        "structured_data": {
-          "incident": {
-            "location": {
-              "lat": 38.9020,
-              "lng": -77.0325,
-              "address": "1050 M St NW, Washington, DC 20005"
-            }
-          }
-        }
-      },
-      {
-        "id": "16",
-        "case_number": "CASE-016",
-        "tracking_code": "TRACK-016",
-        "title": "Health Code Violation",
-        "description": "Unsanitary conditions reported in cafeteria",
-        "category": "health",
-        "priority": "medium",
-        "status": "resolved",
-        "created_at": "2025-06-04T03:17:00.000Z",
-        "updated_at": "2025-06-04T03:17:00.000Z",
-        "secret_code": "HEALTH016",
-        "report_id": "R016",
-        "reward_status": "paid",
-        "structured_data": {
-          "incident": {
-            "location": {
-              "lat": 38.9095,
-              "lng": -77.0240,
-              "address": "1450 I St NW, Washington, DC 20005"
-            }
-          }
-        }
-      },
-      {
-        "id": "17",
-        "case_number": "CASE-017",
-        "tracking_code": "TRACK-017",
-        "title": "Racial Discrimination Complaint",
-        "description": "Alleged bias in team assignments",
-        "category": "discrimination",
-        "priority": "high",
-        "status": "open",
-        "created_at": "2025-06-04T03:17:00.000Z",
-        "updated_at": "2025-06-04T03:17:00.000Z",
-        "secret_code": "DISC017",
-        "report_id": "R017",
-        "reward_status": "pending",
-        "structured_data": {
-          "incident": {
-            "location": {
-              "lat": 38.9150,
-              "lng": -77.0315,
-              "address": "1750 L St NW, Washington, DC 20005"
-            }
-          }
-        }
-      },
-      {
-        "id": "18",
-        "case_number": "CASE-018",
-        "tracking_code": "TRACK-018",
-        "title": "Vendor Kickback Scheme",
-        "description": "Suspected payments for favorable vendor selection",
-        "category": "corruption",
-        "priority": "critical",
-        "status": "under_investigation",
-        "created_at": "2025-06-04T03:17:00.000Z",
-        "updated_at": "2025-06-04T03:17:00.000Z",
-        "secret_code": "CORR018",
-        "report_id": "R018",
-        "reward_status": "pending",
-        "structured_data": {
-          "incident": {
-            "location": {
-              "lat": 38.9015,
-              "lng": -77.0280,
-              "address": "1000 K St NW, Washington, DC 20005"
-            }
-          }
-        }
-      },
-      {
-        "id": "19",
-        "case_number": "CASE-019",
-        "tracking_code": "TRACK-019",
-        "title": "Fire Safety Noncompliance",
-        "description": "Blocked fire exits reported in office building",
-        "category": "safety",
-        "priority": "high",
-        "status": "open",
-        "created_at": "2025-06-04T03:17:00.000Z",
-        "updated_at": "2025-06-04T03:17:00.000Z",
-        "secret_code": "SAFETY019",
-        "report_id": "R019",
-        "reward_status": "pending",
-        "structured_data": {
-          "incident": {
-            "location": {
-              "lat": 38.9085,
-              "lng": -77.0350,
-              "address": "1625 M St NW, Washington, DC 20005"
-            }
-          }
-        }
-      },
-      {
-        "id": "20",
-        "case_number": "CASE-020",
-        "tracking_code": "TRACK-020",
-        "title": "Embezzlement Suspected",
-        "description": "Discrepancies found in financial records",
-        "category": "fraud",
-        "priority": "critical",
-        "status": "under_investigation",
-        "created_at": "2025-06-04T03:17:00.000Z",
-        "updated_at": "2025-06-04T03:17:00.000Z",
-        "secret_code": "FRAUD020",
-        "report_id": "R020",
-        "reward_status": "pending",
-        "structured_data": {
-          "incident": {
-            "location": {
-              "lat": 38.9160,
-              "lng": -77.0265,
-              "address": "1800 I St NW, Washington, DC 20005"
-            }
-          }
-        }
-      },
-      {
-        "id": "21",
-        "case_number": "CASE-021",
-        "tracking_code": "TRACK-021",
-        "title": "Sexual Harassment Allegation",
-        "description": "Inappropriate comments reported in workplace",
-        "category": "harassment",
-        "priority": "high",
-        "status": "open",
-        "created_at": "2025-06-04T03:17:00.000Z",
-        "updated_at": "2025-06-04T03:17:00.000Z",
-        "secret_code": "HARASS021",
-        "report_id": "R021",
-        "reward_status": "pending",
-        "structured_data": {
-          "incident": {
-            "location": {
-              "lat": 38.9045,
-              "lng": -77.0345,
-              "address": "1225 M St NW, Washington, DC 20005"
-            }
-          }
-        }
-      },
-      {
-        "id": "22",
-        "case_number": "CASE-022",
-        "tracking_code": "TRACK-022",
-        "title": "Non-Compliant Hiring Practices",
-        "description": "Failure to follow diversity hiring guidelines",
-        "category": "discrimination",
-        "priority": "medium",
-        "status": "under_investigation",
-        "created_at": "2025-06-04T03:17:00.000Z",
-        "updated_at": "2025-06-04T03:17:00.000Z",
-        "secret_code": "DISC022",
-        "report_id": "R022",
-        "reward_status": "pending",
-        "structured_data": {
-          "incident": {
-            "location": {
-              "lat": 38.9125,
-              "lng": -77.0235,
-              "address": "1525 I St NW, Washington, DC 20005"
-            }
-          }
-        }
-      },
-      {
-        "id": "23",
-        "case_number": "CASE-023",
-        "tracking_code": "TRACK-023",
-        "title": "Conflict of Interest",
-        "description": "Employee involved in vendor selection has personal ties",
-        "category": "corruption",
-        "priority": "high",
-        "status": "open",
-        "created_at": "2025-06-04T03:17:00.000Z",
-        "updated_at": "2025-06-04T03:17:00.000ZV",
-        "secret_code": "CORR023",
-        "report_id": "R023",
-        "reward_status": "pending",
-        "structured_data": {
-          "incident": {
-            "location": {
-              "lat": 38.9035,
-              "lng": -77.0305,
-              "address": "1125 K St NW, Washington, DC 20005"
-            }
-          }
-        }
-      },
-      {
-        "id": "24",
-        "case_number": "CASE-024",
-        "tracking_code": "TRACK-024",
-        "title": "Equipment Safety Issue",
-        "description": "Malfunctioning safety guards on machinery",
-        "category": "safety",
-        "priority": "high",
-        "status": "resolved",
-        "created_at": "2025-06-04T03:17:00.000Z",
-        "updated_at": "2025-06-04T03:17:00.000Z",
-        "secret_code": "SAFETY024",
-        "report_id": "R024",
-        "reward_status": "paid",
-        "structured_data": {
-          "incident": {
-            "location": {
-              "lat": 38.9105,
-              "lng": -77.0220,
-              "address": "1475 I St NW, Washington, DC 20005"
-            }
-          }
-        }
-      },
-      {
-        "id": "25",
-        "case_number": "CASE-025",
-        "tracking_code": "TRACK-025",
-        "title": "Falsified Time Records",
-        "description": "Employee reported inflating work hours",
-        "category": "fraud",
-        "priority": "medium",
-        "status": "under_investigation",
-        "created_at": "2025-06-04T03:17:00.000Z",
-        "updated_at": "2025-06-04T03:17:00.000Z",
-        "secret_code": "FRAUD025",
-        "report_id": "R025",
-        "reward_status": "pending",
-        "structured_data": {
-          "incident": {
-            "location": {
-              "lat": 38.9165,
-              "lng": -77.0335,
-              "address": "1825 M St NW, Washington, DC 20005"
-            }
-          }
-        }
-      },
-      {
-        "id": "26",
-        "case_number": "CASE-026",
-        "tracking_code": "TRACK-026",
-        "title": "Retaliation Complaint",
-        "description": "Employee faced demotion after reporting misconduct",
-        "category": "retaliation",
-        "priority": "high",
-        "status": "open",
-        "created_at": "2025-06-04T03:17:00.000Z",
-        "updated_at": "2025-06-04T03:17:00.000Z",
-        "secret_code": "RETAL026",
-        "report_id": "R026",
-        "reward_status": "pending",
-        "structured_data": {
-          "incident": {
-            "location": {
-              "lat": 38.9025,
-              "lng": -77.0255,
-              "address": "1075 I St NW, Washington, DC 20005"
-            }
-          }
-        }
-      },
-      {
-        "id": "27",
-        "case_number": "CASE-027",
-        "tracking_code": "TRACK-027",
-        "title": "Improper Waste Disposal",
-        "description": "Chemical waste dumped without proper permits",
-        "category": "environmental",
-        "priority": "critical",
-        "status": "under_investigation",
-        "created_at": "2025-06-04T03:17:00.000Z",
-        "updated_at": "2025-06-04T03:17:00.000Z",
-        "secret_code": "ENV027",
-        "report_id": "R027",
-        "reward_status": "pending",
-        "structured_data": {
-          "incident": {
-            "location": {
-              "lat": 38.9145,
-              "lng": -77.0355,
-              "address": "1775 M St NW, Washington, DC 20005"
-            }
-          }
-        }
-      },
-      {
-        "id": "28",
-        "case_number": "CASE-028",
-        "tracking_code": "TRACK-028",
-        "title": "Unreported Workplace Injury",
-        "description": "Employee injury not documented properly",
-        "category": "safety",
-        "priority": "medium",
-        "status": "open",
-        "created_at": "2025-06-04T03:17:00.000Z",
-        "updated_at": "2025-06-04T03:17:00.000Z",
-        "secret_code": "SAFETY028",
-        "report_id": "R028",
-        "reward_status": "pending",
-        "structured_data": {
-          "incident": {
-            "location": {
-              "lat": 38.9070,
-              "lng": -77.0225,
-              "address": "1300 I St NW, Washington, DC 20005"
-            }
-          }
-        }
-      },
-      {
-        "id": "29",
-        "case_number": "CASE-029",
-        "tracking_code": "TRACK-029",
-        "title": "Misuse of Company Resources",
-        "description": "Employee using company vehicles for personal use",
-        "category": "misconduct",
-        "priority": "medium",
-        "status": "under_investigation",
-        "created_at": "2025-06-04T03:17:00.000Z",
-        "updated_at": "2025-06-04T03:17:00.000Z",
-        "secret_code": "MIS029",
-        "report_id": "R029",
-        "reward_status": "pending",
-        "structured_data": {
-          "incident": {
-            "location": {
-              "lat": 38.9110,
-              "lng": -77.0360,
-              "address": "1675 M St NW, Washington, DC 20005"
-            }
-          }
-        }
-      },
-      {
-        "id": "30",
-        "case_number": "CASE-030",
-        "tracking_code": "TRACK-030",
-        "title": "Payroll Fraud",
-        "description": "Ghost employees detected on payroll system",
-        "category": "fraud",
-        "priority": "critical",
-        "status": "open",
-        "created_at": "2025-06-04T03:17:00.000Z",
-        "updated_at": "2025-06-04T03:17:00.000Z",
-        "secret_code": "FRAUD030",
-        "report_id": "R030",
-        "reward_status": "pending",
-        "structured_data": {
-          "incident": {
-            "location": {
-              "lat": 38.9155,
-              "lng": -77.0245,
-              "address": "1725 I St NW, Washington, DC 20005"
-            }
-          }
-        }
-      }
-    
-  ]);
+  const [cases, setCases] = useState<Case[]>([]);
   const [loading, setLoading] = useState(false);
   const [mapError, setMapError] = useState<string | null>(null);
   const [deployingDrone, setDeployingDrone] = useState<string | null>(null);
@@ -867,11 +145,11 @@ export default function MapComponent() {
       
       // Initialize the map with explicit options
       map.current = L.map(mapContainer.current, {
-        center: [38.90767, -77.02858], // New center coordinates
-        zoom: 17, // Increased zoom level for better focus on the area
+        center: [38.90767, -77.02858],
+        zoom: 17,
         zoomControl: false,
         attributionControl: false,
-        minZoom: 15, // Prevent zooming out too far
+        minZoom: 15,
         maxZoom: 19,
         zoomSnap: 1,
         zoomDelta: 1,
@@ -882,9 +160,7 @@ export default function MapComponent() {
         bounceAtZoomLimits: true
       });
 
-      console.log("Map initialized, adding tile layer...");
-
-      // Add OpenStreetMap tiles with explicit options
+      // Add OpenStreetMap tiles
       L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", {
         maxZoom: 19,
         attribution: '© OpenStreetMap contributors, © CARTO',
@@ -895,114 +171,31 @@ export default function MapComponent() {
         keepBuffer: 2
       }).addTo(map.current);
 
-      // Add a marker for the Convention Center
-      const conventionCenterIcon = L.divIcon({
-        className: 'convention-center-marker',
-        html: `<div style="
-          background-color: #2196F3;
-          width: 16px;
-          height: 16px;
-          border-radius: 50%;
-          border: 2px solid white;
-          box-shadow: 0 0 8px rgba(0,0,0,0.3);
-        "></div>`,
-        iconSize: [20, 20],
-        iconAnchor: [10, 10]
-      });
-
-      L.marker([38.90767, -77.02858], { icon: conventionCenterIcon })
-        .bindPopup(`
-          <div style="
-            padding: 8px;
-            background: white;
-            color: #333;
-            border-radius: 4px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-          ">
-            <h3 style="margin: 0 0 4px 0; font-size: 14px; font-weight: 600;">Center Point</h3>
-            <p style="margin: 0; font-size: 12px; color: #666;">Lat: 38.90767, Lng: -77.02858</p>
-          </div>
-        `)
-        .addTo(map.current);
-
-      console.log("Tile layer added, adding controls...");
-
-      // Add zoom control in top right
+      // Add zoom control
       L.control.zoom({
         position: 'topright',
         zoomInText: '+',
         zoomOutText: '-'
       }).addTo(map.current);
 
-      // Add attribution in bottom right
+      // Add attribution
       L.control.attribution({
         position: 'bottomright',
         prefix: '© OpenStreetMap contributors'
       }).addTo(map.current);
 
-      // Add legend control for the heatmap
-      const LegendControl = L.Control.extend({
-        options: {
-          position: 'bottomleft'
-        },
-        onAdd: function() {
-          const div = L.DomUtil.create('div', 'leaflet-control leaflet-bar');
-          div.innerHTML = `
-            <div style="
-              background-color: rgba(255, 255, 255, 0.98);
-              padding: 16px;
-              border-radius: 10px;
-              color: #333;
-              font-size: 12px;
-              box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-              backdrop-filter: blur(8px);
-            ">
-              <h4 style="margin: 0 0 12px 0; font-size: 14px; font-weight: 600; color: #1a1a1a;">Safety Level</h4>
-              <div style="display: flex; flex-direction: column; gap: 10px;">
-                <div style="display: flex; align-items: center; gap: 10px;">
-                  <div style="width: 18px; height: 18px; background-color: ${safetyColors.safe}; border: 1px solid rgba(0,0,0,0.1); border-radius: 4px;"></div>
-                  <span style="font-weight: 500;">Safe</span>
-                </div>
-                <div style="display: flex; align-items: center; gap: 10px;">
-                  <div style="width: 18px; height: 18px; background-color: ${safetyColors.warning}; border: 1px solid rgba(0,0,0,0.1); border-radius: 4px;"></div>
-                  <span style="font-weight: 500;">Warning</span>
-                </div>
-                <div style="display: flex; align-items: center; gap: 10px;">
-                  <div style="width: 18px; height: 18px; background-color: ${safetyColors.danger}; border: 1px solid rgba(0,0,0,0.1); border-radius: 4px;"></div>
-                  <span style="font-weight: 500;">Danger</span>
-                </div>
-              </div>
-            </div>
-          `;
-          return div;
-        }
-      });
-
-      new LegendControl().addTo(map.current);
-
-      console.log("Controls added, map initialization complete");
-
-      // Force multiple resize events to ensure the map renders properly
-      const resizeMap = () => {
+      // Force resize to ensure proper rendering
+      setTimeout(() => {
         if (map.current) {
           map.current.invalidateSize();
-          console.log("Map resized");
         }
-      };
-
-      // Initial resize
-      setTimeout(resizeMap, 100);
-      
-      // Additional resizes
-      setTimeout(resizeMap, 500);
-      setTimeout(resizeMap, 1000);
+      }, 100);
 
     } catch (error) {
       console.error("Error initializing map:", error);
       setMapError(error instanceof Error ? error.message : "Failed to initialize map");
     }
 
-    // Cleanup on unmount
     return () => {
       if (map.current) {
         map.current.remove();
@@ -1011,43 +204,96 @@ export default function MapComponent() {
     };
   }, []);
 
-  // Update markers or heatmap when cases changes
+  // Update markers when cases change
   useEffect(() => {
     if (!map.current || !cases.length) return;
 
     // Clear existing markers and heatmap
     markersRef.current.forEach(marker => marker.remove());
     markersRef.current = [];
-    if (heatmapLayer.current) {
+    if (heatmapLayer.current && map.current) {
       map.current.removeLayer(heatmapLayer.current);
     }
 
-    // Show safety heatmap
-    const gridSize = 0.0003; // Even smaller grid size for more detailed heatmap
-    const bounds = map.current.getBounds();
-    const heatmapData: { lat: number; lng: number; color: string }[] = [];
+    // Add markers for each case
+    cases.forEach(case_ => {
+      const lat = case_.structured_data?.incident?.location?.lat;
+      const lng = case_.structured_data?.incident?.location?.lng;
+      
+      if (lat && lng && map.current) {
+        // Create custom icon for the marker
+        const iconHtml = `
+          <div style="
+            background-color: ${categoryColors[case_.category as keyof typeof categoryColors] || '#666'};
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            border: 2px solid white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+          ">
+            <i class="${categoryIcons[case_.category as keyof typeof categoryIcons] || 'fa-solid fa-circle'}"></i>
+          </div>
+        `;
 
-    for (let lat = bounds.getSouth(); lat < bounds.getNorth(); lat += gridSize) {
-      for (let lng = bounds.getWest(); lng < bounds.getEast(); lng += gridSize) {
-        const { color } = calculateSafetyScore(cases, lat, lng);
-        heatmapData.push({ lat, lng, color });
+        const customIcon = L.divIcon({
+          className: 'custom-marker',
+          html: iconHtml,
+          iconSize: [32, 32],
+          iconAnchor: [16, 16],
+          popupAnchor: [0, -16]
+        });
+
+        // Create marker with custom icon
+        const marker = L.marker([lat, lng], { icon: customIcon })
+          .bindPopup(`
+            <div style="padding: 8px;">
+              <h3 style="margin: 0 0 4px 0; font-size: 14px; font-weight: 600;">${case_.title}</h3>
+              <p style="margin: 0 0 4px 0; font-size: 12px; color: #666;">${case_.description}</p>
+              <div style="display: flex; align-items: center; gap: 4px; margin-top: 8px;">
+                <i class="${categoryIcons[case_.category as keyof typeof categoryIcons] || 'fa-solid fa-circle'}" 
+                   style="color: ${categoryColors[case_.category as keyof typeof categoryColors] || '#666'};"></i>
+                <span style="font-size: 12px; text-transform: capitalize;">${case_.category}</span>
+              </div>
+            </div>
+          `);
+
+        marker.addTo(map.current);
+        markersRef.current.push(marker);
       }
-    }
-
-    // Create heatmap layer
-    const heatmap = L.layerGroup().addTo(map.current);
-    heatmapData.forEach(({ lat, lng, color }) => {
-      L.rectangle(
-        [[lat, lng], [lat + gridSize, lng + gridSize]],
-        {
-          color: color,
-          fillColor: color,
-          fillOpacity: 0.5,
-          weight: 0
-        }
-      ).addTo(heatmap);
     });
-    heatmapLayer.current = heatmap;
+
+    // Show safety heatmap
+    if (map.current) {
+      const gridSize = 0.0003;
+      const bounds = map.current.getBounds();
+      const heatmapData: { lat: number; lng: number; color: string }[] = [];
+
+      for (let lat = bounds.getSouth(); lat < bounds.getNorth(); lat += gridSize) {
+        for (let lng = bounds.getWest(); lng < bounds.getEast(); lng += gridSize) {
+          const { color } = calculateSafetyScore(cases, lat, lng);
+          heatmapData.push({ lat, lng, color });
+        }
+      }
+
+      // Create heatmap layer
+      const heatmap = L.layerGroup().addTo(map.current);
+      heatmapData.forEach(({ lat, lng, color }) => {
+        L.rectangle(
+          [[lat, lng], [lat + gridSize, lng + gridSize]],
+          {
+            color: color,
+            fillColor: color,
+            fillOpacity: 0.5,
+            weight: 0
+          }
+        ).addTo(heatmap);
+      });
+      heatmapLayer.current = heatmap;
+    }
 
   }, [cases]);
 

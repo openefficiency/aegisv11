@@ -140,7 +140,7 @@ export default function EthicsOfficerDashboard() {
       if (demoIndex < demoCasesData.length) {
         setCases((prev) => [normalizeCase(demoCasesData[demoIndex]), ...prev]);
         demoIndex++;
-        setTimeout(addDemoCase, 2000); // 2 seconds between each
+        setTimeout(addDemoCase, 500); 
       }
     };
     addDemoCase();
