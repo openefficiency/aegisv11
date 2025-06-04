@@ -60,36 +60,36 @@ const MapWrapper: React.FC<MapWrapperProps> = ({
   const [showInstructions, setShowInstructions] = useState(true);
 
   return (
-    <div style={{ height: 'calc(100vh - 64px - 56px)', width: '100vw', position: 'relative', zIndex: 9999 }}>
+    <div className="map-wrapper" style={{ height: 'calc(100vh - 64px - 56px)', width: '100vw', position: 'relative', zIndex: 9999 }}>
       {/* Instructions Overlay */}
       {showInstructions && !selectedLocation && (
-        <div className="absolute inset-0 z-[9999] flex items-center justify-center pointer-events-none">
-          <div className="bg-slate-900/90 backdrop-blur-sm p-6 rounded-2xl shadow-2xl max-w-md mx-4 transform transition-all duration-500 ease-in-out animate-fade-in">
-            <div className="flex items-start gap-4">
-              <div className="bg-blue-500/20 p-3 rounded-xl">
+        <div className="instructions-overlay absolute inset-0 z-[9999] flex items-center justify-center pointer-events-none">
+          <div className="instructions-container bg-slate-900/90 backdrop-blur-sm p-6 rounded-2xl shadow-2xl max-w-md mx-4 transform transition-all duration-500 ease-in-out animate-fade-in">
+            <div className="instructions-content flex items-start gap-4">
+              <div className="icon-container bg-blue-500/20 p-3 rounded-xl">
                 <MapPin className="h-6 w-6 text-blue-400" />
               </div>
-              <div className="flex-1">
+              <div className="text-content flex-1">
                 <h3 className="text-white text-lg font-semibold mb-2">Choose Report Location</h3>
                 <p className="text-slate-300 text-sm leading-relaxed">
                   Click anywhere on the map to select the location where the incident occurred. 
                   You can zoom in/out and pan around to find the exact spot.
                 </p>
-                <div className="mt-4 flex items-center gap-2 text-xs text-slate-400">
-                  <div className="flex items-center gap-1">
-                    <div className="w-2 h-2 rounded-full bg-blue-400"></div>
+                <div className="legend-container mt-4 flex items-center gap-2 text-xs text-slate-400">
+                  <div className="legend-item flex items-center gap-1">
+                    <div className="legend-dot w-2 h-2 rounded-full bg-blue-400"></div>
                     <span>Click to place marker</span>
                   </div>
-                  <span>•</span>
-                  <div className="flex items-center gap-1">
-                    <div className="w-2 h-2 rounded-full bg-green-400"></div>
+                  <span className="separator">•</span>
+                  <div className="legend-item flex items-center gap-1">
+                    <div className="legend-dot w-2 h-2 rounded-full bg-green-400"></div>
                     <span>Drag to move marker</span>
                   </div>
                 </div>
               </div>
               <button 
                 onClick={() => setShowInstructions(false)}
-                className="text-slate-400 hover:text-white transition-colors pointer-events-auto"
+                className="close-button text-slate-400 hover:text-white transition-colors pointer-events-auto"
               >
                 <X className="h-5 w-5" />
               </button>
@@ -128,15 +128,15 @@ const MapWrapper: React.FC<MapWrapperProps> = ({
               className="custom-popup"
               position={selectedLocation}
             >
-              <div className="p-3 min-w-[250px]">
-                <h3 className="font-bold text-lg mb-2 text-slate-900">Report Location</h3>
-                <p className="text-sm text-slate-600 mb-2">{address}</p>
-                <p className="text-xs text-slate-500 mb-4">
+              <div className="popup-content p-3 min-w-[250px]" style={{zIndex: 99999}}>
+                <h3 className="popup-title font-bold text-lg mb-2 text-slate-900">Report Location</h3>
+                <p className="popup-address text-sm text-slate-600 mb-2">{address}</p>
+                <p className="popup-coordinates text-xs text-slate-500 mb-4">
                   Lat: {selectedLocation.lat.toFixed(5)}, Lng: {selectedLocation.lng.toFixed(5)}
                 </p>
                 <Button 
                   onClick={onStartReport}
-                  className="w-full bg-blue-600 hover:bg-blue-700 text-white transition-colors py-2"
+                  className="popup-button w-full bg-blue-600 hover:bg-blue-700 text-white transition-colors py-2"
                 >
                   Start Report
                 </Button>
@@ -148,8 +148,8 @@ const MapWrapper: React.FC<MapWrapperProps> = ({
 
       {/* Map Controls Overlay */}
       {!selectedLocation && (
-        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-[9998] bg-white/90 backdrop-blur-sm px-4 py-2 rounded-full shadow-lg pointer-events-none">
-          <p className="text-sm text-slate-700 font-medium">
+        <div className="map-controls absolute bottom-4 left-1/2 -translate-x-1/2 z-[9998] bg-white/90 backdrop-blur-sm px-4 py-2 rounded-full shadow-lg pointer-events-none">
+          <p className="controls-text text-sm text-slate-700 font-medium">
             Click on the map to select location
           </p>
         </div>
