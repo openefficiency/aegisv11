@@ -113,7 +113,7 @@ export default function FollowUpPage() {
     // Launch VAPI for voice response
     setIsVoiceActive(true);
     const vapiUrl =
-      "https://vapi.ai?demo=true&shareKey=89effcf9-d6c0-4a75-9470-51e6f0114e4b&assistantId=bb8029bb-dde6-485a-9c32-d41b684568ff";
+      "https://vapi.ai?demo=true&shareKey=6a029118-46e8-4cda-87f3-0ac2f287af8f&assistantId=265d793f-8179-4d20-a6cc-eb337577c512";
     const width = 400;
     const height = 600;
     const left = window.innerWidth / 2 - width / 2;
