@@ -60,21 +60,17 @@ const MapWrapper: React.FC<MapWrapperProps> = ({
   const [showInstructions, setShowInstructions] = useState(true);
   const [userClosedInstructions, setUserClosedInstructions] = useState(false);
 
-  useEffect(() => {
-    if (selectedLocation) {
-      setShowInstructions(false);
-    }
-  }, [selectedLocation]);
-
   const handleCloseInstructions = () => {
     setShowInstructions(false);
     setUserClosedInstructions(true);
   };
 
+  const shouldShowInstructions = showInstructions && !userClosedInstructions && !selectedLocation;
+
   return (
     <div className="map-wrapper" style={{ height: 'calc(100vh - 64px - 56px)', width: '100vw', position: 'relative', zIndex: 1 }}>
       {/* Instructions Overlay */}
-      {showInstructions && !userClosedInstructions && (
+      {shouldShowInstructions && (
         <div className="instructions-overlay absolute inset-0 z-[100] flex items-center justify-center pointer-events-none">
           <div className="instructions-container bg-slate-900/90 backdrop-blur-sm p-6 rounded-2xl shadow-2xl max-w-md mx-4 transform transition-all duration-500 ease-in-out animate-fade-in">
             <div className="instructions-content flex items-start gap-4">

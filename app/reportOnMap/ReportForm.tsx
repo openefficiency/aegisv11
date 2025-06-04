@@ -171,7 +171,7 @@ const ReportForm: React.FC<ReportFormProps> = ({ open, onClose, onSuccess, addre
               <SelectTrigger id="category" className="w-full">
                 <SelectValue placeholder="Select incident category" />
               </SelectTrigger>
-              <SelectContent position="popper" className="w-full">
+              <SelectContent position="popper" sideOffset={5} className="w-full">
                 <SelectItem value="fraud">Fraud</SelectItem>
                 <SelectItem value="abuse">Abuse</SelectItem>
                 <SelectItem value="discrimination">Discrimination</SelectItem>
