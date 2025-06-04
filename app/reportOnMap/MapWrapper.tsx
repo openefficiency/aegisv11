@@ -58,6 +58,7 @@ const MapWrapper: React.FC<MapWrapperProps> = ({
   popupRef
 }) => {
   const [showInstructions, setShowInstructions] = useState(true);
+  const [userClosedInstructions, setUserClosedInstructions] = useState(false);
 
   useEffect(() => {
     if (selectedLocation) {
@@ -65,10 +66,15 @@ const MapWrapper: React.FC<MapWrapperProps> = ({
     }
   }, [selectedLocation]);
 
+  const handleCloseInstructions = () => {
+    setShowInstructions(false);
+    setUserClosedInstructions(true);
+  };
+
   return (
     <div className="map-wrapper" style={{ height: 'calc(100vh - 64px - 56px)', width: '100vw', position: 'relative', zIndex: 1 }}>
       {/* Instructions Overlay */}
-      {showInstructions && (
+      {showInstructions && !userClosedInstructions && (
         <div className="instructions-overlay absolute inset-0 z-[100] flex items-center justify-center pointer-events-none">
           <div className="instructions-container bg-slate-900/90 backdrop-blur-sm p-6 rounded-2xl shadow-2xl max-w-md mx-4 transform transition-all duration-500 ease-in-out animate-fade-in">
             <div className="instructions-content flex items-start gap-4">
@@ -94,7 +100,7 @@ const MapWrapper: React.FC<MapWrapperProps> = ({
                 </div>
               </div>
               <button 
-                onClick={() => setShowInstructions(false)}
+                onClick={handleCloseInstructions}
                 className="close-button text-slate-400 hover:text-white transition-colors pointer-events-auto"
                 type="button"
               >
