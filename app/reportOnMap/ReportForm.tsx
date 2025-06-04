@@ -22,11 +22,20 @@ interface ReportFormProps {
   location: LatLngLiteral | null
 }
 
+interface FormData {
+  category: string
+  title: string
+  description: string
+  dateOccurred: string
+  anonymous: boolean
+  contactInfo: string
+}
+
 const ReportForm: React.FC<ReportFormProps> = ({ open, onClose, onSuccess, address, location }) => {
   const { toast } = useToast()
   const [isLoading, setIsLoading] = useState(false)
   const [showContactInfo, setShowContactInfo] = useState(false)
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<FormData>({
     category: "",
     title: "",
     description: "",
@@ -130,8 +139,8 @@ const ReportForm: React.FC<ReportFormProps> = ({ open, onClose, onSuccess, addre
     }
   }
 
-  const handleInputChange = (field: string, value: string | boolean) => {
-    setFormData((prev) => ({
+  const handleInputChange = (field: keyof FormData, value: string | boolean) => {
+    setFormData((prev: FormData) => ({
       ...prev,
       [field]: value,
     }))
@@ -139,7 +148,7 @@ const ReportForm: React.FC<ReportFormProps> = ({ open, onClose, onSuccess, addre
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto z-[300]">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Shield className="h-5 w-5 text-blue-600" />

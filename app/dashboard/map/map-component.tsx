@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { type Case } from "@/lib/supabase";
+import { FaFire } from "react-icons/fa";
 
 // Fix for default marker icons in Next.js
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -343,13 +344,16 @@ export default function MapComponent() {
                 </span>
                 <span class="switcher-title modern">${viewMode === 'cases' ? 'Cases View' : 'Heatmap View'}</span>
               </div>
-              <button id="viewModeToggle" class="modern-switch-btn ${viewMode === 'cases' ? 'cases' : 'heatmap'}">
-                <span class="modern-switch-btn-icon">${viewMode === 'cases'
-                  ? '<svg width="18" height="18" fill="none" stroke="#FF5722" stroke-width="2" viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5A2.5 2.5 0 1 1 12 6a2.5 2.5 0 0 1 0 5.5z"/></svg>'
-                  : '<svg width="18" height="18" fill="none" stroke="#2196F3" stroke-width="2" viewBox="0 0 24 24"><path d="M3 6l9-4 9 4M4 10v6a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 012-2h0a2 2 0 012 2v2a2 2 0 002 2h2a2 2 0 002-2v-6"/></svg>'}
-                </span>
-                <span class="modern-switch-btn-label">Switch to ${viewMode === 'cases' ? 'Heatmap View' : 'Cases View'}</span>
-              </button>
+              <div style={{ display: 'flex', justifyContent: 'flex-end', paddingRight: 20 }}>
+                <button
+                  id="viewModeToggle"
+                  className={`modern-switch-btn ${viewMode === 'cases' ? 'cases' : 'heatmap'}`}
+                  style={{ display: 'flex', alignItems: 'center', gap: 8 }}
+                >
+                  <FaFire size={24} color="#FF9800" style={{ marginRight: 8 }} />
+                  <span style={{ fontWeight: 600, fontSize: 16, color: "#1a1a1a" }}>Heatmap</span>
+                </button>
+              </div>
             </div>
           `;
           return div;
@@ -689,7 +693,7 @@ export default function MapComponent() {
   if (mapError) {
     return (
       <div className="h-full w-full flex items-center justify-center bg-gray-100">
-        <div className="bg-white p-6 rounded-lg shadow-lg">
+        <div className="bg-white p-6 rounded-lg shadow-lg" style={{zIndex: 99999}}>
           <div className="text-red-500 mb-2">Error Loading Map</div>
           <div className="text-gray-600">{mapError}</div>
           <button 

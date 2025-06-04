@@ -25,16 +25,6 @@ const Popup = dynamic(
   { ssr: false }
 );
 
-interface MapWrapperProps {
-  selectedLocation: LatLngLiteral | null;
-  mapCenter: LatLngLiteral;
-  onMapClick: (latlng: LatLngLiteral) => void;
-  onStartReport: () => void;
-  address: string;
-  mapRef: React.RefObject<LeafletMap>;
-  popupRef: React.RefObject<LeafletPopup>;
-}
-
 interface MapClickEvent {
   latlng: LatLngLiteral;
 }
@@ -48,6 +38,16 @@ const MapClickHandler: React.FC<{ onMapClick: (latlng: LatLngLiteral) => void }>
   return null;
 };
 
+interface MapWrapperProps {
+  selectedLocation: LatLngLiteral | null;
+  mapCenter: LatLngLiteral;
+  onMapClick: (latlng: LatLngLiteral) => void;
+  onStartReport: () => void;
+  address: string;
+  mapRef: React.RefObject<LeafletMap>;
+  popupRef: React.RefObject<LeafletPopup>;
+}
+
 const MapWrapper: React.FC<MapWrapperProps> = ({
   selectedLocation,
   mapCenter,
@@ -60,10 +60,10 @@ const MapWrapper: React.FC<MapWrapperProps> = ({
   const [showInstructions, setShowInstructions] = useState(true);
 
   return (
-    <div className="map-wrapper" style={{ height: 'calc(100vh - 64px - 56px)', width: '100vw', position: 'relative', zIndex: 9999 }}>
+    <div className="map-wrapper" style={{ height: 'calc(100vh - 64px - 56px)', width: '100vw', position: 'relative', zIndex: 1 }}>
       {/* Instructions Overlay */}
       {showInstructions && !selectedLocation && (
-        <div className="instructions-overlay absolute inset-0 z-[9999] flex items-center justify-center pointer-events-none">
+        <div className="instructions-overlay absolute inset-0 z-[100] flex items-center justify-center pointer-events-none">
           <div className="instructions-container bg-slate-900/90 backdrop-blur-sm p-6 rounded-2xl shadow-2xl max-w-md mx-4 transform transition-all duration-500 ease-in-out animate-fade-in">
             <div className="instructions-content flex items-start gap-4">
               <div className="icon-container bg-blue-500/20 p-3 rounded-xl">
@@ -128,7 +128,7 @@ const MapWrapper: React.FC<MapWrapperProps> = ({
               className="custom-popup"
               position={selectedLocation}
             >
-              <div className="popup-content p-3 min-w-[250px]" style={{zIndex: 99999}}>
+              <div className="popup-content p-3 min-w-[250px]" style={{zIndex: 250}}>
                 <h3 className="popup-title font-bold text-lg mb-2 text-slate-900">Report Location</h3>
                 <p className="popup-address text-sm text-slate-600 mb-2">{address}</p>
                 <p className="popup-coordinates text-xs text-slate-500 mb-4">
@@ -148,7 +148,7 @@ const MapWrapper: React.FC<MapWrapperProps> = ({
 
       {/* Map Controls Overlay */}
       {!selectedLocation && (
-        <div className="map-controls absolute bottom-4 left-1/2 -translate-x-1/2 z-[9998] bg-white/90 backdrop-blur-sm px-4 py-2 rounded-full shadow-lg pointer-events-none">
+        <div className="map-controls absolute bottom-4 left-1/2 -translate-x-1/2 z-[50] bg-white/90 backdrop-blur-sm px-4 py-2 rounded-full shadow-lg pointer-events-none">
           <p className="controls-text text-sm text-slate-700 font-medium">
             Click on the map to select location
           </p>

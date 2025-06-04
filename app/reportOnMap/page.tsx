@@ -6,6 +6,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import type { LatLngLiteral } from 'leaflet';
+import type { Map as LeafletMap, Popup as LeafletPopup } from 'leaflet';
 import { FaSearch } from 'react-icons/fa';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
@@ -21,6 +22,22 @@ import { Eye, EyeOff } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { ToastAction } from "@/components/ui/toast";
 import ReportForm from './ReportForm';
+
+interface Suggestion {
+  display_name: string;
+  lat: string;
+  lon: string;
+  address?: {
+    city?: string;
+    state?: string;
+    country?: string;
+  };
+  extratags?: {
+    shop?: string;
+    amenity?: string;
+    office?: string;
+  };
+}
 
 // Dynamically import the MapWrapper component
 const MapWrapper = dynamic(
@@ -53,11 +70,11 @@ const ReportOnMap = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [mapCenter, setMapCenter] = useState<LatLngLiteral>(DEFAULT_CENTER);
   const [searching, setSearching] = useState(false);
-  const [suggestions, setSuggestions] = useState<Array<{ display_name: string; lat: string; lon: string }>>([]);
+  const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [address, setAddress] = useState<string>('');
-  const mapRef = useRef<L.Map | null>(null);
-  const popupRef = useRef<L.Popup | null>(null);
+  const mapRef = useRef<LeafletMap | null>(null);
+  const popupRef = useRef<LeafletPopup | null>(null);
   const searchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [showReportForm, setShowReportForm] = useState(false);
   const [reporterName, setReporterName] = useState('');
@@ -373,7 +390,7 @@ const ReportOnMap = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 overflow-x-hidden page-container">
       {/* Navigation */}
-      <nav className="aegis-nav border-b border-slate-800 bg-slate-900/50 backdrop-blur-sm sticky top-0 z-50" style={{zIndex: 99999}}>
+      <nav className="aegis-nav border-b border-slate-800 bg-slate-900/50 backdrop-blur-sm sticky top-0 z-[200]" style={{zIndex: 200}}>
         <div className="aegis-nav__container max-w-7xl mx-auto px-2 sm:px-4 md:px-6 lg:px-8">
           <div className="flex flex-wrap sm:flex-nowrap justify-between items-center h-16 gap-2 nav-content">
             <div className="aegis-nav__brand flex items-center space-x-2">
@@ -403,7 +420,7 @@ const ReportOnMap = () => {
         </div>
       </nav>
       {/* Search Bar */}
-      <div className="aegis-searchbar flex justify-center items-center py-4 sm:py-6 bg-transparent sticky top-16 z-40 search-container" style={{zIndex: 45}}>
+      <div className="aegis-searchbar flex justify-center items-center py-4 sm:py-6 bg-transparent sticky top-16 z-[150] search-container" style={{zIndex: 150}}>
         <form onSubmit={handleSearch} className="relative w-full max-w-[calc(100%-2rem)] sm:max-w-xl mx-2 sm:mx-4 search-form">
           <div className="relative search-input-container">
             <span className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 text-gray-400 search-icon">
@@ -435,7 +452,7 @@ const ReportOnMap = () => {
             </button>
           </div>
           {showSuggestions && suggestions.length > 0 && (
-            <div className="aegis-searchbar__suggestions absolute top-full left-0 w-full mt-2 bg-white rounded-2xl shadow-2xl z-[9999] border border-gray-200 max-h-[300px] overflow-y-auto suggestions-container">
+            <div className="aegis-searchbar__suggestions absolute top-full left-0 w-full mt-2 bg-white rounded-2xl shadow-2xl z-[150] border border-gray-200 max-h-[300px] overflow-y-auto suggestions-container">
               {suggestions.map((suggestion, index) => (
                 <div
                   key={index}
@@ -452,7 +469,7 @@ const ReportOnMap = () => {
         </form>
       </div>
       {/* Map */}
-      <div className="aegis-map-wrapper h-[calc(100vh-8rem)] sm:h-[calc(100vh-9rem)] md:h-[calc(100vh-10rem)] map-container" style={{zIndex: 99999, width: '100%'}}>
+      <div className="aegis-map-wrapper h-[calc(100vh-8rem)] sm:h-[calc(100vh-9rem)] md:h-[calc(100vh-10rem)] map-container" style={{zIndex: 1, width: '100%'}}>
         <MapWrapper
           selectedLocation={selectedLocation}
           mapCenter={mapCenter}
