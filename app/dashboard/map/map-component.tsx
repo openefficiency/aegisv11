@@ -22,7 +22,13 @@ const categoryIcons = {
   harassment: "fa-solid fa-user-shield",
   safety: "fa-solid fa-hard-hat",
   corruption: "fa-solid fa-user-tie",
-};
+  data_breach: "fa-solid fa-shield-halved",
+  theft: "fa-solid fa-hand-holding",
+  environmental: "fa-solid fa-leaf",
+  misconduct: "fa-solid fa-user-slash",
+  health: "fa-solid fa-heart-pulse",
+  retaliation: "fa-solid fa-arrow-rotate-left"
+} as const;
 
 // Category colors mapping
 const categoryColors = {
@@ -32,7 +38,13 @@ const categoryColors = {
   harassment: "#F44336",    // Red
   safety: "#FFC107",    // Yellow
   corruption: "#F44336",    // Red
-};
+  data_breach: "#9C27B0",   // Purple
+  theft: "#FF9800",    // Orange
+  environmental: "#4CAF50",  // Green
+  misconduct: "#795548",    // Brown
+  health: "#E91E63",    // Pink
+  retaliation: "#607D8B"    // Blue Grey
+} as const;
 
 // Add this function after the categoryColors mapping
 const generateRandomLocation = (centerLat: number, centerLng: number, radiusInMeters: number = 500) => {
