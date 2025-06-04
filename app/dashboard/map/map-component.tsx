@@ -330,20 +330,20 @@ export default function MapComponent() {
         onAdd: function() {
           const div = L.DomUtil.create('div', 'leaflet-control leaflet-bar custom-switcher-card');
           div.innerHTML = `
-            <div class="switcher-card">
-              <div class="switcher-header">
-                <span class="switcher-icon">${viewMode === 'cases'
-                  ? '<svg width="28" height="28" fill="none" stroke="#2196F3" stroke-width="2" viewBox="0 0 24 24"><path d="M3 6l9-4 9 4M4 10v6a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 012-2h0a2 2 0 012 2v2a2 2 0 002 2h2a2 2 0 002-2v-6"/></svg>'
-                  : '<svg width="28" height="28" fill="none" stroke="#FF5722" stroke-width="2" viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5A2.5 2.5 0 1 1 12 6a2.5 2.5 0 0 1 0 5.5z"/></svg>'}
+            <div class="switcher-card compact">
+              <div class="switcher-header compact">
+                <span class="switcher-icon compact">${viewMode === 'cases'
+                  ? '<svg width="22" height="22" fill="none" stroke="#2196F3" stroke-width="2" viewBox="0 0 24 24"><path d="M3 6l9-4 9 4M4 10v6a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 012-2h0a2 2 0 012 2v2a2 2 0 002 2h2a2 2 0 002-2v-6"/></svg>'
+                  : '<svg width="22" height="22" fill="none" stroke="#FF5722" stroke-width="2" viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5A2.5 2.5 0 1 1 12 6a2.5 2.5 0 0 1 0 5.5z"/></svg>'}
                 </span>
-                <span class="switcher-title">${viewMode === 'cases' ? 'Cases View' : 'Heatmap View'}</span>
+                <span class="switcher-title compact">${viewMode === 'cases' ? 'Cases View' : 'Heatmap View'}</span>
               </div>
-              <button id="viewModeToggle" class="switcher-btn ${viewMode === 'cases' ? 'cases' : 'heatmap'}">
-                <span class="switcher-btn-icon">${viewMode === 'cases'
-                  ? '<svg width="20" height="20" fill="none" stroke="#fff" stroke-width="2" viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5A2.5 2.5 0 1 1 12 6a2.5 2.5 0 0 1 0 5.5z"/></svg>'
-                  : '<svg width="20" height="20" fill="none" stroke="#2196F3" stroke-width="2" viewBox="0 0 24 24"><path d="M3 6l9-4 9 4M4 10v6a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 012-2h0a2 2 0 012 2v2a2 2 0 002 2h2a2 2 0 002-2v-6"/></svg>'}
+              <button id="viewModeToggle" class="switcher-btn compact ${viewMode === 'cases' ? 'cases' : 'heatmap'}">
+                <span class="switcher-btn-icon compact">${viewMode === 'cases'
+                  ? '<svg width="16" height="16" fill="none" stroke="#2196F3" stroke-width="2" viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5A2.5 2.5 0 1 1 12 6a2.5 2.5 0 0 1 0 5.5z"/></svg>'
+                  : '<svg width="16" height="16" fill="none" stroke="#2196F3" stroke-width="2" viewBox="0 0 24 24"><path d="M3 6l9-4 9 4M4 10v6a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 012-2h0a2 2 0 012 2v2a2 2 0 002 2h2a2 2 0 002-2v-6"/></svg>'}
                 </span>
-                <span class="switcher-btn-label">Switch to ${viewMode === 'cases' ? 'Heatmap View' : 'Cases View'}</span>
+                <span class="switcher-btn-label compact">Switch to ${viewMode === 'cases' ? 'Heatmap View' : 'Cases View'}</span>
               </button>
             </div>
           `;
@@ -741,87 +741,90 @@ style.textContent = `
     margin: 0 !important;
     padding: 0 !important;
   }
-  .switcher-card {
-    background: #fff;
-    border-radius: 18px;
-    box-shadow: 0 6px 32px rgba(33, 150, 243, 0.10), 0 1.5px 6px rgba(0,0,0,0.06);
-    padding: 22px 20px 18px 20px;
-    min-width: 260px;
-    max-width: 90vw;
+  .switcher-card.compact {
+    background: rgba(255,255,255,0.85);
+    border-radius: 14px;
+    box-shadow: 0 2px 12px rgba(33, 150, 243, 0.08), 0 1px 3px rgba(0,0,0,0.04);
+    padding: 12px 14px 10px 14px;
+    min-width: 180px;
+    max-width: 80vw;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 16px;
-    transition: box-shadow 0.25s cubic-bezier(.4,0,.2,1), transform 0.18s cubic-bezier(.4,0,.2,1);
+    gap: 10px;
+    border: 1px solid rgba(33,150,243,0.07);
+    backdrop-filter: blur(6px);
+    transition: box-shadow 0.18s cubic-bezier(.4,0,.2,1), transform 0.14s cubic-bezier(.4,0,.2,1);
   }
-  .switcher-header {
+  .switcher-header.compact {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 8px;
     margin-bottom: 0;
   }
-  .switcher-icon {
+  .switcher-icon.compact {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 36px;
-    height: 36px;
+    width: 28px;
+    height: 28px;
     border-radius: 50%;
     background: #f4f8fd;
-    box-shadow: 0 2px 8px rgba(33,150,243,0.07);
+    box-shadow: 0 1px 4px rgba(33,150,243,0.04);
   }
-  .switcher-title {
-    font-size: 20px;
-    font-weight: 700;
+  .switcher-title.compact {
+    font-size: 15px;
+    font-weight: 600;
     color: #222;
-    letter-spacing: -0.5px;
+    letter-spacing: -0.2px;
   }
-  .switcher-btn {
+  .switcher-btn.compact {
     width: 100%;
-    border: none;
+    border: 1.5px solid #2196F3;
     border-radius: 999px;
-    padding: 14px 0;
-    font-size: 16px;
-    font-weight: 700;
+    padding: 7px 0;
+    font-size: 14px;
+    font-weight: 500;
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 10px;
+    gap: 7px;
     cursor: pointer;
-    box-shadow: 0 2px 8px rgba(33,150,243,0.10);
-    background: #2196F3;
-    color: #fff;
-    transition: background 0.18s, transform 0.18s, box-shadow 0.18s;
+    box-shadow: 0 1px 4px rgba(33,150,243,0.07);
+    background: #f7fbff;
+    color: #2196F3;
+    transition: background 0.16s, color 0.16s, border 0.16s, transform 0.16s, box-shadow 0.16s;
     outline: none;
     position: relative;
     overflow: hidden;
   }
-  .switcher-btn.heatmap {
-    background: #FF5722;
-    color: #fff;
+  .switcher-btn.compact.heatmap {
+    border: 1.5px solid #FF5722;
+    color: #FF5722;
+    background: #fff7f4;
   }
-  .switcher-btn:active {
+  .switcher-btn.compact:active {
     transform: scale(0.97);
-    box-shadow: 0 1px 2px rgba(33,150,243,0.10);
+    box-shadow: 0 1px 2px rgba(33,150,243,0.08);
   }
-  .switcher-btn-label {
-    font-size: 16px;
-    font-weight: 700;
-    letter-spacing: -0.2px;
+  .switcher-btn-label.compact {
+    font-size: 14px;
+    font-weight: 500;
+    letter-spacing: -0.1px;
   }
-  .switcher-btn-icon {
+  .switcher-btn-icon.compact {
     display: flex;
     align-items: center;
     justify-content: center;
   }
-  .switcher-btn::after {
+  .switcher-btn.compact::after {
     content: '';
     position: absolute;
     left: 50%;
     top: 50%;
     width: 0;
     height: 0;
-    background: rgba(255,255,255,0.25);
+    background: rgba(33,150,243,0.10);
     border-radius: 50%;
     transform: translate(-50%, -50%);
     transition: width 0.4s cubic-bezier(.4,0,.2,1), height 0.4s cubic-bezier(.4,0,.2,1), opacity 0.4s;
@@ -829,26 +832,28 @@ style.textContent = `
     pointer-events: none;
     z-index: 1;
   }
-  .switcher-btn.clicked::after {
-    width: 200%;
-    height: 200%;
+  .switcher-btn.compact.heatmap::after {
+    background: rgba(255,87,34,0.10);
+  }
+  .switcher-btn.compact.clicked::after {
+    width: 180%;
+    height: 180%;
     opacity: 1;
     transition: width 0.4s cubic-bezier(.4,0,.2,1), height 0.4s cubic-bezier(.4,0,.2,1), opacity 0.4s;
   }
-
   @media (max-width: 768px) {
-    .switcher-card {
+    .switcher-card.compact {
       min-width: 0;
-      width: 98vw;
-      padding: 16px 6vw 12px 6vw;
+      width: 94vw;
+      padding: 10px 3vw 8px 3vw;
       box-sizing: border-box;
     }
-    .switcher-title {
-      font-size: 17px;
+    .switcher-title.compact {
+      font-size: 13px;
     }
-    .switcher-btn {
-      font-size: 15px;
-      padding: 12px 0;
+    .switcher-btn.compact {
+      font-size: 13px;
+      padding: 6px 0;
     }
   }
 `;
