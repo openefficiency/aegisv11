@@ -300,7 +300,7 @@ export default function EthicsOfficerDashboard() {
         );
       } catch (dbError) {
         console.warn("Database not available, using mock data:", dbError);
-        setCases(mockCases.map((c) => normalizeCase(c)));
+        //setCases(mockCases.map((c) => normalizeCase(c))); //test
         setInvestigators(mockInvestigators);
 
         // Calculate stats from mock data
