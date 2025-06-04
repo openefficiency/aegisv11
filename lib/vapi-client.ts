@@ -197,10 +197,13 @@ export class VAPIClient {
 }
 
 // Initialize with your actual VAPI credentials
+/* Old values:
+ * apiKey: "2ca2e718-80b2-454a-a78b-e0560a06f1c4"
+ * assistantId: "265d793f-8179-4d20-a6cc-eb337577c512"
+ * shareKey: "6a029118-46e8-4cda-87f3-0ac2f287af8f"
+ */
 export const vapiClient = new VAPIClient({
-  apiKey:
-    process.env.NEXT_PUBLIC_VAPI_API_KEY ||
-    "2ca2e718-80b2-454a-a78b-e0560a06f1c4",
+  apiKey: process.env.NEXT_PUBLIC_VAPI_API_KEY || "6a029118-46e8-4cda-87f3-0ac2f287af8f",
   baseUrl: "https://api.vapi.ai",
   assistantId: "265d793f-8179-4d20-a6cc-eb337577c512",
   shareKey: "6a029118-46e8-4cda-87f3-0ac2f287af8f",
@@ -215,7 +218,7 @@ export const testVAPICredentials = async () => {
       "https://api.vapi.ai/assistant/265d793f-8179-4d20-a6cc-eb337577c512",
       {
         headers: {
-          Authorization: "Bearer 2ca2e718-80b2-454a-a78b-e0560a06f1c4",
+          Authorization: "Bearer 6a029118-46e8-4cda-87f3-0ac2f287af8f", // old: "2ca2e718-80b2-454a-a78b-e0560a06f1c4"
           "Content-Type": "application/json",
         },
       }
@@ -232,7 +235,7 @@ export const testVAPICredentials = async () => {
       console.error("VAPI API Error:", response.status, errorText);
       return { success: false, error: `${response.status}: ${errorText}` };
     }
-  } catch (error) {
+  } catch (error: any) {
     console.error("VAPI Connection Error:", error);
     return { success: false, error: error.message };
   }
