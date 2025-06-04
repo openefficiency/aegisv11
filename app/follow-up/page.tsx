@@ -293,7 +293,7 @@ export default function FollowUpPage() {
 
                     </CardTitle>
                     <CardDescription className="text-slate-400">
-                      Report ID: {caseData.report_id || caseData.case_number} •
+                      Case ID: {caseData.tracking_code || caseData.report_id || caseData.case_number} •
                       Submitted:{" "}
                       {new Date(caseData.created_at).toLocaleDateString()}
                     </CardDescription>
