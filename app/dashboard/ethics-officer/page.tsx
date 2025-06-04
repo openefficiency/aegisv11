@@ -139,11 +139,15 @@ export default function EthicsOfficerDashboard() {
     const addDemoCase = () => {
       if (demoIndex < demoCasesData.length) {
         setCases((prev) => {
-          // Keep only the most recent cases (remove last 20)
-          const recentCases = prev.slice(0, -20);
+          // Keep only the most recent 30 cases
+          const recentCases = prev.slice(0, 29);
           return [normalizeCase(demoCasesData[demoIndex]), ...recentCases];
         });
         demoIndex++;
+        setTimeout(addDemoCase, 500);
+      } else {
+        // Reset index to start over when we reach the end
+        demoIndex = 0;
         setTimeout(addDemoCase, 500);
       }
     };
