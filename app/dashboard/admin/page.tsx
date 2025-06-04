@@ -43,9 +43,16 @@ export default function AdminDashboard() {
           category: demoCase.category,
           status: demoCase.status,
           priority: demoCase.priority,
-          reward_amount: demoCase.reward_amount,
-          recovery_amount: demoCase.recovery_amount,
+          case_number: demoCase.case_number,
+          tracking_code: demoCase.tracking_code,
+          report_id: demoCase.report_id,
+          secret_code: demoCase.secret_code,
+          reward_status: demoCase.reward_status,
+          vapi_report_summary: demoCase.vapi_report_summary,
+          vapi_session_id: demoCase.vapi_session_id,
+          vapi_audio_url: demoCase.vapi_audio_url,
           created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
         })
 
         if (error) {

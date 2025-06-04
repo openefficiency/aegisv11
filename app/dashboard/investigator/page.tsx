@@ -77,18 +77,32 @@ export default function InvestigatorDashboard() {
       const batch = demoCases.slice(demoCaseIndex, endIndex);
 
       for (const demoCase of batch) {
-        const { error } = await supabase.from("cases").insert({
-          title: demoCase.title,
-          description: demoCase.description,
-          category: demoCase.category,
-          status: "under_investigation", // Set initial status for investigator
-          priority: demoCase.priority,
-          assigned_to: "33333333-3333-3333-3333-333333333333", // Demo investigator ID
-          created_at: new Date().toISOString(),
-        });
+        // Check if case already exists
+        const { data: existingCase } = await supabase
+          .from("cases")
+          .select("id")
+          .eq("tracking_code", demoCase.tracking_code)
+          .single();
 
-        if (error) {
-          console.error("Error adding demo case:", error);
+        if (!existingCase) {
+          const { error } = await supabase.from("cases").insert({
+            title: demoCase.title,
+            description: demoCase.description,
+            category: demoCase.category,
+            status: "open", // Start with open status
+            priority: demoCase.priority,
+            assigned_to: "33333333-3333-3333-3333-333333333333", // Demo investigator ID
+            tracking_code: demoCase.tracking_code,
+            case_number: demoCase.case_number,
+            report_id: demoCase.report_id,
+            vapi_report_summary: demoCase.vapi_report_summary,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          });
+
+          if (error) {
+            console.error("Error adding demo case:", error);
+          }
         }
       }
 
