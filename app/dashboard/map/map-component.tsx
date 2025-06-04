@@ -22,19 +22,7 @@ const categoryIcons = {
   harassment: "fa-solid fa-user-shield",
   safety: "fa-solid fa-hard-hat",
   corruption: "fa-solid fa-user-tie",
-  data_breach: "fa-solid fa-database",
-  theft: "fa-solid fa-hand-holding",
-  environmental: "fa-solid fa-leaf",
-  misconduct: "fa-solid fa-user-slash",
-  health: "fa-solid fa-heart-pulse",
-  retaliation: "fa-solid fa-arrow-rotate-left",
-  data_breach: "fa-solid fa-shield-halved",
-  theft: "fa-solid fa-hand-holding",
-  environmental: "fa-solid fa-leaf",
-  misconduct: "fa-solid fa-user-slash",
-  health: "fa-solid fa-heart-pulse",
-  retaliation: "fa-solid fa-arrow-rotate-left"
-} as const;
+};
 
 // Category colors mapping
 const categoryColors = {
