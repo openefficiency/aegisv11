@@ -140,7 +140,7 @@ const ReportForm: React.FC<ReportFormProps> = ({ open, onClose, onSuccess, addre
   }
 
   const handleInputChange = (field: keyof FormData, value: string | boolean) => {
-    setFormData((prev: FormData) => ({
+    setFormData((prev) => ({
       ...prev,
       [field]: value,
     }))
@@ -163,8 +163,11 @@ const ReportForm: React.FC<ReportFormProps> = ({ open, onClose, onSuccess, addre
           {/* Category Selection */}
           <div className="space-y-2 form-category-section">
             <Label htmlFor="category">Category *</Label>
-            <Select value={formData.category} onValueChange={(value) => handleInputChange("category", value)}>
-              <SelectTrigger>
+            <Select 
+              value={formData.category} 
+              onValueChange={(value: string) => handleInputChange("category", value)}
+            >
+              <SelectTrigger id="category">
                 <SelectValue placeholder="Select incident category" />
               </SelectTrigger>
               <SelectContent>
