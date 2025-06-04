@@ -350,7 +350,7 @@ export default function InvestigatorDashboard() {
                 <Table>
                   <TableHeader>
                     <TableRow className="border-slate-700">
-                      <TableHead className="text-slate-300">ID</TableHead>
+                      <TableHead className="text-slate-300">Case ID</TableHead>
                       <TableHead className="text-slate-300">Title</TableHead>
                       <TableHead className="text-slate-300">Summary</TableHead>
                       <TableHead className="text-slate-300">Category</TableHead>
@@ -362,7 +362,7 @@ export default function InvestigatorDashboard() {
                     {cases.map((case_) => (
                       <TableRow key={case_.id} className="border-slate-700">
                         <TableCell className="text-slate-300 font-mono">
-                          {case_.report_id || case_.case_number}
+                          {case_.tracking_code || case_.report_id || case_.case_number}
                         </TableCell>
                         <TableCell className="text-white max-w-xs truncate">
 

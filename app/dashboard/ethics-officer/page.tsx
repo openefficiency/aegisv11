@@ -375,12 +375,15 @@ export default function EthicsOfficerDashboard() {
           report.transcript.length > 20
         ) {
           // Create new case from VAPI report
+          const match = report.summary?.match(/tracking code[:\s]+([A-Z0-9]+)/i);
+
           const newCase: Case = {
             id: `case-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
             case_number: `WB-${new Date().getFullYear()}-${String(
               Math.floor(Math.random() * 10000)
             ).padStart(4, "0")}`,
             report_id: report.report_id,
+            tracking_code: match ? match[1] : undefined,
             title: extractTitleFromSummary(report.summary),
             description: report.summary,
             category: categorizeReport(report.summary, report.transcript),
@@ -446,12 +449,15 @@ export default function EthicsOfficerDashboard() {
         return;
       }
 
+      const match = report.summary?.match(/tracking code[:\s]+([A-Z0-9]+)/i);
+
       const newCase: Case = {
         id: `case-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
         case_number: `WB-${new Date().getFullYear()}-${String(
           Math.floor(Math.random() * 10000)
         ).padStart(4, "0")}`,
         report_id: report.report_id,
+        tracking_code: match ? match[1] : undefined,
         title: extractTitleFromSummary(report.summary),
         description: report.summary,
         category: categorizeReport(report.summary, report.transcript),
@@ -947,7 +953,7 @@ export default function EthicsOfficerDashboard() {
                   <Table>
                     <TableHeader>
                       <TableRow className="border-slate-700">
-                        <TableHead className="text-slate-300">ID</TableHead>
+                        <TableHead className="text-slate-300">Case ID</TableHead>
                         <TableHead className="text-slate-300">Title</TableHead>
                         <TableHead className="text-slate-300">
                           Summary
@@ -968,7 +974,7 @@ export default function EthicsOfficerDashboard() {
                       {cases.map((case_) => (
                         <TableRow key={case_.id} className="border-slate-700">
                           <TableCell className="text-slate-300 font-mono">
-                            {case_.report_id || case_.case_number}
+                            {case_.tracking_code || case_.report_id || case_.case_number}
                           </TableCell>
                           <TableCell className="text-white max-w-xs truncate">
 
@@ -1294,7 +1300,7 @@ export default function EthicsOfficerDashboard() {
                   <Table>
                     <TableHeader>
                       <TableRow className="border-slate-700">
-                        <TableHead className="text-slate-300">Case #</TableHead>
+                        <TableHead className="text-slate-300">Case ID</TableHead>
                         <TableHead className="text-slate-300">Title</TableHead>
                         <TableHead className="text-slate-300">
                           Recovery Amount
@@ -1316,7 +1322,7 @@ export default function EthicsOfficerDashboard() {
                         .map((case_) => (
                           <TableRow key={case_.id} className="border-slate-700">
                             <TableCell className="text-slate-300 font-mono">
-                              {case_.case_number}
+                              {case_.tracking_code || case_.report_id || case_.case_number}
                             </TableCell>
                             <TableCell className="text-white">
 
