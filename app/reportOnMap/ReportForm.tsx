@@ -20,9 +20,11 @@ interface ReportFormProps {
   onSuccess: () => void
   address: string
   location: LatLngLiteral | null
+  showSuccessMessage: boolean
+  successCaseId: string
 }
 
-const ReportForm: React.FC<ReportFormProps> = ({ open, onClose, onSuccess, address, location }) => {
+const ReportForm: React.FC<ReportFormProps> = ({ open, onClose, onSuccess, address, location, showSuccessMessage, successCaseId }) => {
   const { toast } = useToast()
   const [isLoading, setIsLoading] = useState(false)
   const [showContactInfo, setShowContactInfo] = useState(false)
@@ -149,6 +151,24 @@ const ReportForm: React.FC<ReportFormProps> = ({ open, onClose, onSuccess, addre
             Your report will be submitted securely and anonymously. Location: {address || "Selected location"}
           </DialogDescription>
         </DialogHeader>
+
+        {showSuccessMessage && (
+          <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
+            <div className="flex items-center gap-3">
+              <div className="flex-shrink-0">
+                <svg className="h-5 w-5 text-green-400" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="text-sm font-medium text-green-800">Report Submitted Successfully</h3>
+                <p className="mt-1 text-sm text-green-700">
+                  Your report has been submitted. Case ID: <span className="font-semibold">{successCaseId}</span>
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
 
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Category Selection */}
