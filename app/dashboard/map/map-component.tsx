@@ -832,7 +832,6 @@ export default function MapComponent() {
     
   ]);
   const [loading, setLoading] = useState(false);
-  const [viewMode, setViewMode] = useState<'cases' | 'safety'>('cases');
   const [mapError, setMapError] = useState<string | null>(null);
   const [deployingDrone, setDeployingDrone] = useState<string | null>(null);
 
@@ -929,318 +928,7 @@ export default function MapComponent() {
         prefix: '© OpenStreetMap contributors'
       }).addTo(map.current);
 
-      // Add view mode toggle control
-      const ViewModeControl = L.Control.extend({
-        options: {
-          position: 'topright'
-        },
-        onAdd: function() {
-          const div = L.DomUtil.create('div', 'leaflet-control leaflet-bar custom-switcher-card');
-          div.innerHTML = `
-            <div class="switcher-card modern" style="margin-right: 20px;">
-              <div class="switcher-header modern">
-                <span class="switcher-icon modern">${viewMode === 'cases'
-                  ? '<svg width="20" height="20" fill="none" stroke="#2196F3" stroke-width="2" viewBox="0 0 24 24"><path d="M3 6l9-4 9 4M4 10v6a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 012-2h0a2 2 0 012 2v2a2 2 0 002 2h2a2 2 0 002-2v-6"/></svg>'
-                  : '<svg width="20" height="20" fill="none" stroke="#FF5722" stroke-width="2" viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5A2.5 2.5 0 1 1 12 6a2.5 2.5 0 0 1 0 5.5z"/></svg>'}
-                </span>
-                <span class="switcher-title modern">${viewMode === 'cases' ? 'Cases View' : 'Heatmap View'}</span>
-              </div>
-              <div style="display: flex; justify-content: flex-end; padding-right: 20px;">
-                <button
-                  id="viewModeToggle"
-                  class="modern-switch-btn ${viewMode === 'cases' ? 'cases' : 'heatmap'}"
-                  style="display: flex; align-items: center; gap: 8px;"
-                >
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FF9800" stroke-width="2" style="margin-right: 8px;">
-                    <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5A2.5 2.5 0 1 1 12 6a2.5 2.5 0 0 1 0 5.5z"/>
-                  </svg>
-                  ${viewMode === 'cases' ? 'Switch to Heatmap' : 'Switch to Cases'}
-                </button>
-              </div>
-            </div>
-          `;
-          return div;
-        }
-      });
-
-      new ViewModeControl().addTo(map.current);
-
-      console.log("Controls added, map initialization complete");
-
-      // Force multiple resize events to ensure the map renders properly
-      const resizeMap = () => {
-        if (map.current) {
-          map.current.invalidateSize();
-          console.log("Map resized");
-        }
-      };
-
-      // Initial resize
-      setTimeout(resizeMap, 100);
-      
-      // Additional resizes
-      setTimeout(resizeMap, 500);
-      setTimeout(resizeMap, 1000);
-
-      // Add event listener for view mode toggle
-      setTimeout(() => {
-        const toggleButton = document.getElementById('viewModeToggle');
-        if (toggleButton) {
-          toggleButton.addEventListener('click', () => {
-            setViewMode(prev => prev === 'cases' ? 'safety' : 'cases');
-          });
-        }
-      }, 100);
-
-    } catch (error) {
-      console.error("Error initializing map:", error);
-      setMapError(error instanceof Error ? error.message : "Failed to initialize map");
-    }
-
-    // Cleanup on unmount
-    return () => {
-      if (map.current) {
-        map.current.remove();
-        map.current = null;
-      }
-    };
-  }, []);
-
-  // Update markers or heatmap when cases or view mode changes
-  useEffect(() => {
-    if (!map.current || !cases.length) return;
-
-    // Clear existing markers and heatmap
-    markersRef.current.forEach(marker => marker.remove());
-    markersRef.current = [];
-    if (heatmapLayer.current) {
-      map.current.removeLayer(heatmapLayer.current);
-    }
-
-    if (viewMode === 'cases') {
-      // Show individual case markers
-      markersRef.current = cases.map((case_) => {
-        // Determine marker color based on priority
-        let markerColor;
-        switch(case_.priority) {
-          case 'critical':
-            markerColor = '#F44336'; // Red
-            break;
-          case 'high':
-            markerColor = '#FFC107'; // Yellow
-            break;
-          case 'medium':
-            markerColor = '#4CAF50'; // Green
-            break;
-          default:
-            markerColor = '#4CAF50'; // Default to green
-        }
-
-        const customIcon = L.divIcon({
-          className: `custom-marker ${markerColor}`,
-          html: `<div style="
-            background-color: ${markerColor};
-            width: 52px;
-            height: 52px;
-            border-radius: 50%;
-            border: 2px solid white;
-            box-shadow: 0 0 8px rgba(0,0,0,0.3);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            animation: pulse 2s infinite;
-          ">
-            <i class="${categoryIcons[case_.category]}" style="
-              color: white;
-              font-size: 24px;
-            "></i>
-          </div>`,
-          iconSize: [32, 32],
-          iconAnchor: [16, 16]
-        });
-
-        const popupContent = `
-          <div style="
-            min-width: 280px;
-            max-width: 90vw;
-            background: white;
-            color: #333;
-            border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            overflow: hidden;
-          ">
-            <div style="
-              padding: 16px;
-              border-bottom: 1px solid #eee;
-              background: ${markerColor};
-              color: white;
-            ">
-              <h3 style="margin: 0; font-size: 16px; font-weight: 600; line-height: 1.3;">${case_.title}</h3>
-              <p style="margin: 4px 0 0 0; font-size: 12px; opacity: 0.9;">Case ID: ${case_.tracking_code}</p>
-            </div>
-            
-            <div style="padding: 16px;">
-              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px;">
-                <div>
-                  <p style="margin: 0 0 4px 0; font-size: 11px; color: #666;">STATUS</p>
-                  <p style="margin: 0; font-size: 13px; font-weight: 500; color: ${case_.status === 'resolved' ? '#4CAF50' : case_.status === 'under_investigation' ? '#FFC107' : '#F44336'}">
-                    ${case_.status.replace('_', ' ').toUpperCase()}
-                  </p>
-                </div>
-                <div>
-                  <p style="margin: 0 0 4px 0; font-size: 11px; color: #666;">PRIORITY</p>
-                  <p style="margin: 0; font-size: 13px; font-weight: 500; color: ${markerColor}">
-                    ${case_.priority.toUpperCase()}
-                  </p>
-                </div>
-                <div>
-                  <p style="margin: 0 0 4px 0; font-size: 11px; color: #666;">CATEGORY</p>
-                  <p style="margin: 0; font-size: 13px; font-weight: 500;">
-                    ${case_.category.toUpperCase()}
-                  </p>
-                </div>
-                <div>
-                  <p style="margin: 0 0 4px 0; font-size: 11px; color: #666;">CREATED</p>
-                  <p style="margin: 0; font-size: 13px; font-weight: 500;">
-                    ${new Date(case_.created_at).toLocaleDateString()}
-                  </p>
-                </div>
-              </div>
-
-              <div style="margin-bottom: 16px;">
-                <p style="margin: 0 0 4px 0; font-size: 11px; color: #666;">DESCRIPTION</p>
-                <p style="margin: 0; font-size: 13px; line-height: 1.4;">${case_.description}</p>
-              </div>
-
-              <div style="
-                background: #f8f9fa;
-                padding: 12px;
-                border-radius: 8px;
-                margin-bottom: 16px;
-                display: flex;
-                align-items: center;
-                gap: 8px;
-              ">
-                <i class="fa-solid fa-location-dot" style="color: #666;"></i>
-                <p style="margin: 0; font-size: 13px; color: #333;">
-                  ${case_.structured_data?.incident?.location?.address || 'Address not available'}
-                </p>
-              </div>
-
-              ${case_.reward_amount ? `
-                <div style="
-                  background: #f8f9fa;
-                  padding: 12px;
-                  border-radius: 8px;
-                  margin-bottom: 16px;
-                ">
-                  <p style="margin: 0 0 4px 0; font-size: 11px; color: #666;">REWARD</p>
-                  <p style="margin: 0; font-size: 16px; font-weight: 600; color: #2c3e50;">
-                    $${case_.reward_amount.toLocaleString()}
-                  </p>
-                </div>
-              ` : ''}
-
-              <button 
-                onclick="document.dispatchEvent(new CustomEvent('deployDrone', { detail: '${case_.id}' }))"
-                style="
-                  width: 100%;
-                  padding: 14px;
-                  background: ${markerColor};
-                  color: white;
-                  border: none;
-                  border-radius: 8px;
-                  font-size: 14px;
-                  font-weight: 600;
-                  cursor: pointer;
-                  display: flex;
-                  align-items: center;
-                  justify-content: center;
-                  gap: 8px;
-                  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-                  position: relative;
-                  overflow: hidden;
-                  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-                  -webkit-tap-highlight-color: transparent;
-                "
-                onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 4px 12px rgba(0,0,0,0.15)'"
-                onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='0 2px 4px rgba(0,0,0,0.1)'"
-              >
-                ${deployingDrone === case_.id ? `
-                  <div style="
-                    width: 18px;
-                    height: 18px;
-                    border: 2px solid white;
-                    border-top-color: transparent;
-                    border-radius: 50%;
-                    animation: spin 1s linear infinite;
-                  "></div>
-                  <span>Deploying Drone...</span>
-                ` : `
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
-                  </svg>
-                  <span>Deploy Drone</span>
-                `}
-              </button>
-            </div>
-          </div>
-        `;
-
-        // Get location from structured data or generate random location
-        let location;
-        if (case_.structured_data?.incident?.location?.lat && case_.structured_data?.incident?.location?.lng) {
-          location = {
-            lat: case_.structured_data.incident.location.lat,
-            lng: case_.structured_data.incident.location.lng
-          };
-        } else {
-          // Generate random location around convention center
-          location = generateRandomLocation(38.90767, -77.02858);
-        }
-
-        const marker = L.marker([location.lat, location.lng], { icon: customIcon })
-          .bindPopup(popupContent)
-          .addTo(map.current!);
-
-        // Add event listener for drone deployment
-        document.addEventListener('deployDrone', ((e: CustomEvent) => {
-          if (e.detail === case_.id) {
-            handleDeployDrone(case_.id);
-          }
-        }) as EventListener);
-
-        return marker;
-      });
-    } else {
-      // Show safety heatmap
-      const gridSize = 0.0003; // Even smaller grid size for more detailed heatmap
-      const bounds = map.current.getBounds();
-      const heatmapData: { lat: number; lng: number; color: string }[] = [];
-
-      for (let lat = bounds.getSouth(); lat < bounds.getNorth(); lat += gridSize) {
-        for (let lng = bounds.getWest(); lng < bounds.getEast(); lng += gridSize) {
-          const { color } = calculateSafetyScore(cases, lat, lng);
-          heatmapData.push({ lat, lng, color });
-        }
-      }
-
-      // Create heatmap layer
-      const heatmap = L.layerGroup().addTo(map.current);
-      heatmapData.forEach(({ lat, lng, color }) => {
-        L.rectangle(
-          [[lat, lng], [lat + gridSize, lng + gridSize]],
-          {
-            color: color,
-            fillColor: color,
-            fillOpacity: 0.5,
-            weight: 0
-          }
-        ).addTo(heatmap);
-      });
-      heatmapLayer.current = heatmap;
-
-      // Add legend
+      // Add legend control for the heatmap
       const LegendControl = L.Control.extend({
         options: {
           position: 'bottomleft'
@@ -1279,8 +967,77 @@ export default function MapComponent() {
       });
 
       new LegendControl().addTo(map.current);
+
+      console.log("Controls added, map initialization complete");
+
+      // Force multiple resize events to ensure the map renders properly
+      const resizeMap = () => {
+        if (map.current) {
+          map.current.invalidateSize();
+          console.log("Map resized");
+        }
+      };
+
+      // Initial resize
+      setTimeout(resizeMap, 100);
+      
+      // Additional resizes
+      setTimeout(resizeMap, 500);
+      setTimeout(resizeMap, 1000);
+
+    } catch (error) {
+      console.error("Error initializing map:", error);
+      setMapError(error instanceof Error ? error.message : "Failed to initialize map");
     }
-  }, [cases, viewMode, deployingDrone]);
+
+    // Cleanup on unmount
+    return () => {
+      if (map.current) {
+        map.current.remove();
+        map.current = null;
+      }
+    };
+  }, []);
+
+  // Update markers or heatmap when cases changes
+  useEffect(() => {
+    if (!map.current || !cases.length) return;
+
+    // Clear existing markers and heatmap
+    markersRef.current.forEach(marker => marker.remove());
+    markersRef.current = [];
+    if (heatmapLayer.current) {
+      map.current.removeLayer(heatmapLayer.current);
+    }
+
+    // Show safety heatmap
+    const gridSize = 0.0003; // Even smaller grid size for more detailed heatmap
+    const bounds = map.current.getBounds();
+    const heatmapData: { lat: number; lng: number; color: string }[] = [];
+
+    for (let lat = bounds.getSouth(); lat < bounds.getNorth(); lat += gridSize) {
+      for (let lng = bounds.getWest(); lng < bounds.getEast(); lng += gridSize) {
+        const { color } = calculateSafetyScore(cases, lat, lng);
+        heatmapData.push({ lat, lng, color });
+      }
+    }
+
+    // Create heatmap layer
+    const heatmap = L.layerGroup().addTo(map.current);
+    heatmapData.forEach(({ lat, lng, color }) => {
+      L.rectangle(
+        [[lat, lng], [lat + gridSize, lng + gridSize]],
+        {
+          color: color,
+          fillColor: color,
+          fillOpacity: 0.5,
+          weight: 0
+        }
+      ).addTo(heatmap);
+    });
+    heatmapLayer.current = heatmap;
+
+  }, [cases]);
 
   if (loading) {
     return (
