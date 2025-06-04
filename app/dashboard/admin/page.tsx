@@ -10,7 +10,7 @@ import { Users, FileText, DollarSign, TrendingUp, Settings, Plus, MoreHorizontal
 import { DashboardLayout } from "@/components/dashboard-layout"
 import { supabase, type Case, type Profile } from "@/lib/supabase"
 import { formatCaseText, formatCaseTitle } from "@/lib/utils"
-import demoCases from "@/data/demo.json"
+import demoCases from "../demo.json"
 
 export default function AdminDashboard() {
   const [cases, setCases] = useState<Case[]>([])

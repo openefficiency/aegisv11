@@ -45,8 +45,7 @@ import { DashboardLayout } from "@/components/dashboard-layout";
 import { supabase, type Case, type InvestigatorQuery } from "@/lib/supabase";
 import { auditLogger } from "@/lib/audit-logger";
 import { formatCaseText, formatCaseTitle } from "@/lib/utils";
-
-
+import demoCases from "../demo.json";
 
 export default function InvestigatorDashboard() {
   const [cases, setCases] = useState<Case[]>([]);
@@ -63,10 +62,43 @@ export default function InvestigatorDashboard() {
   const [queryText, setQueryText] = useState("");
   const [updateNote, setUpdateNote] = useState("");
   const [isFinished, setIsFinished] = useState(false);
+  const [demoCaseIndex, setDemoCaseIndex] = useState(0);
 
   useEffect(() => {
     fetchData();
   }, []);
+
+  useEffect(() => {
+    const addDemoCases = async () => {
+      if (demoCaseIndex >= demoCases.length) return;
+
+      const batchSize = 3;
+      const endIndex = Math.min(demoCaseIndex + batchSize, demoCases.length);
+      const batch = demoCases.slice(demoCaseIndex, endIndex);
+
+      for (const demoCase of batch) {
+        const { error } = await supabase.from("cases").insert({
+          title: demoCase.title,
+          description: demoCase.description,
+          category: demoCase.category,
+          status: "under_investigation", // Set initial status for investigator
+          priority: demoCase.priority,
+          assigned_to: "33333333-3333-3333-3333-333333333333", // Demo investigator ID
+          created_at: new Date().toISOString(),
+        });
+
+        if (error) {
+          console.error("Error adding demo case:", error);
+        }
+      }
+
+      setDemoCaseIndex(endIndex);
+      fetchData();
+    };
+
+    const interval = setInterval(addDemoCases, 10000);
+    return () => clearInterval(interval);
+  }, [demoCaseIndex]);
 
   const fetchData = async () => {
     try {
@@ -75,7 +107,8 @@ export default function InvestigatorDashboard() {
         .from("cases")
         .select("*")
         .eq("assigned_to", "33333333-3333-3333-3333-333333333333") // Demo investigator ID
-        .order("created_at", { ascending: false });
+        .order("created_at", { ascending: false })
+        .limit(30);
 
       if (casesError) throw casesError;
 
@@ -365,12 +398,7 @@ export default function InvestigatorDashboard() {
                           {case_.tracking_code || case_.report_id || case_.case_number}
                         </TableCell>
                         <TableCell className="text-white max-w-xs truncate">
-
                           {formatCaseTitle(case_.title, case_.description, case_.created_at)}
-
-
-
-
                         </TableCell>
                         <TableCell className="text-slate-300 max-w-sm truncate">
                           {formatCaseText(case_.vapi_report_summary || case_.description)}

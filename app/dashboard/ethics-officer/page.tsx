@@ -1,7 +1,7 @@
 // app/dashboard/ethics-officer/page.tsx (Updated with better error handling)
 "use client";
 
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { vapiClient } from "@/lib/vapi-client";
 import {
   Card,
@@ -134,27 +134,26 @@ export default function EthicsOfficerDashboard() {
     // Auto-refresh VAPI reports every 30 seconds
     const interval = setInterval(fetchVAPIReports, 30000);
 
-    // Add demo cases continuously
-    let demoIndex = 0;
-    const addDemoCase = () => {
-      if (demoIndex < demoCasesData.length) {
-        setCases((prev) => {
-          // Keep only the most recent 30 cases
-          const recentCases = prev.slice(0, 29);
-          // Always add new case at the beginning of the array
-          return [normalizeCase(demoCasesData[demoIndex]), ...recentCases];
-        });
-        demoIndex++;
-        setTimeout(addDemoCase, 500);
-      } else {
-        // Reset index to start over when we reach the end
-        demoIndex = 0;
-        setTimeout(addDemoCase, 500);
-      }
+    // Add demo cases in batches
+    const addDemoCases = () => {
+      setCases((prev) => {
+        // Take first 5 cases from demo data
+        const newCases = demoCasesData.slice(0, 5).map(normalizeCase);
+        // Combine with existing cases, keeping only most recent 30
+        return [...newCases, ...prev].slice(0, 30);
+      });
     };
-    addDemoCase();
 
-    return () => clearInterval(interval);
+    // Add initial batch of cases
+    addDemoCases();
+
+    // Add new batch every 10 seconds
+    const demoInterval = setInterval(addDemoCases, 10000);
+
+    return () => {
+      clearInterval(interval);
+      clearInterval(demoInterval);
+    };
   }, []);
 
   const fetchData = async () => {
