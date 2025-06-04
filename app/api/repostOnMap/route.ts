@@ -11,6 +11,8 @@ let supabase: ReturnType<typeof createClient> | null = null
 
 if (supabaseUrl && supabaseServiceKey) {
   supabase = createClient(supabaseUrl, supabaseServiceKey)
+} else if (process.env.NODE_ENV !== 'development') {
+  throw new Error('Supabase environment variables are missing')
 } else {
   console.warn('Supabase environment variables not found. Running in test mode.')
 }
@@ -190,11 +192,17 @@ export async function POST(request: Request) {
       )
     }
 
-    // If Supabase is not configured, return a test response
+    // If Supabase is not configured
     if (!supabase) {
+      if (process.env.NODE_ENV !== 'development') {
+        return NextResponse.json(
+          { success: false, error: 'Supabase is not configured' },
+          { status: 500 }
+        )
+      }
       console.log('Test mode: Report data received:', { ...body, contactInfo: body.contactInfo ? '[REDACTED]' : undefined })
-      return NextResponse.json({ 
-        success: true, 
+      return NextResponse.json({
+        success: true,
         caseId: body.case_id,
         message: 'Report submitted successfully (test mode)',
         testMode: true,
