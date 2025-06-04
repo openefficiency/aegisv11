@@ -125,7 +125,8 @@ export default function MapComponent() {
         incident: {
           location: {
             lat: 38.9082,  // North of center point
-            lng: -77.0280
+            lng: -77.0280,
+            address: "1400 L St NW, Washington, DC 20005"
           }
         }
       }
@@ -147,7 +148,8 @@ export default function MapComponent() {
         incident: {
           location: {
             lat: 38.9070,  // South of center point
-            lng: -77.0285
+            lng: -77.0285,
+            address: "1300 K St NW, Washington, DC 20005"
           }
         }
       }
@@ -169,7 +171,8 @@ export default function MapComponent() {
         incident: {
           location: {
             lat: 38.9075,  // East of center point
-            lng: -77.0275
+            lng: -77.0275,
+            address: "1350 I St NW, Washington, DC 20005"
           }
         }
       }
@@ -191,7 +194,8 @@ export default function MapComponent() {
         incident: {
           location: {
             lat: 38.9078,  // West of center point
-            lng: -77.0295
+            lng: -77.0295,
+            address: "1450 M St NW, Washington, DC 20005"
           }
         }
       }
@@ -213,7 +217,8 @@ export default function MapComponent() {
         incident: {
           location: {
             lat: 38.9073,  // Southeast of center point
-            lng: -77.0290
+            lng: -77.0290,
+            address: "1325 K St NW, Washington, DC 20005"
           }
         }
       }
@@ -447,11 +452,12 @@ export default function MapComponent() {
 
         const popupContent = `
           <div style="
-            min-width: 300px;
+            min-width: 280px;
+            max-width: 90vw;
             background: white;
             color: #333;
-            border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
             overflow: hidden;
           ">
             <div style="
@@ -460,7 +466,7 @@ export default function MapComponent() {
               background: ${markerColor};
               color: white;
             ">
-              <h3 style="margin: 0; font-size: 16px; font-weight: 600;">${case_.title}</h3>
+              <h3 style="margin: 0; font-size: 16px; font-weight: 600; line-height: 1.3;">${case_.title}</h3>
               <p style="margin: 4px 0 0 0; font-size: 12px; opacity: 0.9;">Case ID: ${case_.case_number}</p>
             </div>
             
@@ -497,11 +503,26 @@ export default function MapComponent() {
                 <p style="margin: 0; font-size: 13px; line-height: 1.4;">${case_.description}</p>
               </div>
 
+              <div style="
+                background: #f8f9fa;
+                padding: 12px;
+                border-radius: 8px;
+                margin-bottom: 16px;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+              ">
+                <i class="fa-solid fa-location-dot" style="color: #666;"></i>
+                <p style="margin: 0; font-size: 13px; color: #333;">
+                  ${case_.structured_data?.incident?.location?.address || 'Address not available'}
+                </p>
+              </div>
+
               ${case_.reward_amount ? `
                 <div style="
                   background: #f8f9fa;
                   padding: 12px;
-                  border-radius: 6px;
+                  border-radius: 8px;
                   margin-bottom: 16px;
                 ">
                   <p style="margin: 0 0 4px 0; font-size: 11px; color: #666;">REWARD</p>
@@ -515,13 +536,13 @@ export default function MapComponent() {
                 onclick="document.dispatchEvent(new CustomEvent('deployDrone', { detail: '${case_.id}' }))"
                 style="
                   width: 100%;
-                  padding: 12px;
+                  padding: 14px;
                   background: ${markerColor};
                   color: white;
                   border: none;
-                  border-radius: 6px;
+                  border-radius: 8px;
                   font-size: 14px;
-                  font-weight: 500;
+                  font-weight: 600;
                   cursor: pointer;
                   display: flex;
                   align-items: center;
@@ -531,6 +552,7 @@ export default function MapComponent() {
                   position: relative;
                   overflow: hidden;
                   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                  -webkit-tap-highlight-color: transparent;
                 "
                 onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 4px 12px rgba(0,0,0,0.15)'"
                 onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='0 2px 4px rgba(0,0,0,0.1)'"
@@ -544,12 +566,12 @@ export default function MapComponent() {
                     border-radius: 50%;
                     animation: spin 1s linear infinite;
                   "></div>
-                  <span style="font-weight: 600;">Deploying Drone...</span>
+                  <span>Deploying Drone...</span>
                 ` : `
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
                   </svg>
-                  <span style="font-weight: 600;">Deploy Drone</span>
+                  <span>Deploy Drone</span>
                 `}
               </button>
             </div>
@@ -712,6 +734,26 @@ style.textContent = `
     }
     100% {
       box-shadow: 0 0 0 0 rgba(0,0,0,0);
+    }
+  }
+
+  @media (max-width: 768px) {
+    .leaflet-popup-content {
+      margin: 0;
+      width: 100% !important;
+    }
+    
+    .leaflet-popup-content-wrapper {
+      padding: 0;
+      border-radius: 12px;
+    }
+
+    .leaflet-control-zoom {
+      margin: 20px !important;
+    }
+
+    .leaflet-control-attribution {
+      font-size: 10px !important;
     }
   }
 `;
