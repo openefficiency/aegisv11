@@ -937,7 +937,7 @@ export default function MapComponent() {
         onAdd: function() {
           const div = L.DomUtil.create('div', 'leaflet-control leaflet-bar custom-switcher-card');
           div.innerHTML = `
-            <div class="switcher-card modern">
+            <div class="switcher-card modern" style="margin-right: 20px;">
               <div class="switcher-header modern">
                 <span class="switcher-icon modern">${viewMode === 'cases'
                   ? '<svg width="20" height="20" fill="none" stroke="#2196F3" stroke-width="2" viewBox="0 0 24 24"><path d="M3 6l9-4 9 4M4 10v6a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 012-2h0a2 2 0 012 2v2a2 2 0 002 2h2a2 2 0 002-2v-6"/></svg>'
