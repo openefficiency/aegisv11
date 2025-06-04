@@ -28,3 +28,22 @@ Continue building your app on:
 2. Deploy your chats from the v0 interface
 3. Changes are automatically pushed to this repository
 4. Vercel deploys the latest version from this repository
+
+
+## Configuration
+
+1. Copy `.env.example` to `.env` and fill in your credentials:
+
+   ```bash
+   cp .env.example .env
+   ```
+
+2. Set the following environment variables locally or in Vercel:
+
+   - `NEXT_PUBLIC_SUPABASE_URL`
+   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+   - `SUPABASE_SERVICE_ROLE_KEY`
+   - `NEXT_PUBLIC_VAPI_API_KEY`
+   - `NEXT_PUBLIC_VAPI_ASSISTANT_ID`
+
+If the Supabase variables are missing in production, API routes will fail.
