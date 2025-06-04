@@ -33,6 +33,14 @@ const ReportForm: React.FC<ReportFormProps> = ({ open, onClose, onSuccess, addre
   });
   const [isLoading, setIsLoading] = useState(false);
 
+  // Add input length limits
+  const INPUT_LIMITS = {
+    title: 200,
+    description: 2000,
+    location: 500,
+    contactInfo: 500
+  };
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsLoading(true);
@@ -41,6 +49,18 @@ const ReportForm: React.FC<ReportFormProps> = ({ open, onClose, onSuccess, addre
       if (!formData.category || !formData.title || !formData.description) {
         throw new Error('Please fill in all required fields (Category, Title, and Description)');
       }
+
+      // Validate input lengths
+      if (formData.title.length > INPUT_LIMITS.title) {
+        throw new Error(`Title must be less than ${INPUT_LIMITS.title} characters`);
+      }
+      if (formData.description.length > INPUT_LIMITS.description) {
+        throw new Error(`Description must be less than ${INPUT_LIMITS.description} characters`);
+      }
+      if (formData.contactInfo && formData.contactInfo.length > INPUT_LIMITS.contactInfo) {
+        throw new Error(`Contact information must be less than ${INPUT_LIMITS.contactInfo} characters`);
+      }
+
       const timestamp = new Date().toISOString().slice(2, 10).replace(/-/g, '');
       const random = Math.random().toString(36).substring(2, 6).toUpperCase();
       const caseId = `WA${timestamp}${random}`;
@@ -135,7 +155,7 @@ const ReportForm: React.FC<ReportFormProps> = ({ open, onClose, onSuccess, addre
           {/* Title */}
           <div className="space-y-2">
             <Label htmlFor="title" className="text-slate-300">
-              Brief Title *
+              Brief Title * <span className="text-slate-500 text-xs">(max {INPUT_LIMITS.title} characters)</span>
             </Label>
             <Input
               id="title"
@@ -144,12 +164,13 @@ const ReportForm: React.FC<ReportFormProps> = ({ open, onClose, onSuccess, addre
               placeholder="Brief description of the issue"
               className="bg-slate-900/50 border-slate-600 text-white"
               required
+              maxLength={INPUT_LIMITS.title}
             />
           </div>
           {/* Description */}
           <div className="space-y-2">
             <Label htmlFor="description" className="text-slate-300">
-              Detailed Description *
+              Detailed Description * <span className="text-slate-500 text-xs">(max {INPUT_LIMITS.description} characters)</span>
             </Label>
             <Textarea
               id="description"
@@ -158,6 +179,7 @@ const ReportForm: React.FC<ReportFormProps> = ({ open, onClose, onSuccess, addre
               placeholder="Provide as much detail as possible about what happened, when, where, and who was involved..."
               className="bg-slate-900/50 border-slate-600 text-white min-h-[120px]"
               required
+              maxLength={INPUT_LIMITS.description}
             />
           </div>
           {/* Location (pre-filled from map) */}
@@ -221,6 +243,7 @@ const ReportForm: React.FC<ReportFormProps> = ({ open, onClose, onSuccess, addre
                   onChange={(e) => setFormData({ ...formData, contactInfo: e.target.value })}
                   placeholder="Email or phone number (optional)"
                   className="bg-slate-900/50 border-slate-600 text-white"
+                  maxLength={INPUT_LIMITS.contactInfo}
                 />
               </div>
             )}

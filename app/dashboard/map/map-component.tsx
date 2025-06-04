@@ -331,22 +331,53 @@ export default function MapComponent() {
           const div = L.DomUtil.create('div', 'leaflet-control leaflet-bar');
           div.innerHTML = `
             <div style="
-              background-color: rgba(0, 0, 0, 0.8);
-              padding: 8px;
-              border-radius: 4px;
-              margin-bottom: 8px;
+              background-color: white;
+              padding: 12px;
+              border-radius: 12px;
+              box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+              margin: 12px;
+              min-width: 200px;
             ">
-              <button id="viewModeToggle" style="
-                background-color: #2c3e50;
-                border: none;
-                color: white;
-                padding: 8px 16px;
-                border-radius: 4px;
-                cursor: pointer;
-                font-size: 14px;
-                width: 100%;
+              <div style="
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                margin-bottom: 8px;
               ">
-                Switch to ${viewMode === 'cases' ? 'Safety View' : 'Cases View'}
+                <i class="fa-solid ${viewMode === 'cases' ? 'fa-map-location-dot' : 'fa-fire'}" 
+                   style="color: ${viewMode === 'cases' ? '#2196F3' : '#FF5722'}; font-size: 18px;">
+                </i>
+                <span style="
+                  font-size: 14px;
+                  font-weight: 600;
+                  color: #333;
+                ">${viewMode === 'cases' ? 'Cases View' : 'Heatmap View'}</span>
+              </div>
+              
+              <button id="viewModeToggle" style="
+                width: 100%;
+                padding: 10px;
+                background: ${viewMode === 'cases' ? '#2196F3' : '#FF5722'};
+                color: white;
+                border: none;
+                border-radius: 8px;
+                font-size: 13px;
+                font-weight: 500;
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 8px;
+                transition: all 0.3s ease;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+              "
+              onmouseover="this.style.transform='translateY(-1px)';this.style.boxShadow='0 4px 8px rgba(0,0,0,0.15)'"
+              onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='0 2px 4px rgba(0,0,0,0.1)'"
+              >
+                <i class="fa-solid ${viewMode === 'cases' ? 'fa-fire' : 'fa-map-location-dot'}" 
+                   style="font-size: 14px;">
+                </i>
+                Switch to ${viewMode === 'cases' ? 'Heatmap View' : 'Cases View'}
               </button>
             </div>
           `;
@@ -754,6 +785,10 @@ style.textContent = `
 
     .leaflet-control-attribution {
       font-size: 10px !important;
+    }
+
+    .leaflet-control {
+      margin: 12px !important;
     }
   }
 `;

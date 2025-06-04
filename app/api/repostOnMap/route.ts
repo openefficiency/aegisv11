@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
+import { headers } from 'next/headers'
 
 // Check for required environment variables
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
@@ -24,6 +25,14 @@ const VALID_CATEGORIES = {
   corruption: { priority: 'high' }
 } as const
 
+// Define input limits
+const INPUT_LIMITS = {
+  title: { maxLength: 200 },
+  description: { maxLength: 2000 },
+  location: { maxLength: 500 },
+  contactInfo: { maxLength: 500 }
+} as const
+
 type Category = keyof typeof VALID_CATEGORIES
 
 interface ReportData {
@@ -41,8 +50,68 @@ interface ReportData {
   contactInfo?: string
 }
 
+// Simple rate limiting
+const RATE_LIMIT = {
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  maxRequests: 100 // maximum 100 requests per window
+}
+
+const requestCounts = new Map<string, { count: number; resetTime: number }>()
+
+function isRateLimited(ip: string): boolean {
+  const now = Date.now()
+  const requestData = requestCounts.get(ip)
+
+  if (!requestData || now > requestData.resetTime) {
+    requestCounts.set(ip, { count: 1, resetTime: now + RATE_LIMIT.windowMs })
+    return false
+  }
+
+  if (requestData.count >= RATE_LIMIT.maxRequests) {
+    return true
+  }
+
+  requestData.count++
+  return false
+}
+
+function sanitizeInput(input: string): string {
+  return input
+    .replace(/[<>]/g, '') // Remove potential HTML tags
+    .trim()
+}
+
 export async function POST(request: Request) {
   try {
+    // Check request size
+    const contentLength = request.headers.get('content-length')
+    if (contentLength && parseInt(contentLength) > 1024 * 1024) { // 1MB limit
+      return NextResponse.json(
+        { 
+          success: false,
+          error: 'Request too large',
+          details: 'Request body must be less than 1MB',
+          code: 'REQUEST_TOO_LARGE'
+        },
+        { status: 413 }
+      )
+    }
+
+    // Check rate limit
+    const headersList = await headers()
+    const ip = headersList.get('x-forwarded-for') || 'unknown'
+    if (isRateLimited(ip)) {
+      return NextResponse.json(
+        { 
+          success: false,
+          error: 'Too many requests',
+          details: 'Please try again later',
+          code: 'RATE_LIMIT_EXCEEDED'
+        },
+        { status: 429 }
+      )
+    }
+
     const body = await request.json() as ReportData
     console.log('Received report data:', { ...body, contactInfo: body.contactInfo ? '[REDACTED]' : undefined })
     
@@ -61,6 +130,30 @@ export async function POST(request: Request) {
         },
         { status: 400 }
       )
+    }
+
+    // Validate input lengths
+    for (const [field, limit] of Object.entries(INPUT_LIMITS)) {
+      const value = body[field as keyof ReportData]
+      if (typeof value === 'string' && value.length > limit.maxLength) {
+        return NextResponse.json(
+          { 
+            success: false,
+            error: 'Validation failed',
+            details: `${field} must be less than ${limit.maxLength} characters`,
+            code: 'FIELD_TOO_LONG'
+          },
+          { status: 400 }
+        )
+      }
+    }
+
+    // Sanitize text inputs
+    body.title = sanitizeInput(body.title)
+    body.description = sanitizeInput(body.description)
+    body.location = sanitizeInput(body.location)
+    if (body.contactInfo) {
+      body.contactInfo = sanitizeInput(body.contactInfo)
     }
 
     // Validate coordinates
@@ -129,48 +222,62 @@ export async function POST(request: Request) {
 
     console.log('Attempting to insert report:', { ...reportData, contact_info: reportData.contact_info ? '[REDACTED]' : undefined })
 
-    // Insert the report into the database
-    const { data, error } = await supabase
-      .from('reports')
-      .insert([reportData])
-      .select()
+    // Insert the report into the database with retry logic
+    let retries = 3
+    let lastError = null
 
-    if (error) {
-      console.error('Database error:', {
-        message: error.message,
-        details: error.details,
-        hint: error.hint,
-        code: error.code
-      })
-      
-      return NextResponse.json(
-        { 
-          success: false,
-          error: 'Database operation failed',
-          details: error.message,
-          hint: error.hint,
-          code: error.code
-        },
-        { status: 500 }
-      )
+    while (retries > 0) {
+      try {
+        const { data, error } = await supabase
+          .from('reports')
+          .insert([reportData])
+          .select()
+
+        if (error) throw error
+
+        console.log('Report submitted successfully:', { 
+          caseId: body.case_id,
+          category: body.category,
+          priority: VALID_CATEGORIES[body.category].priority
+        })
+
+        return NextResponse.json({ 
+          success: true, 
+          caseId: body.case_id,
+          message: 'Report submitted successfully',
+          priority: VALID_CATEGORIES[body.category].priority,
+          data: {
+            ...data[0],
+            contact_info: data[0].contact_info ? '[REDACTED]' : undefined
+          }
+        })
+      } catch (error) {
+        lastError = error
+        retries--
+        if (retries > 0) {
+          await new Promise(resolve => setTimeout(resolve, 1000)) // Wait 1 second before retry
+        }
+      }
     }
 
-    console.log('Report submitted successfully:', { 
-      caseId: body.case_id,
-      category: body.category,
-      priority: VALID_CATEGORIES[body.category].priority
+    // If all retries failed
+    console.error('Database error after retries:', {
+      message: lastError instanceof Error ? lastError.message : 'Unknown error',
+      details: lastError instanceof Error ? lastError.message : undefined,
+      hint: lastError instanceof Error ? lastError.stack : undefined,
+      code: 'DB_ERROR'
     })
-
-    return NextResponse.json({ 
-      success: true, 
-      caseId: body.case_id,
-      message: 'Report submitted successfully',
-      priority: VALID_CATEGORIES[body.category].priority,
-      data: {
-        ...data[0],
-        contact_info: data[0].contact_info ? '[REDACTED]' : undefined
-      }
-    })
+    
+    return NextResponse.json(
+      { 
+        success: false,
+        error: 'Database operation failed',
+        details: lastError instanceof Error ? lastError.message : 'Unknown error',
+        hint: lastError instanceof Error ? lastError.stack : undefined,
+        code: 'DB_ERROR'
+      },
+      { status: 500 }
+    )
 
   } catch (error) {
     console.error('Error processing report:', error)

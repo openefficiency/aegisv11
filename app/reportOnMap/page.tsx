@@ -317,6 +317,11 @@ const ReportOnMap = () => {
       const data = await response.json();
 
       if (!response.ok) {
+        // Handle rate limiting
+        if (response.status === 429) {
+          throw new Error('Too many requests. Please wait a few minutes before trying again.');
+        }
+        
         // Construct a detailed error message
         let errorMessage = data.error || 'Failed to submit report';
         if (data.details) errorMessage += `\nDetails: ${data.details}`;
