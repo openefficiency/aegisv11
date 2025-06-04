@@ -846,6 +846,31 @@ style.textContent = `
       padding: 8px 0;
     }
   }
+
+  .heatmap-btn {
+    display: flex;
+    align-items: center;
+    background: #f6fbff;
+    border: 2px solid #d1eaff;
+    border-radius: 2em;
+    box-shadow: 0 2px 8px #eaf6ff;
+    padding: 12px 20px 12px 16px; /* 20px right padding */
+    font-size: 1.5rem;
+    color: #17407e;
+    font-weight: 600;
+    cursor: pointer;
+    transition: box-shadow 0.2s;
+  }
+
+  .heatmap-btn .icon {
+    margin-right: 12px;
+    display: flex;
+    align-items: center;
+  }
+
+  .heatmap-btn .label {
+    font-family: inherit;
+  }
 `;
 document.head.appendChild(style);
 
