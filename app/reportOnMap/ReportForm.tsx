@@ -76,7 +76,7 @@ const ReportForm: React.FC<ReportFormProps> = ({ open, onClose, onSuccess, addre
         priority: 'medium',
         created_at: new Date().toISOString()
       };
-      const response = await fetch('/api/repostOnMap', {
+      const response = await fetch('/api/reportOnMap', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(reportData),
