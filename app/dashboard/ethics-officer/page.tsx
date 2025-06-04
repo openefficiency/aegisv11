@@ -134,11 +134,20 @@ export default function EthicsOfficerDashboard() {
     // Auto-refresh VAPI reports every 30 seconds
     const interval = setInterval(fetchVAPIReports, 30000);
 
-    // Add all demo cases at once
-    if (demoCasesData.length > 0) {
-      const normalizedDemoCases = demoCasesData.map(normalizeCase);
-      setCases((prev) => [...normalizedDemoCases, ...prev]);
-    }
+    // Add demo cases continuously
+    let demoIndex = 0;
+    const addDemoCase = () => {
+      if (demoIndex < demoCasesData.length) {
+        setCases((prev) => {
+          // Keep only the most recent cases (remove last 20)
+          const recentCases = prev.slice(0, -20);
+          return [normalizeCase(demoCasesData[demoIndex]), ...recentCases];
+        });
+        demoIndex++;
+        setTimeout(addDemoCase, 500);
+      }
+    };
+    addDemoCase();
 
     return () => clearInterval(interval);
   }, []);
