@@ -121,11 +121,12 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
 
   useEffect(() => {
     // Check if user is authenticated
+    if (typeof window === "undefined") return
+
     const storedRole = localStorage.getItem("userRole")
     const storedEmail = localStorage.getItem("userEmail")
 
-    // Convert stored role to match our expected format
-    const normalizedStoredRole = storedRole === "ethics_officer" ? "ethics-officer" : storedRole
+    console.log("Checking auth:", { storedRole, storedEmail, expectedRole: role })
 
     if (!storedRole || !storedEmail) {
       console.log("No authentication found, redirecting to login")
@@ -133,18 +134,22 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
       return
     }
 
+    // Convert stored role to match our expected format
+    const normalizedStoredRole = storedRole === "ethics_officer" ? "ethics-officer" : storedRole
+
     // Check if the stored role matches the current page role
     if (normalizedStoredRole !== role) {
       console.log(`Role mismatch: stored ${normalizedStoredRole}, current ${role}`)
-      // If roles don't match, redirect to the correct dashboard
-      if (normalizedStoredRole === "admin") {
-        router.push("/dashboard/admin")
-      } else if (normalizedStoredRole === "ethics-officer") {
-        router.push("/dashboard/ethics-officer")
-      } else if (normalizedStoredRole === "investigator") {
-        router.push("/dashboard/investigator")
+      // Redirect to the correct dashboard based on stored role
+      const roleRoutes = {
+        admin: "/dashboard/admin",
+        "ethics-officer": "/dashboard/ethics-officer",
+        investigator: "/dashboard/investigator",
+      }
+      const targetRoute = roleRoutes[normalizedStoredRole as keyof typeof roleRoutes]
+      if (targetRoute) {
+        router.push(targetRoute)
       } else {
-        // If role is invalid, redirect to login
         router.push("/login")
       }
       return

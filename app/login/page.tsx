@@ -11,8 +11,6 @@ import { Shield, ArrowLeft, Info } from "lucide-react"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { supabase } from "@/lib/supabase"
-import { auditLogger } from "@/lib/audit-logger"
 
 export default function UnifiedLoginPage() {
   const [isLoading, setIsLoading] = useState(false)
@@ -37,104 +35,39 @@ export default function UnifiedLoginPage() {
     try {
       console.log(`Attempting login for ${email} as ${selectedRole}`)
 
-      // For demo purposes, use mock authentication
+      // Demo credentials for testing
+      const demoCredentials = {
+        admin: { email: "admin@aegiswhistle.com", password: "admin123" },
+        ethics_officer: { email: "ethics@aegiswhistle.com", password: "ethics123" },
+        investigator: { email: "investigator@aegiswhistle.com", password: "investigator123" },
+      }
+
+      // Check demo credentials first
       const creds = demoCredentials[selectedRole as keyof typeof demoCredentials]
       if (email === creds.email && password === creds.password) {
-        // Mock successful authentication
         console.log("Demo credentials matched, proceeding with login")
 
-        try {
-          await auditLogger.log({
-            user_id: selectedRole + "_demo_user",
-            action: "user_login",
-            entity_type: "case",
-            entity_id: "system",
-            details: { role: selectedRole, email },
-          })
-        } catch (logError) {
-          console.warn("Failed to log login attempt:", logError)
+        // Store role in localStorage for persistence
+        if (typeof window !== "undefined") {
+          localStorage.setItem("userRole", selectedRole)
+          localStorage.setItem("userEmail", email)
         }
 
-        // Store role in localStorage for persistence
-        localStorage.setItem("userRole", selectedRole)
-        localStorage.setItem("userEmail", email)
-
-        // Route based on role
+        // Route based on role after a short delay
         setTimeout(() => {
           setIsLoading(false)
-          switch (selectedRole) {
-            case "admin":
-              router.push("/dashboard/admin")
-              break
-            case "ethics_officer":
-              router.push("/dashboard/ethics-officer")
-              break
-            case "investigator":
-              router.push("/dashboard/investigator")
-              break
-            default:
-              router.push("/dashboard/ethics-officer")
+          const roleRoutes = {
+            admin: "/dashboard/admin",
+            ethics_officer: "/dashboard/ethics-officer",
+            investigator: "/dashboard/investigator",
           }
+          router.push(roleRoutes[selectedRole as keyof typeof roleRoutes] || "/dashboard/ethics-officer")
         }, 1000)
         return
       }
 
-      // Try real authentication with Supabase if demo credentials don't match
-      const { data, error: authError } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      })
-
-      if (authError) {
-        throw new Error(authError.message || "Invalid credentials")
-      }
-
-      // Real authentication successful
-      const { data: profile, error: profileError } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("email", email)
-        .single()
-
-      if (profileError || !profile) {
-        throw new Error("User profile not found")
-      }
-
-      if (profile.role !== selectedRole) {
-        throw new Error("Role mismatch")
-      }
-
-      if (!profile.is_active) {
-        throw new Error("Account is inactive")
-      }
-
-      await auditLogger.log({
-        user_id: profile.id,
-        action: "user_login",
-        entity_type: "case",
-        entity_id: "system",
-        details: { role: profile.role, email },
-      })
-
-      // Store role in localStorage for persistence
-      localStorage.setItem("userRole", profile.role)
-      localStorage.setItem("userEmail", email)
-
-      // Route based on actual role
-      setIsLoading(false)
-      switch (profile.role) {
-        case "admin":
-          router.push("/dashboard/admin")
-          break
-        case "ethics_officer":
-          router.push("/dashboard/ethics-officer")
-          break
-        case "investigator":
-          router.push("/dashboard/investigator")
-          break
-        default:
-          router.push("/dashboard/ethics-officer")
-      }
+      // If demo credentials don't match, show error
+      throw new Error("Invalid credentials. Please use the demo credentials provided.")
     } catch (error: any) {
       console.error("Login error:", error)
       setError(error.message || "Login failed")
@@ -176,11 +109,17 @@ export default function UnifiedLoginPage() {
               <Info className="h-4 w-4" />
               <AlertDescription className="text-blue-300">
                 <div className="space-y-2">
-                  <p className="font-semibold">Demo Access Available:</p>
-                  <div className="text-sm space-y-1">
-                    <p>• Ethics Officer: ethics@aegiswhistle.com / ethics123</p>
-                    <p>• Investigator: investigator@aegiswhistle.com / investigator123</p>
-                    <p>• Admin: admin@aegiswhistle.com / admin123</p>
+                  <p className="font-semibold">Demo Login Credentials:</p>
+                  <div className="text-sm space-y-1 bg-slate-800/50 p-3 rounded">
+                    <p>
+                      <strong>Ethics Officer:</strong> ethics@aegiswhistle.com / ethics123
+                    </p>
+                    <p>
+                      <strong>Investigator:</strong> investigator@aegiswhistle.com / investigator123
+                    </p>
+                    <p>
+                      <strong>Admin:</strong> admin@aegiswhistle.com / admin123
+                    </p>
                   </div>
                   <Button
                     variant="outline"
@@ -188,7 +127,7 @@ export default function UnifiedLoginPage() {
                     onClick={fillDemoCredentials}
                     className="mt-2 border-blue-600 text-blue-300 hover:bg-blue-600 hover:text-white"
                   >
-                    Fill Demo Credentials
+                    Fill Demo Credentials for {selectedRole.replace("_", " ")}
                   </Button>
                 </div>
               </AlertDescription>
