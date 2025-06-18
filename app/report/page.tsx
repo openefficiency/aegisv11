@@ -1,7 +1,6 @@
 "use client"
 
 import type React from "react"
-
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -25,21 +24,49 @@ export default function ReportPage() {
     contactInfo: "",
   })
   const [secretCode, setSecretCode] = useState("")
+  const [reportId, setReportId] = useState("")
+  const [trackingCode, setTrackingCode] = useState("")
   const [showSecretCode, setShowSecretCode] = useState(false)
   const [isSubmitted, setIsSubmitted] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
+    setError(null)
 
-    // Simulate submission
-    setTimeout(() => {
-      const generatedCode = "ABC" + Math.random().toString(36).substr(2, 9).toUpperCase()
-      setSecretCode(generatedCode)
+    try {
+      // Validate required fields
+      if (!formData.category || !formData.title || !formData.description) {
+        throw new Error("Please fill in all required fields")
+      }
+
+      const response = await fetch("/api/submit-report", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.details || data.error || "Failed to submit report")
+      }
+
+      // Set the response data
+      setSecretCode(data.secret_code)
+      setReportId(data.report_id)
+      setTrackingCode(data.tracking_code)
       setIsSubmitted(true)
+    } catch (error) {
+      console.error("Error submitting report:", error)
+      setError(error instanceof Error ? error.message : "Failed to submit report")
+    } finally {
       setIsLoading(false)
-    }, 2000)
+    }
   }
 
   if (isSubmitted) {
@@ -64,7 +91,8 @@ export default function ReportPage() {
               </div>
               <CardTitle className="text-white text-2xl">Report Submitted Successfully</CardTitle>
               <CardDescription className="text-slate-400">
-                Your report has been securely submitted and is now in our system
+                Your report has been securely submitted and assigned ID:{" "}
+                <span className="font-mono text-blue-400">{reportId}</span>
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
@@ -86,6 +114,17 @@ export default function ReportPage() {
                 <p className="text-sm text-slate-400 mt-2">
                   Save this code securely. You'll need it to track your report's progress.
                 </p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="bg-slate-900/50 p-3 rounded border border-slate-600">
+                  <Label className="text-slate-300 text-sm">Report ID</Label>
+                  <div className="font-mono text-white">{reportId}</div>
+                </div>
+                <div className="bg-slate-900/50 p-3 rounded border border-slate-600">
+                  <Label className="text-slate-300 text-sm">Tracking Code</Label>
+                  <div className="font-mono text-white">{trackingCode}</div>
+                </div>
               </div>
 
               <div className="space-y-4">
@@ -186,6 +225,15 @@ export default function ReportPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
+            {error && (
+              <div className="bg-red-900/20 border border-red-700 rounded-lg p-4 mb-6">
+                <div className="flex items-center">
+                  <Shield className="h-5 w-5 text-red-400 mr-2" />
+                  <span className="text-red-300">{error}</span>
+                </div>
+              </div>
+            )}
+
             <form onSubmit={handleSubmit} className="space-y-6">
               {/* Category */}
               <div className="space-y-2">
@@ -206,7 +254,6 @@ export default function ReportPage() {
                     <SelectItem value="harassment">Harassment</SelectItem>
                     <SelectItem value="safety">Safety Violations</SelectItem>
                     <SelectItem value="corruption">Corruption</SelectItem>
-                    <SelectItem value="other">Other</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

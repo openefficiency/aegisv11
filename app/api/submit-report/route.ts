@@ -1,41 +1,13 @@
-import { createClient } from "@supabase/supabase-js"
 import { NextResponse } from "next/server"
 import { headers } from "next/headers"
-import { createStandardReport, validateCoordinates } from "@/lib/report-utils"
+import { supabase } from "@/lib/supabase"
+import { createStandardReport } from "@/lib/report-utils"
 
-// Initialize Supabase client
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-
-if (!supabaseUrl || !supabaseServiceKey) {
-  console.error("Missing Supabase environment variables")
-}
-
-const supabase = createClient(supabaseUrl!, supabaseServiceKey!, {
-  auth: { persistSession: false },
-})
-
-// Define valid categories
-const VALID_CATEGORIES = {
-  fraud: { priority: "high" },
-  abuse: { priority: "high" },
-  discrimination: { priority: "high" },
-  harassment: { priority: "high" },
-  safety: { priority: "critical" },
-  corruption: { priority: "high" },
-} as const
-
-type Category = keyof typeof VALID_CATEGORIES
-
-interface MapReportData {
-  category: Category
+interface ManualReportData {
+  category: string
   title: string
   description: string
-  location: string
-  coordinates: {
-    lat: number
-    lng: number
-  }
+  location?: string
   dateOccurred?: string
   anonymous?: boolean
   contactInfo?: string
@@ -47,7 +19,7 @@ const requestCounts = new Map<string, { count: number; resetTime: number }>()
 function isRateLimited(ip: string): boolean {
   const now = Date.now()
   const windowMs = 15 * 60 * 1000 // 15 minutes
-  const maxRequests = 10 // 10 requests per window for map reports
+  const maxRequests = 5 // 5 requests per window for manual reports
 
   const requestData = requestCounts.get(ip)
 
@@ -88,15 +60,15 @@ export async function POST(request: Request) {
       )
     }
 
-    const body = (await request.json()) as MapReportData
-    console.log("Received map report data:", {
+    const body = (await request.json()) as ManualReportData
+    console.log("Received manual report data:", {
       ...body,
       contactInfo: body.contactInfo ? "[REDACTED]" : undefined,
     })
 
     // Validate required fields
-    const requiredFields = ["category", "title", "description", "location", "coordinates"] as const
-    const missingFields = requiredFields.filter((field) => !body[field as keyof MapReportData])
+    const requiredFields = ["category", "title", "description"] as const
+    const missingFields = requiredFields.filter((field) => !body[field as keyof ManualReportData])
 
     if (missingFields.length > 0) {
       return NextResponse.json(
@@ -110,48 +82,21 @@ export async function POST(request: Request) {
       )
     }
 
-    // Validate coordinates
-    if (!validateCoordinates(body.coordinates.lat, body.coordinates.lng)) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: "Invalid coordinates",
-          details: "Latitude must be between -90 and 90, longitude between -180 and 180",
-          code: "INVALID_COORDINATES",
-        },
-        { status: 400 },
-      )
-    }
-
-    // Validate category
-    if (!Object.keys(VALID_CATEGORIES).includes(body.category)) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: "Invalid category",
-          details: `Category must be one of: ${Object.keys(VALID_CATEGORIES).join(", ")}`,
-          code: "INVALID_CATEGORY",
-        },
-        { status: 400 },
-      )
-    }
-
     // Sanitize inputs
     const sanitizedData = {
       category: body.category,
       title: sanitizeInput(body.title),
       description: sanitizeInput(body.description),
-      location: sanitizeInput(body.location),
-      coordinates: body.coordinates,
+      location: body.location ? sanitizeInput(body.location) : undefined,
       dateOccurred: body.dateOccurred || null,
       anonymous: body.anonymous ?? true,
       contactInfo: body.contactInfo ? sanitizeInput(body.contactInfo) : null,
     }
 
     // Create standard report
-    const standardReport = createStandardReport(sanitizedData, "MapReport")
+    const standardReport = createStandardReport(sanitizedData, "ManualReport")
 
-    console.log("Attempting to insert map report into reports table...")
+    console.log("Attempting to insert manual report into reports table...")
 
     try {
       // Insert into reports table
@@ -162,16 +107,16 @@ export async function POST(request: Request) {
         throw reportError
       }
 
-      console.log("Map report successfully inserted into reports table")
+      console.log("Manual report successfully inserted into reports table")
       return NextResponse.json({
         success: true,
         case_id: standardReport.case_id,
         report_id: standardReport.report_id,
         tracking_code: standardReport.tracking_code,
         secret_code: standardReport.secret_code,
-        message: "Map report submitted successfully",
+        message: "Report submitted successfully",
         priority: standardReport.priority,
-        report_source: "MapReport",
+        report_source: "ManualReport",
       })
     } catch (dbError) {
       console.error("Database error:", dbError)
@@ -183,14 +128,14 @@ export async function POST(request: Request) {
         report_id: standardReport.report_id,
         tracking_code: standardReport.tracking_code,
         secret_code: standardReport.secret_code,
-        message: "Map report submitted successfully (demo mode)",
+        message: "Report submitted successfully (demo mode)",
         priority: standardReport.priority,
-        report_source: "MapReport",
+        report_source: "ManualReport",
         demo_mode: true,
       })
     }
   } catch (error) {
-    console.error("Error processing map report:", error)
+    console.error("Error processing manual report:", error)
     return NextResponse.json(
       {
         success: false,

@@ -29,7 +29,6 @@ Continue building your app on:
 3. Changes are automatically pushed to this repository
 4. Vercel deploys the latest version from this repository
 
-
 ## Configuration
 
 1. Copy `.env.example` to `.env` and fill in your credentials:
@@ -40,10 +39,20 @@ Continue building your app on:
 
 2. Set the following environment variables locally or in Vercel:
 
+   **Client-side (NEXT_PUBLIC_):**
    - `NEXT_PUBLIC_SUPABASE_URL`
    - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-   - `SUPABASE_SERVICE_ROLE_KEY`
-   - `NEXT_PUBLIC_VAPI_API_KEY`
    - `NEXT_PUBLIC_VAPI_ASSISTANT_ID`
 
+   **Server-side only:**
+   - `SUPABASE_SERVICE_ROLE_KEY`
+   - `VAPI_API_KEY` (secure server-side only)
+   - `VAPI_SHARE_KEY` (secure server-side only)
+
 If the Supabase variables are missing in production, API routes will fail.
+
+## Security Notes
+
+- VAPI API keys are handled server-side only for security
+- Never expose sensitive API keys in client-side code
+- Use server actions for all VAPI operations

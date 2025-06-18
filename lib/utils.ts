@@ -105,3 +105,50 @@ export function truncateText(text: string, maxLength: number): string {
   if (text.length <= maxLength) return text
   return text.substr(0, maxLength - 3) + "..."
 }
+
+export function formatCaseText(text: string): string {
+  if (!text) return "No description available"
+
+  // Clean up the text and format it properly
+  return (
+    text
+      .replace(/\n+/g, " ") // Replace multiple newlines with single space
+      .replace(/\s+/g, " ") // Replace multiple spaces with single space
+      .trim()
+      .substring(0, 500) + // Limit to 500 characters
+    (text.length > 500 ? "..." : "")
+  )
+}
+
+export function formatCaseTitle(transcript: string): string {
+  if (!transcript) return "Voice Report"
+
+  // Extract first meaningful sentence or phrase as title
+  const sentences = transcript.split(/[.!?]+/)
+  const firstSentence = sentences[0]?.trim()
+
+  if (!firstSentence) return "Voice Report"
+
+  // Clean and format the title
+  const title = firstSentence
+    .replace(/^(um|uh|well|so|okay|hi|hello|hey),?\s*/i, "") // Remove filler words
+    .replace(/\s+/g, " ")
+    .trim()
+
+  // Capitalize first letter and limit length
+  const formattedTitle = title.charAt(0).toUpperCase() + title.slice(1)
+  return formattedTitle.length > 60 ? formattedTitle.substring(0, 57) + "..." : formattedTitle || "Voice Report"
+}
+
+export function getCaseDateReceived(timestamp?: string | Date): string {
+  const date = timestamp ? new Date(timestamp) : new Date()
+
+  return date.toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true,
+  })
+}

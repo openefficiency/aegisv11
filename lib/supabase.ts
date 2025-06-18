@@ -1,18 +1,13 @@
 import { createClient } from "@supabase/supabase-js"
+import { getEnvVar } from "./env-validator"
 
-// Clean environment variables from quotes if present
-const cleanEnvVar = (value: string | undefined): string | undefined => {
-  if (!value) return undefined
-  // Remove quotes if present
-  return value.replace(/^['"](.*)['"]$/, "$1")
-}
-
-const supabaseUrl = cleanEnvVar(process.env.NEXT_PUBLIC_SUPABASE_URL)
-const supabaseKey = cleanEnvVar(process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY)
+// Get cleaned environment variables
+const supabaseUrl = getEnvVar("NEXT_PUBLIC_SUPABASE_URL") || "https://vnjfnlnwfhnwzcfkdrsw.supabase.co"
+const supabaseKey = getEnvVar("NEXT_PUBLIC_SUPABASE_ANON_KEY")
 
 // Create a fallback client if environment variables are missing
 const createFallbackClient = () => {
-  console.warn("Using fallback Supabase client - database operations will be simulated")
+  console.warn("⚠️ Using fallback Supabase client - database operations will be simulated")
 
   // Return a mock client that simulates Supabase operations
   return {
@@ -22,9 +17,11 @@ const createFallbackClient = () => {
           single: async () => ({ data: null, error: new Error("Using fallback client") }),
         }),
         order: () => ({ data: [], error: null }),
+        limit: () => ({ data: [], error: null }),
       }),
       insert: async () => ({ data: null, error: null }),
       update: () => ({ eq: async () => ({ data: null, error: null }) }),
+      delete: () => ({ eq: async () => ({ data: null, error: null }) }),
     }),
     auth: {
       signInWithPassword: async () => ({ data: null, error: new Error("Using fallback client") }),
@@ -36,6 +33,30 @@ const createFallbackClient = () => {
 export const supabase =
   supabaseUrl && supabaseKey ? createClient(supabaseUrl, supabaseKey) : (createFallbackClient() as any)
 
+// Test connection function
+export async function testSupabaseConnection(): Promise<boolean> {
+  try {
+    if (!supabaseUrl || !supabaseKey) {
+      console.warn("⚠️ Supabase credentials not found, using demo mode")
+      return false
+    }
+
+    // Test with a simple query
+    const { data, error } = await supabase.from("profiles").select("count(*)").limit(1)
+
+    if (error) {
+      console.warn("⚠️ Supabase connection test failed:", error.message)
+      return false
+    }
+
+    console.log("✅ Supabase connection successful")
+    return true
+  } catch (error) {
+    console.warn("⚠️ Supabase connection error:", error)
+    return false
+  }
+}
+
 // Enhanced existing Case interface
 export interface Case {
   id: string
@@ -46,22 +67,30 @@ export interface Case {
   status: "open" | "under_investigation" | "resolved" | "escalated"
   priority: "low" | "medium" | "high" | "critical"
   secret_code: string
-  report_id: string // NEW: 10-digit alphanumeric ID
-  tracking_code: string // NEW required tracking code from VAPI
+  report_id: string // 10-digit alphanumeric ID
+  tracking_code: string // required tracking code from VAPI
   reward_amount?: number
   recovery_amount?: number
   reward_status: "pending" | "approved" | "paid"
   vapi_report_summary?: string
   vapi_session_id?: string
-  vapi_transcript?: string // NEW
-  vapi_audio_url?: string // NEW
+  vapi_transcript?: string
+  vapi_audio_url?: string
   structured_data?: any // Parsed VAPI fields
   assigned_to?: string
-  assigned_by?: string // NEW
-  resolution_summary?: string // NEW
-  whistleblower_update?: string // NEW
-  crypto_address?: string // NEW
-  crypto_currency?: string // NEW
+  assigned_by?: string
+  resolution_summary?: string
+  whistleblower_update?: string
+  crypto_address?: string
+  crypto_currency?: string
+  report_source?: "VAPIReport" | "MapReport" | "ManualReport"
+  latitude?: number
+  longitude?: number
+  location?: string
+  is_anonymous?: boolean
+  contact_info?: string
+  date_occurred?: string
+  vapi_call_data?: any
   created_at: string
   updated_at: string
 }
@@ -74,11 +103,12 @@ export interface Profile {
   last_name: string
   role: "admin" | "ethics_officer" | "investigator"
   is_active: boolean
-  department?: string // NEW
+  department?: string
+  phone?: string
   created_at: string
 }
 
-// NEW: VAPI Report interface
+// VAPI Report interface
 export interface VAPIReport {
   id: string
   report_id: string
@@ -87,10 +117,14 @@ export interface VAPIReport {
   audio_url: string
   session_id: string
   status: "pending" | "processed"
+  vapi_call_data?: any
+  processed_to_case_id?: string
   created_at: string
+  processed_at?: string
+  ended_at?: string
 }
 
-// NEW: Investigator Query interface
+// Investigator Query interface
 export interface InvestigatorQuery {
   id: string
   case_id: string
@@ -103,18 +137,20 @@ export interface InvestigatorQuery {
   responded_at?: string
 }
 
-// NEW: Audit Trail interface
+// Audit Trail interface
 export interface AuditTrail {
   id: string
   user_id: string
   action: string
-  entity_type: "case" | "reward" | "assignment" | "query"
+  entity_type: "case" | "reward" | "assignment" | "query" | "report"
   entity_id: string
   details: any
+  ip_address?: string
+  user_agent?: string
   timestamp: string
 }
 
-// NEW: Reward Transaction interface
+// Reward Transaction interface
 export interface RewardTransaction {
   id: string
   case_id: string
@@ -123,20 +159,23 @@ export interface RewardTransaction {
   crypto_address: string
   transaction_hash?: string
   status: "pending" | "completed" | "failed"
+  created_by?: string
   created_at: string
   completed_at?: string
 }
 
-// Existing interfaces remain the same
+// Case Update interface
 export interface CaseUpdate {
   id: string
   case_id: string
   message: string
   update_type: "progress" | "status" | "escalated" | "resolved"
   is_public: boolean
+  created_by?: string
   created_at: string
 }
 
+// Interview interface
 export interface Interview {
   id: string
   case_id: string
@@ -146,4 +185,45 @@ export interface Interview {
   scheduled_date: string
   status: "scheduled" | "completed" | "cancelled"
   notes?: string
+  created_at: string
+}
+
+// Report interface (main reports table)
+export interface Report {
+  id: string
+  case_id: string // 10-digit alphanumeric key
+  case_number: string
+  title: string
+  description: string
+  category: "fraud" | "abuse" | "discrimination" | "harassment" | "safety" | "corruption"
+  status: "open" | "under_investigation" | "resolved" | "escalated" | "closed"
+  priority: "low" | "medium" | "high" | "critical"
+  report_source: "VAPIReport" | "MapReport" | "ManualReport"
+  report_type: string
+  location?: string
+  latitude?: number
+  longitude?: number
+  is_anonymous: boolean
+  contact_info?: string
+  date_occurred?: string
+  secret_code: string
+  report_id: string // 10-digit alphanumeric
+  tracking_code?: string
+  vapi_report_summary?: string
+  vapi_session_id?: string
+  vapi_transcript?: string
+  vapi_audio_url?: string
+  vapi_call_data?: any
+  reward_amount: number
+  recovery_amount: number
+  reward_status: "pending" | "approved" | "paid"
+  crypto_address?: string
+  crypto_currency?: string
+  assigned_to?: string
+  assigned_by?: string
+  resolution_summary?: string
+  whistleblower_update?: string
+  structured_data?: any
+  created_at: string
+  updated_at: string
 }

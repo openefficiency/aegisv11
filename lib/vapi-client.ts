@@ -105,17 +105,21 @@ export class VAPIClient {
       const calls = await this.fetchCalls()
       console.log(`Retrieved ${calls.length} calls from VAPI`)
 
-      // Filter and transform calls into report format
+      // Filter and transform calls into report format with 10-digit keys
       const reports = calls
         .filter((call) => call.status === "ended" && call.transcript)
         .map((call) => ({
           id: call.id,
-          report_id: this.generateReportId(),
+          case_id: this.generate10DigitKey(), // 10-digit alphanumeric key
+          report_id: this.generate10DigitKey(), // 10-digit alphanumeric key
           summary: call.analysis?.summary || this.extractSummaryFromTranscript(call.transcript || ""),
           transcript: call.transcript || "",
           audio_url: call.recordingUrl || call.stereoRecordingUrl || call.monoRecordingUrl || "",
           session_id: call.id,
           status: "processed",
+          report_source: "VAPIReport",
+          priority: this.determinePriority(call.transcript || ""),
+          category: this.categorizeReport(call.transcript || ""),
           created_at: call.createdAt,
           ended_at: call.endedAt,
           cost: call.cost,
@@ -124,25 +128,58 @@ export class VAPIClient {
           vapi_call_data: call,
         }))
 
-      console.log(`Converted ${reports.length} calls to reports`)
+      console.log(`Converted ${reports.length} calls to reports with 10-digit keys`)
       return reports
     } catch (error) {
       console.error("Error fetching VAPI reports:", error)
-      throw error // Re-throw to let the calling function handle fallback
+      throw error
     }
   }
 
   private extractSummaryFromTranscript(transcript: string): string {
-    // Extract a meaningful summary from transcript
     const sentences = transcript.split(/[.!?]+/).filter((s) => s.trim().length > 0)
     if (sentences.length === 0) return "Voice report submitted"
 
-    // Take first 2-3 meaningful sentences
     const summary = sentences.slice(0, 3).join(". ").trim()
     return summary.length > 200 ? summary.substring(0, 200) + "..." : summary
   }
 
-  generateReportId(): string {
+  private determinePriority(transcript: string): string {
+    const urgentKeywords = ["urgent", "emergency", "immediate", "critical", "danger", "threat"]
+    const highKeywords = ["serious", "important", "concern", "violation", "harassment"]
+
+    const lowerTranscript = transcript.toLowerCase()
+
+    if (urgentKeywords.some((keyword) => lowerTranscript.includes(keyword))) {
+      return "urgent"
+    } else if (highKeywords.some((keyword) => lowerTranscript.includes(keyword))) {
+      return "high"
+    } else {
+      return "medium"
+    }
+  }
+
+  private categorizeReport(transcript: string): string {
+    const categories = {
+      harassment: ["harassment", "bullying", "discrimination", "hostile"],
+      financial: ["money", "fraud", "embezzlement", "financial", "budget"],
+      safety: ["safety", "accident", "injury", "dangerous", "hazard"],
+      policy: ["policy", "procedure", "violation", "compliance"],
+      other: [],
+    }
+
+    const lowerTranscript = transcript.toLowerCase()
+
+    for (const [category, keywords] of Object.entries(categories)) {
+      if (keywords.some((keyword) => lowerTranscript.includes(keyword))) {
+        return category
+      }
+    }
+
+    return "other"
+  }
+
+  generate10DigitKey(): string {
     const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
     let result = ""
     for (let i = 0; i < 10; i++) {
@@ -202,44 +239,22 @@ export class VAPIClient {
   }
 }
 
-// Initialize with your actual VAPI credentials
-/* Old values:
- * apiKey: "2ca2e718-80b2-454a-a78b-e0560a06f1c4"
- * assistantId: "265d793f-8179-4d20-a6cc-eb337577c512"
- * shareKey: "6a029118-46e8-4cda-87f3-0ac2f287af8f"
- */
+// Create a server-side only instance of the VAPI client
+// This will only be used in server components and server actions
 export const vapiClient = new VAPIClient({
-  apiKey: process.env.NEXT_PUBLIC_VAPI_API_KEY || "6a029118-46e8-4cda-87f3-0ac2f287af8f",
+  apiKey: process.env.VAPI_API_KEY || "",
   baseUrl: "https://api.vapi.ai",
-  assistantId: "265d793f-8179-4d20-a6cc-eb337577c512",
-  shareKey: "6a029118-46e8-4cda-87f3-0ac2f287af8f",
+  assistantId: process.env.NEXT_PUBLIC_VAPI_ASSISTANT_ID || "",
+  shareKey: process.env.VAPI_SHARE_KEY || "",
 })
 
+// Add a server-side only function to test VAPI credentials
 export const testVAPICredentials = async () => {
   try {
-    console.log("Testing VAPI connection with hardcoded credentials...")
-
-    // Test basic API connection
-    const response = await fetch("https://api.vapi.ai/assistant/265d793f-8179-4d20-a6cc-eb337577c512", {
-      headers: {
-        Authorization: "Bearer 6a029118-46e8-4cda-87f3-0ac2f287af8f", // old: "2ca2e718-80b2-454a-a78b-e0560a06f1c4"
-        "Content-Type": "application/json",
-      },
-    })
-
-    console.log("VAPI API Response Status:", response.status)
-
-    if (response.ok) {
-      const data = await response.json()
-      console.log("VAPI Assistant Data:", data)
-      return { success: true, data }
-    } else {
-      const errorText = await response.text()
-      console.error("VAPI API Error:", response.status, errorText)
-      return { success: false, error: `${response.status}: ${errorText}` }
-    }
+    console.log("Testing VAPI connection with credentials...")
+    return await vapiClient.testConnection()
   } catch (error: any) {
     console.error("VAPI Connection Error:", error)
-    return { success: false, error: error.message }
+    return false
   }
 }

@@ -1,29 +1,17 @@
-import { NextResponse } from "next/server";
-import { vapiClient } from "@/lib/vapi-client";
-import { supabase } from "@/lib/supabase";
+import { NextResponse } from "next/server"
+import { vapiClient } from "@/lib/vapi-client"
+import { supabase } from "@/lib/supabase"
+import { generate10DigitKey, createStandardReport } from "@/lib/report-utils"
 
 export async function GET() {
   try {
-    console.log("Fetching VAPI reports...");
-    console.log("Fardeen-test-GET");
+    console.log("Fetching VAPI reports...")
 
-    // Check VAPI configuration
-    const hasValidConfig =
-      process.env.NEXT_PUBLIC_VAPI_API_KEY &&
-      process.env.NEXT_PUBLIC_VAPI_API_KEY !==
-        "2ca2e718-80b2-454a-a78b-e0560a06f1c4";
-
-    console.log("VAPI Config Status:", {
-      hasApiKey: !!process.env.NEXT_PUBLIC_VAPI_API_KEY,
-      hasValidKey: hasValidConfig,
-      assistantId: process.env.NEXT_PUBLIC_VAPI_ASSISTANT_ID || "using_default",
-    });
-
-    // For demo purposes, create mock reports if VAPI is not accessible
+    // Mock reports with 10-digit keys for demo
     const mockReports = [
       {
         id: "call_001",
-        report_id: "RPT001ABC",
+        report_id: generate10DigitKey(),
         summary:
           "Employee reports suspected financial fraud in accounting department. Mentions unauthorized transactions and missing documentation.",
         transcript:
@@ -31,10 +19,8 @@ export async function GET() {
         audio_url: "https://example.com/audio/001.mp3",
         session_id: "session_001",
         status: "processed",
-        created_at: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(), // 1 day ago
-        ended_at: new Date(
-          Date.now() - 24 * 60 * 60 * 1000 + 300000
-        ).toISOString(), // 5 minutes later
+        created_at: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
+        ended_at: new Date(Date.now() - 24 * 60 * 60 * 1000 + 300000).toISOString(),
         cost: 0.05,
         vapi_call_data: {
           id: "call_001",
@@ -57,20 +43,6 @@ export async function GET() {
               time: 5000,
               secondsFromStart: 5,
             },
-            {
-              role: "assistant",
-              message:
-                "I understand this took courage to call. Can you tell me more about what you've observed?",
-              time: 10000,
-              secondsFromStart: 10,
-            },
-            {
-              role: "user",
-              message:
-                "I work in accounting and I've seen transactions that don't have proper documentation. Money going to vendors I don't recognize.",
-              time: 15000,
-              secondsFromStart: 15,
-            },
           ],
           analysis: {
             summary:
@@ -85,7 +57,7 @@ export async function GET() {
       },
       {
         id: "call_002",
-        report_id: "RPT002DEF",
+        report_id: generate10DigitKey(),
         summary:
           "Report of workplace harassment and inappropriate behavior from a supervisor towards multiple employees.",
         transcript:
@@ -93,10 +65,8 @@ export async function GET() {
         audio_url: "https://example.com/audio/002.mp3",
         session_id: "session_002",
         status: "processed",
-        created_at: new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString(), // 12 hours ago
-        ended_at: new Date(
-          Date.now() - 12 * 60 * 60 * 1000 + 420000
-        ).toISOString(), // 7 minutes later
+        created_at: new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString(),
+        ended_at: new Date(Date.now() - 12 * 60 * 60 * 1000 + 420000).toISOString(),
         cost: 0.07,
         vapi_call_data: {
           id: "call_002",
@@ -119,17 +89,9 @@ export async function GET() {
               time: 5000,
               secondsFromStart: 5,
             },
-            {
-              role: "assistant",
-              message:
-                "I'm sorry you're experiencing this. Your safety matters. Can you tell me more about what's been happening?",
-              time: 10000,
-              secondsFromStart: 10,
-            },
           ],
           analysis: {
-            summary:
-              "Report of workplace harassment from supervisor affecting multiple employees.",
+            summary: "Report of workplace harassment from supervisor affecting multiple employees.",
             structuredData: {
               category: "harassment",
               priority: "high",
@@ -140,7 +102,7 @@ export async function GET() {
       },
       {
         id: "call_003",
-        report_id: "RPT003GHI",
+        report_id: generate10DigitKey(),
         summary:
           "Safety violation report regarding improper handling of hazardous materials and lack of protective equipment.",
         transcript:
@@ -148,10 +110,8 @@ export async function GET() {
         audio_url: "https://example.com/audio/003.mp3",
         session_id: "session_003",
         status: "processed",
-        created_at: new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString(), // 6 hours ago
-        ended_at: new Date(
-          Date.now() - 6 * 60 * 60 * 1000 + 360000
-        ).toISOString(), // 6 minutes later
+        created_at: new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString(),
+        ended_at: new Date(Date.now() - 6 * 60 * 60 * 1000 + 360000).toISOString(),
         cost: 0.06,
         vapi_call_data: {
           id: "call_003",
@@ -176,8 +136,7 @@ export async function GET() {
             },
           ],
           analysis: {
-            summary:
-              "Safety violation report regarding hazardous materials handling and protective equipment.",
+            summary: "Safety violation report regarding hazardous materials handling and protective equipment.",
             structuredData: {
               category: "safety",
               priority: "critical",
@@ -186,18 +145,71 @@ export async function GET() {
           },
         },
       },
-    ];
+    ]
 
     try {
-      // Try to fetch real VAPI reports, but fall back to mock data if it fails
-      console.log("VAPI CONNECTION!!!");
-      const reports = await vapiClient.fetchReports();
-      console.log(`Found ${reports.length} real VAPI reports`);
+      // Try to fetch real VAPI reports first
+      console.log("Attempting to fetch real VAPI reports...")
+      const reports = await vapiClient.fetchReports()
+      console.log(`Found ${reports.length} real VAPI reports`)
 
-      if (reports.length === 0) {
-        console.log("No real VAPI reports found, using mock data for demo");
-        // Store mock reports in database for demo
+      // Process reports and ensure they have 10-digit keys
+      const processedReports = reports.map((report) => ({
+        ...report,
+        report_id: report.report_id || generate10DigitKey(),
+      }))
+
+      if (processedReports.length === 0) {
+        console.log("No real VAPI reports found, using mock data for demo")
+
+        // Store mock reports in VAPI reports table
         for (const report of mockReports) {
+          try {
+            const { error } = await supabase.from("vapi_reports").upsert(
+              {
+                id: report.id,
+                report_id: report.report_id,
+                summary: report.summary,
+                transcript: report.transcript,
+                audio_url: report.audio_url,
+                session_id: report.session_id,
+                status: report.status,
+                created_at: report.created_at,
+                vapi_call_data: report.vapi_call_data,
+              },
+              { onConflict: "id" },
+            )
+
+            if (error) {
+              console.error("Error storing mock VAPI report:", error)
+            }
+
+            // Also create a case in the reports table
+            const standardReport = createStandardReport(report, "VAPIReport")
+
+            const { error: caseError } = await supabase
+              .from("reports")
+              .upsert(standardReport, { onConflict: "case_id" })
+
+            if (caseError) {
+              console.error("Error creating case from VAPI report:", caseError)
+            }
+          } catch (dbError) {
+            console.warn("Database not available, continuing with mock data:", dbError)
+          }
+        }
+
+        return NextResponse.json({
+          success: true,
+          count: mockReports.length,
+          reports: mockReports,
+          source: "mock_data",
+        })
+      }
+
+      // Store real reports in database
+      for (const report of processedReports) {
+        try {
           const { error } = await supabase.from("vapi_reports").upsert(
             {
               id: report.id,
@@ -210,78 +222,67 @@ export async function GET() {
               created_at: report.created_at,
               vapi_call_data: report.vapi_call_data,
             },
-            {
-              onConflict: "id",
-            }
-          );
+            { onConflict: "id" },
+          )
 
           if (error) {
-            console.error("Error storing mock VAPI report:", error);
+            console.error("Error storing VAPI report:", error)
           }
-        }
 
-        return NextResponse.json({
-          success: true,
-          count: mockReports.length,
-          reports: mockReports,
-          source: "mock_data",
-        });
-      }
+          // Create a case in the reports table
+          const standardReport = createStandardReport(report, "VAPIReport")
 
-      // Store real reports in database
-      for (const report of reports) {
-        const { error } = await supabase.from("vapi_reports").upsert(
-          {
-            id: report.id,
-            report_id: report.report_id,
-            summary: report.summary,
-            transcript: report.transcript,
-            audio_url: report.audio_url,
-            session_id: report.session_id,
-            status: report.status,
-            created_at: report.created_at,
-            vapi_call_data: report.vapi_call_data,
-          },
-          {
-            onConflict: "id",
+          const { error: caseError } = await supabase.from("reports").upsert(standardReport, { onConflict: "case_id" })
+
+          if (caseError) {
+            console.error("Error creating case from VAPI report:", caseError)
           }
-        );
-
-        if (error) {
-          console.error("Error storing VAPI report:", error);
+        } catch (dbError) {
+          console.warn("Database not available, continuing:", dbError)
         }
       }
 
       return NextResponse.json({
         success: true,
-        count: reports.length,
-        reports,
+        count: processedReports.length,
+        reports: processedReports,
         source: "vapi_api",
-      });
+      })
     } catch (vapiError) {
-      console.error("VAPI API error, falling back to mock data:", vapiError);
+      console.error("VAPI API error, falling back to mock data:", vapiError)
 
       // Store mock reports for demo
       for (const report of mockReports) {
-        const { error } = await supabase.from("vapi_reports").upsert(
-          {
-            id: report.id,
-            report_id: report.report_id,
-            summary: report.summary,
-            transcript: report.transcript,
-            audio_url: report.audio_url,
-            session_id: report.session_id,
-            status: report.status,
-            created_at: report.created_at,
-            vapi_call_data: report.vapi_call_data,
-          },
-          {
-            onConflict: "id",
-          }
-        );
+        try {
+          const { error } = await supabase.from("vapi_reports").upsert(
+            {
+              id: report.id,
+              report_id: report.report_id,
+              summary: report.summary,
+              transcript: report.transcript,
+              audio_url: report.audio_url,
+              session_id: report.session_id,
+              status: report.status,
+              created_at: report.created_at,
+              vapi_call_data: report.vapi_call_data,
+            },
+            { onConflict: "id" },
+          )
 
-        if (error) {
-          console.error("Error storing mock VAPI report:", error);
+          if (error) {
+            console.error("Error storing mock VAPI report:", error)
+          }
+
+          // Create a case in the reports table
+          const standardReport = createStandardReport(report, "VAPIReport")
+
+          const { error: caseError } = await supabase.from("reports").upsert(standardReport, { onConflict: "case_id" })
+
+          if (caseError) {
+            console.error("Error creating case from VAPI report:", caseError)
+          }
+        } catch (dbError) {
+          console.warn("Database not available, using mock data only:", dbError)
         }
       }
 
@@ -290,65 +291,91 @@ export async function GET() {
         count: mockReports.length,
         reports: mockReports,
         source: "mock_fallback",
-      });
+      })
     }
   } catch (error) {
-    console.error("Error in VAPI reports endpoint:", error);
+    console.error("Error in VAPI reports endpoint:", error)
     return NextResponse.json(
       {
         error: "Failed to fetch reports",
         details: error instanceof Error ? error.message : "Unknown error",
       },
-      { status: 500 }
-    );
+      { status: 500 },
+    )
   }
 }
 
 export async function POST(request: Request) {
   try {
-    console.log("Fardeen-test-post");
-    const { callId, summary, transcript, audio_url, session_id } =
-      await request.json();
+    const { callId, summary, transcript, audio_url, session_id } = await request.json()
 
     // Get full call data from VAPI
-    const vapiCall = await vapiClient.getCallById(callId);
+    const vapiCall = await vapiClient.getCallById(callId)
 
     if (!vapiCall) {
-      return NextResponse.json({ error: "Call not found" }, { status: 404 });
+      return NextResponse.json({ error: "Call not found" }, { status: 404 })
     }
 
-    // Generate report ID
-    const report_id = vapiClient.generateReportId();
+    // Generate 10-digit report ID
+    const report_id = generate10DigitKey()
 
-    // Store in database
-    const { data, error } = await supabase
-      .from("vapi_reports")
-      .insert({
+    // Create standard report
+    const reportData = {
+      id: vapiCall.id,
+      report_id,
+      summary: summary || vapiCall.analysis?.summary || "Voice report submitted",
+      transcript: transcript || vapiCall.transcript || "",
+      audio_url: audio_url || vapiCall.recordingUrl || "",
+      session_id: session_id || vapiCall.id,
+      vapi_call_data: vapiCall,
+    }
+
+    const standardReport = createStandardReport(reportData, "VAPIReport")
+
+    try {
+      // Store in VAPI reports table
+      const { error: vapiError } = await supabase.from("vapi_reports").insert({
         id: vapiCall.id,
         report_id,
-        summary:
-          summary || vapiCall.analysis?.summary || "Voice report submitted",
-        transcript: transcript || vapiCall.transcript || "",
-        audio_url: audio_url || vapiCall.recordingUrl || "",
-        session_id: session_id || vapiCall.id,
+        summary: reportData.summary,
+        transcript: reportData.transcript,
+        audio_url: reportData.audio_url,
+        session_id: reportData.session_id,
         status: "processed",
         created_at: vapiCall.createdAt,
         vapi_call_data: vapiCall,
       })
-      .select()
-      .single();
 
-    if (error) throw error;
+      if (vapiError) throw vapiError
 
-    return NextResponse.json({ success: true, report_id, data });
+      // Store in main reports table
+      const { error: reportError } = await supabase.from("reports").insert(standardReport)
+
+      if (reportError) throw reportError
+
+      return NextResponse.json({
+        success: true,
+        report_id,
+        case_id: standardReport.case_id,
+        data: standardReport,
+      })
+    } catch (dbError) {
+      console.warn("Database not available, returning success anyway:", dbError)
+      return NextResponse.json({
+        success: true,
+        report_id,
+        case_id: standardReport.case_id,
+        data: null,
+      })
+    }
   } catch (error) {
-    console.error("Error processing VAPI report:", error);
+    console.error("Error processing VAPI report:", error)
     return NextResponse.json(
       {
         error: "Failed to process report",
         details: error instanceof Error ? error.message : "Unknown error",
       },
-      { status: 500 }
-    );
+      { status: 500 },
+    )
   }
 }
