@@ -1,42 +1,89 @@
-// Environment setup script for Node.js
-console.log("🔧 Setting up Aegis Whistle Platform environment...")
+#!/usr/bin/env node
 
-// Check if we're in a browser environment
-if (typeof window !== "undefined") {
-  console.log("✅ Running in browser environment")
-  console.log("📋 Client-side environment variables available:")
+/**
+ * Environment Setup Script
+ *
+ * This script helps set up the environment variables for the Aegis Whistle Platform.
+ * It validates the current environment and provides guidance on missing variables.
+ */
 
-  // List available client-side environment variables
-  const clientEnvVars = ["NEXT_PUBLIC_SUPABASE_URL", "NEXT_PUBLIC_SUPABASE_ANON_KEY", "NEXT_PUBLIC_VAPI_ASSISTANT_ID"]
+const fs = require("fs")
+const path = require("path")
 
-  clientEnvVars.forEach((varName) => {
-    const value = process.env[varName]
-    if (value) {
-      console.log(`✅ ${varName}: ${value.substring(0, 20)}...`)
-    } else {
-      console.log(`❌ ${varName}: Not set`)
-    }
+// Required environment variables
+const REQUIRED_VARS = {
+  NEXT_PUBLIC_SUPABASE_URL: {
+    description: "Supabase project URL",
+    example: "https://your-project.supabase.co",
+  },
+  NEXT_PUBLIC_SUPABASE_ANON_KEY: {
+    description: "Supabase anonymous key",
+    example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  },
+  NEXT_PUBLIC_VAPI_ASSISTANT_ID: {
+    description: "VAPI Assistant ID",
+    example: "asst_xxxxxxxxxxxxxxxx",
+  },
+}
+
+const SERVER_VARS = {
+  VAPI_API_KEY: {
+    description: "VAPI API key (server-side)",
+    example: "vapi_live_xxxxxxxxxxxxxxxx",
+  },
+  VAPI_SHARE_KEY: {
+    description: "VAPI Share key (server-side)",
+    example: "share_xxxxxxxxxxxxxxxx",
+  },
+  SUPABASE_SERVICE_ROLE_KEY: {
+    description: "Supabase service role key",
+    example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  },
+}
+
+console.log("🔧 Aegis Whistle Platform - Environment Setup\n")
+
+// Check current environment
+const missing = []
+const present = []
+
+Object.keys(REQUIRED_VARS).forEach((varName) => {
+  if (process.env[varName]) {
+    present.push(varName)
+  } else {
+    missing.push(varName)
+  }
+})
+
+// Report status
+if (present.length > 0) {
+  console.log("✅ Present variables:")
+  present.forEach((varName) => {
+    console.log(`  - ${varName}`)
   })
-} else {
-  console.log("✅ Running in Node.js environment")
-  console.log("📋 Server environment variables available:")
+  console.log()
+}
 
-  // Check server-side environment variables
-  const serverEnvVars = ["POSTGRES_URL", "SUPABASE_URL", "SUPABASE_SERVICE_ROLE_KEY", "VAPI_API_KEY", "VAPI_SHARE_KEY"]
-
-  serverEnvVars.forEach((varName) => {
-    const value = process.env[varName]
-    if (value) {
-      console.log(`✅ ${varName}: ${value.substring(0, 20)}...`)
-    } else {
-      console.log(`❌ ${varName}: Not set`)
-    }
+if (missing.length > 0) {
+  console.log("❌ Missing required variables:")
+  missing.forEach((varName) => {
+    const config = REQUIRED_VARS[varName]
+    console.log(`  - ${varName}`)
+    console.log(`    Description: ${config.description}`)
+    console.log(`    Example: ${config.example}`)
+    console.log()
   })
 }
 
-console.log("🎉 Environment setup complete!")
-console.log("💡 Next steps:")
-console.log("   1. Run the SQL script to create database tables")
-console.log("   2. Test the login with demo credentials")
-console.log("   3. Check the ethics officer dashboard")
-console.log("   4. Verify VAPI integration uses server actions")
+// Check server variables
+console.log("🔍 Server-side variables:")
+Object.keys(SERVER_VARS).forEach((varName) => {
+  const status = process.env[varName] ? "✅" : "⚠️ "
+  console.log(`  ${status} ${varName}`)
+})
+
+console.log("\n📝 Next steps:")
+console.log("1. Create a .env.local file in your project root")
+console.log("2. Add the missing environment variables")
+console.log("3. Run the application with: npm run dev")
+console.log("\nFor detailed setup instructions, see ENV_SETUP_SIMPLE.md")

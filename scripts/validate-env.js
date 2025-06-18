@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 
-// Import the environment validator
-const { validateEnvironment, getEnvVarStatusReport } = require("../lib/env-validator")
+// Import the environment validator with correct path
+const path = require("path")
+const { validateEnvironment, getEnvVarStatusReport } = require(path.join(__dirname, "../lib/env-validator.ts"))
 
 console.log("\n🔍 Validating environment variables for build...\n")
 

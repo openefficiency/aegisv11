@@ -3,21 +3,23 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "prebuild": "node scripts/validate-env.js",
+    "prebuild": "node scripts/validate-env-simple.js",
     "build": "next build",
     "dev": "next dev",
     "lint": "next lint",
     "start": "next start",
-    "validate-env": "node scripts/validate-env.js"
+    "validate-env": "node scripts/validate-env-simple.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "latest",
     "@vapi-ai/web": "^2.0.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "fs": "latest",
     "leaflet": "latest",
     "lucide-react": "^0.454.0",
     "next": "14.2.16",
+    "path": "latest",
     "react": "^18",
     "react-dom": "^18",
     "react-icons": "latest",
