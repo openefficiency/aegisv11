@@ -3,9 +3,9 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Shield, Mic, Lock, Coins, TrendingUp, CheckCircle, ArrowRight, MapPin } from "lucide-react"
 import Link from "next/link"
-import { VapiVoiceWidget } from "@/components/vapi-voice-widget"
 import { VapiLauncher } from "@/components/vapi-launcher"
 import Image from "next/image"
+import { VAPIVoiceWidgetEnhanced } from "@/components/vapi-voice-widget-enhanced"
 
 export default function HomePage() {
   return (
@@ -71,7 +71,7 @@ export default function HomePage() {
 
           {/* Voice AI Demo */}
           <div className="mb-16">
-            <VapiVoiceWidget />
+            <VAPIVoiceWidgetEnhanced variant="hero" />
           </div>
 
           {/* Stats */}

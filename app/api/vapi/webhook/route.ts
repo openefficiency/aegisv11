@@ -1,53 +1,27 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { processVAPIWebhook } from "@/lib/vapi-server-actions"
+import { vapiClient } from "@/lib/vapi-client-fixed"
 
 export async function POST(request: NextRequest) {
   try {
-    console.log("🎤 VAPI Webhook received")
-
     const payload = await request.json()
-    console.log("Webhook payload:", JSON.stringify(payload, null, 2))
+    console.log("VAPI webhook received:", payload)
 
-    // Process the webhook using server action
-    const result = await processVAPIWebhook(payload)
+    // Process the webhook
+    const report = await vapiClient.processWebhook(payload)
 
-    if (result.success) {
-      console.log(`✅ Webhook processed: ${result.message}`)
-      return NextResponse.json({
-        success: true,
-        message: result.message,
-        data: result.data,
-        timestamp: new Date().toISOString(),
-      })
+    if (report) {
+      console.log("VAPI report created:", report.id)
+      return NextResponse.json({ success: true, reportId: report.id })
     } else {
-      console.error("❌ Webhook processing failed:", result.error)
-      return NextResponse.json(
-        {
-          success: false,
-          error: result.error,
-          timestamp: new Date().toISOString(),
-        },
-        { status: 500 },
-      )
+      console.log("No report created from webhook")
+      return NextResponse.json({ success: false, message: "No report created" })
     }
   } catch (error) {
-    console.error("❌ Error in VAPI webhook:", error)
-    return NextResponse.json(
-      {
-        success: false,
-        error: "Failed to process webhook",
-        details: error instanceof Error ? error.message : "Unknown error",
-        timestamp: new Date().toISOString(),
-      },
-      { status: 500 },
-    )
+    console.error("VAPI webhook error:", error)
+    return NextResponse.json({ error: "Webhook processing failed" }, { status: 500 })
   }
 }
 
 export async function GET() {
-  return NextResponse.json({
-    message: "VAPI Webhook endpoint is active",
-    timestamp: new Date().toISOString(),
-    status: "ready",
-  })
+  return NextResponse.json({ message: "VAPI webhook endpoint is active" })
 }

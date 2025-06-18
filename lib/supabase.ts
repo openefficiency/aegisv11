@@ -3,7 +3,7 @@ import { getEnvVar } from "./env-validator"
 
 // Get cleaned environment variables
 const supabaseUrl = getEnvVar("NEXT_PUBLIC_SUPABASE_URL") || "https://vnjfnlnwfhnwzcfkdrsw.supabase.co"
-const supabaseKey = getEnvVar("NEXT_PUBLIC_SUPABASE_ANON_KEY")
+const supabaseAnonKey = getEnvVar("NEXT_PUBLIC_SUPABASE_ANON_KEY")
 
 // Create a fallback client if environment variables are missing
 const createFallbackClient = () => {
@@ -31,12 +31,18 @@ const createFallbackClient = () => {
 
 // Create and export the Supabase client
 export const supabase =
-  supabaseUrl && supabaseKey ? createClient(supabaseUrl, supabaseKey) : (createFallbackClient() as any)
+  supabaseUrl && supabaseAnonKey ? createClient(supabaseUrl, supabaseAnonKey) : (createFallbackClient() as any)
+
+// Server-side client with service role key
+export const supabaseAdmin = createClient(
+  supabaseUrl || "https://vnjfnlnwfhnwzcfkdrsw.supabase.co",
+  process.env.SUPABASE_SERVICE_ROLE_KEY!,
+)
 
 // Test connection function
 export async function testSupabaseConnection(): Promise<boolean> {
   try {
-    if (!supabaseUrl || !supabaseKey) {
+    if (!supabaseUrl || !supabaseAnonKey) {
       console.warn("⚠️ Supabase credentials not found, using demo mode")
       return false
     }
