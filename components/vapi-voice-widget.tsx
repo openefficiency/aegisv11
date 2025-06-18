@@ -23,7 +23,6 @@ interface VAPIConfig {
 export function VapiVoiceWidget() {
   const [callStatus, setCallStatus] = useState<VAPICallStatus>({ status: "idle" })
   const [vapiConfig, setVapiConfig] = useState<VAPIConfig | null>(null)
-  const [shareKey, setShareKey] = useState<string | null>(null)
 
   // Load VAPI configuration from server
   useEffect(() => {
@@ -32,11 +31,6 @@ export function VapiVoiceWidget() {
         const result = await getVAPIConfig()
         if (result.success && result.data) {
           setVapiConfig(result.data)
-
-          // Get share key for iframe approach
-          if (process.env.VAPI_SHARE_KEY) {
-            setShareKey(process.env.VAPI_SHARE_KEY)
-          }
         } else {
           setCallStatus({
             status: "error",
@@ -64,7 +58,7 @@ export function VapiVoiceWidget() {
       return
     }
 
-    // Use VAPI's share link approach instead of SDK
+    // Use VAPI's share link approach with existing environment variables
     const shareKey = process.env.VAPI_SHARE_KEY || "6a029118-46e8-4cda-87f3-0ac2f287af8f" // fallback
     const vapiUrl = `https://vapi.ai?demo=true&shareKey=${shareKey}&assistantId=${vapiConfig.assistantId}`
 

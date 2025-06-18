@@ -1,5 +1,6 @@
 import { supabase } from "./supabase"
 import { generate10DigitKey } from "./report-utils"
+import type { ProcessedVAPIReport } from "./vapi-client"
 
 export interface VAPIWebhookPayload {
   message: {
@@ -24,27 +25,10 @@ export interface VAPIWebhookPayload {
   }
 }
 
-export interface ProcessedVAPIReport {
-  id: string
-  case_id: string
-  report_id: string
-  title: string
-  summary: string
-  transcript: string
-  audio_url: string
-  session_id: string
-  category: string
-  priority: string
-  status: string
-  report_source: "VAPIReport"
-  vapi_call_data: any
-  created_at: string
-  ended_at?: string
-}
-
 export class VAPIIntegrationService {
   private static instance: VAPIIntegrationService
   private webhookListeners: Array<(report: ProcessedVAPIReport) => void> = []
+  private realTimeListeners: Array<(data: any) => void> = []
 
   static getInstance(): VAPIIntegrationService {
     if (!VAPIIntegrationService.instance) {
@@ -58,6 +42,11 @@ export class VAPIIntegrationService {
     this.webhookListeners.push(callback)
   }
 
+  // Subscribe to real-time transcript updates
+  onRealTimeUpdate(callback: (data: any) => void) {
+    this.realTimeListeners.push(callback)
+  }
+
   // Process incoming VAPI webhook
   async processWebhook(payload: VAPIWebhookPayload): Promise<ProcessedVAPIReport | null> {
     try {
@@ -66,7 +55,7 @@ export class VAPIIntegrationService {
       if (message.type === "end-of-call-report" && message.call) {
         const call = message.call
 
-        // Generate 10-digit keys
+        // Generate unique identifiers
         const case_id = generate10DigitKey()
         const report_id = generate10DigitKey()
 
@@ -87,6 +76,8 @@ export class VAPIIntegrationService {
           vapi_call_data: call,
           created_at: call.createdAt,
           ended_at: call.endedAt,
+          tracking_code: generate10DigitKey(),
+          secret_code: this.generateSecretCode(),
         }
 
         // Save to database
@@ -96,6 +87,19 @@ export class VAPIIntegrationService {
         this.notifyListeners(processedReport)
 
         return processedReport
+      }
+
+      // Handle real-time transcript updates
+      if (message.type === "transcript" && message.call) {
+        const transcriptData = {
+          type: "transcript_update",
+          callId: message.call.id,
+          transcript: message.call.transcript,
+          timestamp: new Date().toISOString(),
+        }
+
+        // Notify real-time listeners
+        this.notifyRealTimeListeners(transcriptData)
       }
 
       return null
@@ -139,7 +143,8 @@ export class VAPIIntegrationService {
         priority: report.priority,
         report_source: report.report_source,
         report_id: report.report_id,
-        secret_code: this.generateSecretCode(),
+        secret_code: report.secret_code,
+        tracking_code: report.tracking_code,
         vapi_report_summary: report.summary,
         vapi_session_id: report.session_id,
         vapi_transcript: report.transcript,
@@ -170,6 +175,17 @@ export class VAPIIntegrationService {
         callback(report)
       } catch (error) {
         console.error("Error in webhook listener:", error)
+      }
+    })
+  }
+
+  // Notify real-time listeners
+  private notifyRealTimeListeners(data: any) {
+    this.realTimeListeners.forEach((callback) => {
+      try {
+        callback(data)
+      } catch (error) {
+        console.error("Error in real-time listener:", error)
       }
     })
   }
@@ -209,6 +225,7 @@ export class VAPIIntegrationService {
       safety: ["safety", "unsafe", "danger", "accident", "injury", "hazard", "equipment"],
       discrimination: ["discrimination", "discriminate", "racial", "gender", "age", "bias"],
       corruption: ["corruption", "corrupt", "bribe", "kickback", "favor", "influence"],
+      retaliation: ["retaliation", "revenge", "punish", "fired", "demoted", "threatened"],
     }
 
     for (const [category, keywords] of Object.entries(categories)) {
@@ -246,14 +263,23 @@ export class VAPIIntegrationService {
     return result
   }
 
-  // Fetch recent VAPI reports
-  async fetchRecentReports(limit = 50): Promise<ProcessedVAPIReport[]> {
+  // Fetch recent VAPI reports with enhanced filtering
+  async fetchRecentReports(limit = 50, filters?: any): Promise<ProcessedVAPIReport[]> {
     try {
-      const { data, error } = await supabase
-        .from("vapi_reports")
-        .select("*")
-        .order("created_at", { ascending: false })
-        .limit(limit)
+      let query = supabase.from("vapi_reports").select("*").order("created_at", { ascending: false }).limit(limit)
+
+      // Apply filters if provided
+      if (filters?.category) {
+        query = query.eq("category", filters.category)
+      }
+      if (filters?.priority) {
+        query = query.eq("priority", filters.priority)
+      }
+      if (filters?.status) {
+        query = query.eq("status", filters.status)
+      }
+
+      const { data, error } = await query
 
       if (error) {
         console.error("Error fetching VAPI reports:", error)
@@ -276,6 +302,8 @@ export class VAPIIntegrationService {
         vapi_call_data: report.vapi_call_data,
         created_at: report.created_at,
         ended_at: report.ended_at,
+        tracking_code: report.tracking_code || generate10DigitKey(),
+        secret_code: report.secret_code || this.generateSecretCode(),
       }))
     } catch (error) {
       console.error("Error fetching reports:", error)
@@ -302,6 +330,60 @@ export class VAPIIntegrationService {
       .subscribe()
 
     return subscription
+  }
+
+  // Advanced analytics for VAPI reports
+  async getReportAnalytics(timeRange = "7d") {
+    try {
+      const { data, error } = await supabase
+        .from("vapi_reports")
+        .select("category, priority, status, created_at")
+        .gte("created_at", this.getTimeRangeStart(timeRange))
+
+      if (error) {
+        console.error("Error fetching analytics:", error)
+        return null
+      }
+
+      // Process analytics data
+      const analytics = {
+        totalReports: data.length,
+        byCategory: this.groupBy(data, "category"),
+        byPriority: this.groupBy(data, "priority"),
+        byStatus: this.groupBy(data, "status"),
+        dailyTrend: this.getDailyTrend(data),
+      }
+
+      return analytics
+    } catch (error) {
+      console.error("Error calculating analytics:", error)
+      return null
+    }
+  }
+
+  private getTimeRangeStart(range: string): string {
+    const now = new Date()
+    const days = Number.parseInt(range.replace("d", ""))
+    now.setDate(now.getDate() - days)
+    return now.toISOString()
+  }
+
+  private groupBy(array: any[], key: string) {
+    return array.reduce((groups, item) => {
+      const group = item[key] || "unknown"
+      groups[group] = (groups[group] || 0) + 1
+      return groups
+    }, {})
+  }
+
+  private getDailyTrend(data: any[]) {
+    const dailyData = data.reduce((trend, item) => {
+      const date = new Date(item.created_at).toISOString().split("T")[0]
+      trend[date] = (trend[date] || 0) + 1
+      return trend
+    }, {})
+
+    return Object.entries(dailyData).map(([date, count]) => ({ date, count }))
   }
 }
 
