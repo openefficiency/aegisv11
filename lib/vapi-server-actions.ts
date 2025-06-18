@@ -9,10 +9,10 @@ export async function getVAPIConfig() {
     return {
       success: true,
       data: {
-        assistantId: process.env.NEXT_PUBLIC_VAPI_ASSISTANT_ID || "",
+        assistantId: process.env.NEXT_PUBLIC_VAPI_ASSISTANT_ID || "d63127d5-8ec7-4ed7-949a-1942ee4a3917",
         hasApiKey: !!process.env.VAPI_API_KEY,
         hasShareKey: !!process.env.VAPI_SHARE_KEY,
-        shareKey: process.env.VAPI_SHARE_KEY || "", // Add shareKey to the response
+        shareKey: process.env.VAPI_SHARE_KEY || "5d2ff1e9-46b9-4b45-8369-e6f0c65cb063",
       },
     }
   } catch (error: any) {

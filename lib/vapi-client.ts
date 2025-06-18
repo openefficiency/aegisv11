@@ -1,4 +1,4 @@
-// Enhanced VAPI Client with tight integration
+// Enhanced VAPI Client with your real credentials
 export interface VAPIConfig {
   apiKey: string
   baseUrl: string
@@ -332,18 +332,18 @@ export class VAPIClient {
   }
 }
 
-// Create a server-side only instance of the VAPI client
+// Create a server-side only instance of the VAPI client with your real credentials
 export const vapiClient = new VAPIClient({
-  apiKey: process.env.VAPI_API_KEY || "",
+  apiKey: process.env.VAPI_API_KEY || "fac3d79f-ac5c-4548-9581-be2a06fcdca1",
   baseUrl: "https://api.vapi.ai",
-  assistantId: process.env.NEXT_PUBLIC_VAPI_ASSISTANT_ID || "",
-  shareKey: process.env.VAPI_SHARE_KEY || "",
+  assistantId: process.env.NEXT_PUBLIC_VAPI_ASSISTANT_ID || "d63127d5-8ec7-4ed7-949a-1942ee4a3917",
+  shareKey: process.env.VAPI_SHARE_KEY || "5d2ff1e9-46b9-4b45-8369-e6f0c65cb063",
 })
 
 // Add a server-side only function to test VAPI credentials
 export const testVAPICredentials = async () => {
   try {
-    console.log("Testing VAPI connection with credentials...")
+    console.log("Testing VAPI connection with your real credentials...")
     return await vapiClient.testConnection()
   } catch (error: any) {
     console.error("VAPI Connection Error:", error)

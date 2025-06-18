@@ -61,9 +61,10 @@ export function VapiVoiceWidget() {
       return
     }
 
-    // Use the shareKey from environment variables
-    const shareKey = vapiConfig.shareKey || "5d2ff1e9-46b9-4b45-8369-e6f0c65cb063" // Your shareKey as fallback
-    const vapiUrl = `https://vapi.ai/?demo=true&shareKey=${shareKey}&assistantId=${vapiConfig.assistantId}`
+    // Use the shareKey from environment variables with correct fallback
+    const shareKey = vapiConfig.shareKey || "5d2ff1e9-46b9-4b45-8369-e6f0c65cb063"
+    const assistantId = vapiConfig.assistantId || "d63127d5-8ec7-4ed7-949a-1942ee4a3917"
+    const vapiUrl = `https://vapi.ai/?demo=true&shareKey=${shareKey}&assistantId=${assistantId}`
 
     setCallStatus({ status: "redirect", message: "Opening voice assistant..." })
 
@@ -226,7 +227,7 @@ export function VapiVoiceWidget() {
           <div className="text-center">
             {/* Update the iframe src to use the correct shareKey */}
             <iframe
-              src={`https://vapi.ai/?demo=true&shareKey=${vapiConfig.shareKey || "5d2ff1e9-46b9-4b45-8369-e6f0c65cb063"}&assistantId=${vapiConfig.assistantId}`}
+              src={`https://vapi.ai/?demo=true&shareKey=${vapiConfig.shareKey || "5d2ff1e9-46b9-4b45-8369-e6f0c65cb063"}&assistantId=${vapiConfig.assistantId || "d63127d5-8ec7-4ed7-949a-1942ee4a3917"}`}
               className="w-full h-96 rounded-lg border border-slate-700"
               title="VAPI Voice Assistant"
               allow="microphone"
