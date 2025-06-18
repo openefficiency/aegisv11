@@ -50,6 +50,14 @@ export default function TestVoicePage() {
 
   const [isLoading, setIsLoading] = useState(true)
 
+  const [vapiConfig, setVapiConfig] = useState<{
+    hasApiKey: boolean
+    assistantId: string | undefined
+    hasShareKey: boolean
+  } | null>(null)
+
+  const [callStatus, setCallStatus] = useState<{ status: string }>({ status: "idle" })
+
   const testNetworkConnectivity = async () => {
     const checks = {
       online: navigator.onLine,
@@ -437,6 +445,26 @@ export default function TestVoicePage() {
             </p>
           </CardContent>
         </Card>
+        {process.env.NODE_ENV === "development" && (
+          <Card className="bg-slate-900/50 border-slate-600">
+            <CardHeader>
+              <CardTitle className="text-white text-sm">Debug Info</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-1 text-xs text-slate-400">
+                <p>Config Loaded: {vapiConfig ? "✅" : "❌"}</p>
+                <p>Has API Key: {vapiConfig?.hasApiKey ? "✅" : "❌"}</p>
+                <p>Has Assistant ID: {vapiConfig?.assistantId ? "✅" : "❌"}</p>
+                <p>Has Share Key: {vapiConfig?.hasShareKey ? "✅" : "❌"}</p>
+                <p>Status: {callStatus.status}</p>
+                <p>
+                  Demo URL: https://vapi.ai/?demo=true&shareKey=5d2ff1e9-46b9-4b45-8369-e6f0c65cb063&assistantId=
+                  {vapiConfig?.assistantId}
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        )}
       </div>
     </div>
   )

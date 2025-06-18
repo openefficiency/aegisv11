@@ -43,6 +43,7 @@
     "react-dom": "^18",
     "react-icons": "latest",
     "react-leaflet": "latest",
+    "readline": "latest",
     "recharts": "^2.8.0",
     "tailwind-merge": "^2.5.5",
     "tailwindcss": "^3.3.0",

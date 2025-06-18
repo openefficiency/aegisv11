@@ -12,7 +12,7 @@ export async function getVAPIConfig() {
         assistantId: process.env.NEXT_PUBLIC_VAPI_ASSISTANT_ID || "",
         hasApiKey: !!process.env.VAPI_API_KEY,
         hasShareKey: !!process.env.VAPI_SHARE_KEY,
-        // Remove any reference to NEXT_PUBLIC_VAPI_API_KEY
+        shareKey: process.env.VAPI_SHARE_KEY || "", // Add shareKey to the response
       },
     }
   } catch (error: any) {

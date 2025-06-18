@@ -14,10 +14,12 @@ interface VAPICallStatus {
   error?: string
 }
 
+// Update the VAPIConfig interface to include shareKey
 interface VAPIConfig {
   assistantId: string
   hasApiKey: boolean
   hasShareKey: boolean
+  shareKey: string // Add shareKey property
 }
 
 export function VapiVoiceWidget() {
@@ -49,6 +51,7 @@ export function VapiVoiceWidget() {
     loadConfig()
   }, [])
 
+  // Update the startVoiceCall function to use the shareKey from config
   const startVoiceCall = () => {
     if (!vapiConfig?.assistantId) {
       setCallStatus({
@@ -58,9 +61,9 @@ export function VapiVoiceWidget() {
       return
     }
 
-    // Use VAPI's share link approach with existing environment variables
-    const shareKey = process.env.VAPI_SHARE_KEY || "6a029118-46e8-4cda-87f3-0ac2f287af8f" // fallback
-    const vapiUrl = `https://vapi.ai?demo=true&shareKey=${shareKey}&assistantId=${vapiConfig.assistantId}`
+    // Use the shareKey from environment variables
+    const shareKey = vapiConfig.shareKey || "5d2ff1e9-46b9-4b45-8369-e6f0c65cb063" // Your shareKey as fallback
+    const vapiUrl = `https://vapi.ai/?demo=true&shareKey=${shareKey}&assistantId=${vapiConfig.assistantId}`
 
     setCallStatus({ status: "redirect", message: "Opening voice assistant..." })
 
@@ -221,8 +224,9 @@ export function VapiVoiceWidget() {
         </CardHeader>
         <CardContent>
           <div className="text-center">
+            {/* Update the iframe src to use the correct shareKey */}
             <iframe
-              src={`https://vapi.ai?demo=true&shareKey=6a029118-46e8-4cda-87f3-0ac2f287af8f&assistantId=${vapiConfig.assistantId}`}
+              src={`https://vapi.ai/?demo=true&shareKey=${vapiConfig.shareKey || "5d2ff1e9-46b9-4b45-8369-e6f0c65cb063"}&assistantId=${vapiConfig.assistantId}`}
               className="w-full h-96 rounded-lg border border-slate-700"
               title="VAPI Voice Assistant"
               allow="microphone"
